@@ -31,7 +31,7 @@
             <enabled>false</enabled>
           </releases>
           <name>Cytoscape Snapshots</name>
-          <url>http://cytoscape.wodaklab.org/nexus/content/repositories/snapshots/</url>
+          <url>http://code.cytoscape.org/nexus/content/repositories/snapshots/</url>
        </repository>
        <repository>
           <id>cytoscape_releases</id>
@@ -130,7 +130,7 @@
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>          
                 <resource>
-                  <directory>${project.build.directory}/tmp/cytoscape-${project.version}</directory>
+                  <directory>${project.build.directory}/tmp/cytoscape-${distribution.suffix}-${project.version}</directory>
                 </resource>
               </resources>              
             </configuration>            
@@ -161,7 +161,6 @@
           </execution>
         </executions>
       </plugin>
-      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
@@ -222,6 +221,7 @@
       </activation>
       <properties>
         <distribution.type>tar.gz</distribution.type>
+        <distribution.suffix>unix</distribution.suffix>
       </properties>
     </profile>
     <profile>
@@ -233,6 +233,7 @@
       </activation>
       <properties>
         <distribution.type>zip</distribution.type>
+        <distribution.suffix>windows</distribution.suffix>
       </properties>
     </profile>
   </profiles>
