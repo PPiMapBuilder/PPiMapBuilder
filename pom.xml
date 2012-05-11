@@ -15,6 +15,7 @@
 
   <properties>
       <cytoscape.api.version>3.0.0-beta1</cytoscape.api.version>
+      <cytoscape.distribution.version>3.0.0-M4</cytoscape.distribution.version>
   </properties>
 
   <name>Distribution</name>
@@ -66,7 +67,7 @@
                 <artifactItem>
                   <groupId>org.cytoscape.distribution</groupId>
                   <artifactId>cytoscape</artifactId>
-                  <version>${project.version}</version>
+                  <version>${cytoscape.distribution.version}</version>
                   <type>${distribution.type}</type>
                   <overWrite>true</overWrite>
                 </artifactItem>
@@ -196,7 +197,7 @@
     <dependency>
       <groupId>org.cytoscape.distribution</groupId>
       <artifactId>cytoscape</artifactId>
-      <version>${project.version}</version>
+      <version>${cytoscape.distribution.version}</version>
       <type>zip</type>
     </dependency>
     <dependency>
