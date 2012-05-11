@@ -85,7 +85,7 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>org.cytoscape</groupId>
-                  <artifactId>app-api</artifactId>
+                  <artifactId>swing-app-api</artifactId>
                   <version>${cytoscape.api.version}</version>
                   <classifier>javadoc</classifier>
                   <overWrite>true</overWrite>
@@ -105,11 +105,11 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>org.cytoscape</groupId>
-                  <artifactId>app-api</artifactId>
+                  <artifactId>swing-app-api</artifactId>
                   <version>${cytoscape.api.version}</version>
                   <classifier>jar-with-dependencies</classifier>
                   <overWrite>true</overWrite>
-                  <destFileName>cytoscape-app-api-${cytoscape.api.version}.jar</destFileName>
+                  <destFileName>cytoscape-swing-app-api-${cytoscape.api.version}.jar</destFileName>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -201,13 +201,13 @@
     </dependency>
     <dependency>
       <groupId>org.cytoscape</groupId>
-      <artifactId>app-api</artifactId>
+      <artifactId>swing-app-api</artifactId>
       <version>${cytoscape.api.version}</version>
       <classifier>javadoc</classifier>
     </dependency>
     <dependency>
       <groupId>org.cytoscape</groupId>
-      <artifactId>app-api</artifactId>
+      <artifactId>swing-app-api</artifactId>
       <version>${cytoscape.api.version}</version>
       <classifier>jar-with-dependencies</classifier>
     </dependency>
