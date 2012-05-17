@@ -15,7 +15,7 @@
 
   <properties>
       <cytoscape.api.version>3.0.0-beta1</cytoscape.api.version>
-      <cytoscape.distribution.version>3.0.0-M4</cytoscape.distribution.version>
+      <cytoscape.distribution.version>3.0.0-M5-SNAPSHOT</cytoscape.distribution.version>
   </properties>
 
   <name>Distribution</name>
@@ -194,12 +194,6 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>org.cytoscape.distribution</groupId>
-      <artifactId>cytoscape</artifactId>
-      <version>${cytoscape.distribution.version}</version>
-      <type>zip</type>
-    </dependency>
     <dependency>
       <groupId>org.cytoscape</groupId>
       <artifactId>swing-app-api</artifactId>
