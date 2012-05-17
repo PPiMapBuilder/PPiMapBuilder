@@ -15,7 +15,7 @@
 
   <properties>
       <cytoscape.api.version>3.0.0-beta1</cytoscape.api.version>
-      <cytoscape.distribution.version>3.0.0-M5-SNAPSHOT</cytoscape.distribution.version>
+      <cytoscape.distribution.version>${project.version}</cytoscape.distribution.version>
   </properties>
 
   <name>Distribution</name>
@@ -131,7 +131,7 @@
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>          
                 <resource>
-                  <directory>${project.build.directory}/tmp/cytoscape-${distribution.suffix}-${project.version}</directory>
+                  <directory>${project.build.directory}/tmp/cytoscape-${distribution.suffix}-${cytoscape.distribution.version}</directory>
                 </resource>
               </resources>              
             </configuration>            
