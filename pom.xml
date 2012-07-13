@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.cytoscape</groupId>
     <artifactId>parent</artifactId>
-    <version>3.0.0-beta3-SNAPSHOT</version>
+    <version>3.0.0-beta2</version>
      <relativePath>../parent</relativePath>
   </parent>
 
@@ -14,7 +14,7 @@
   <version>3.0.0-M6-SNAPSHOT</version>
 
   <properties>
-      <cytoscape.api.version>3.0.0-beta3-SNAPSHOT</cytoscape.api.version>
+      <cytoscape.api.version>3.0.0-beta2</cytoscape.api.version>
       <cytoscape.distribution.version>${project.version}</cytoscape.distribution.version>
   </properties>
 
