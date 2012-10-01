@@ -234,9 +234,9 @@
 	</profiles>
 
 	<scm>
-		<connection>scm:svn:http://chianti.ucsd.edu/svn/core3/app-developer/branches/user-beta1</connection>
-		<developerConnection>scm:svn:svn+ssh://grenache.ucsd.edu/cellar/common/svn/core3/app-developer/branches/user-beta1</developerConnection>
-		<url>http://chianti.ucsd.edu/svn/core3/app-developer/branches/user-beta1</url>
+		<connection>scm:svn:http://chianti.ucsd.edu/svn/core3/app-developer/trunk</connection>
+		<developerConnection>scm:svn:svn+ssh://grenache.ucsd.edu/cellar/common/svn/core3/app-developer/trunk</developerConnection>
+		<url>http://chianti.ucsd.edu/svn/core3/app-developer/trunk</url>
 	</scm>
 
 </project>
