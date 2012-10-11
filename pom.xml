@@ -14,8 +14,9 @@
 	<version>3.0.0-beta2-SNAPSHOT</version>
 
 	<properties>
-		<cytoscape.api.version>3.0.0-beta3</cytoscape.api.version>
-		<cytoscape.distribution.version>3.0.0-beta1</cytoscape.distribution.version>
+		<cytoscape.api.version>3.0.0-beta4-SNAPSHOT</cytoscape.api.version>
+		<cytoscape.impl.version>3.0.0-beta2-SNAPSHOT</cytoscape.impl.version>
+		<cytoscape.distribution.version>3.0.0-beta2-SNAPSHOT</cytoscape.distribution.version>
 	</properties>
 
 	<name>Distribution</name>
@@ -111,6 +112,22 @@
 									<classifier>jar-with-dependencies</classifier>
 									<overWrite>true</overWrite>
 									<destFileName>cytoscape-swing-app-api-${cytoscape.api.version}.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.cytoscape</groupId>
+									<artifactId>api-parent</artifactId>
+									<version>${cytoscape.api.version}</version>
+									<classifier>sources</classifier>
+									<overWrite>true</overWrite>
+									<destFileName>api-${cytoscape.api.version}-sources.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.cytoscape</groupId>
+									<artifactId>impl-parent</artifactId>
+									<version>${cytoscape.impl.version}</version>
+									<classifier>sources</classifier>
+									<overWrite>true</overWrite>
+									<destFileName>impl-${cytoscape.api.version}-sources.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
 						</configuration>
