@@ -4,19 +4,19 @@
 	<parent>
 		<groupId>org.cytoscape</groupId>
 		<artifactId>parent</artifactId>
-		<version>3.0.0-beta3</version>
+		<version>3.0.0</version>
 		<relativePath>../parent</relativePath>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cytoscape.app-developer</groupId>
 	<artifactId>cytoscape</artifactId>
-	<version>3.0.0-beta2-SNAPSHOT</version>
+	<version>3.0.0</version>
 
 	<properties>
-		<cytoscape.api.version>3.0.0-beta4-SNAPSHOT</cytoscape.api.version>
-		<cytoscape.impl.version>3.0.0-beta2-SNAPSHOT</cytoscape.impl.version>
-		<cytoscape.distribution.version>3.0.0-beta2-SNAPSHOT</cytoscape.distribution.version>
+		<cytoscape.api.version>3.0.0</cytoscape.api.version>
+		<cytoscape.impl.version>3.0.0</cytoscape.impl.version>
+		<cytoscape.distribution.version>3.0.0</cytoscape.distribution.version>
 	</properties>
 
 	<name>Distribution</name>
