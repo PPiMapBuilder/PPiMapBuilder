@@ -1,3 +1,6 @@
 .DS_Store
-target
+target/
+.settings/
+.project
+.classpath
 
