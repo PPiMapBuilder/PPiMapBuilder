@@ -251,9 +251,9 @@
 	</profiles>
 
 	<scm>
-		<connection>scm:svn:http://chianti.ucsd.edu/svn/core3/app-developer/trunk</connection>
-		<developerConnection>scm:svn:svn+ssh://grenache.ucsd.edu/cellar/common/svn/core3/app-developer/trunk</developerConnection>
-		<url>http://chianti.ucsd.edu/svn/core3/app-developer/trunk</url>
-	</scm>
+                <connection>scm:git:git://github.com/cytoscape/cytoscape-app-developer.git</connection>
+                <developerConnection>scm:git:git@github.com:cytoscape/cytoscape-app-developer.git</developerConnection>
+                <url>https://github.com/cytoscape/cytoscape-app-developer.git</url>
+        </scm>
 
 </project>
