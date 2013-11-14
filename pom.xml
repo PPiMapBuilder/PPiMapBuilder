@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<groupId>org.cytoscape</groupId>
@@ -9,14 +10,14 @@
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.cytoscape.app-developer</groupId>
-	<artifactId>cytoscape</artifactId>
-	<version>3.1.0-SNAPSHOT</version>
+	<groupId>tk.nomis-tech</groupId>
+	<artifactId>ppimapbuilder</artifactId>
+	<version>0.1-SNAPSHOT</version>
 
 	<properties>
-		<cytoscape.api.version>3.1.0-SNAPSHOT</cytoscape.api.version>
-		<cytoscape.impl.version>3.1.0-SNAPSHOT</cytoscape.impl.version>
-		<cytoscape.distribution.version>3.1.0-SNAPSHOT</cytoscape.distribution.version>
+		<cytoscape.api.version>3.0.2</cytoscape.api.version>
+		<cytoscape.impl.version>3.0.2</cytoscape.impl.version>
+		<cytoscape.distribution.version>3.0.2</cytoscape.distribution.version>
 	</properties>
 
 	<name>Distribution</name>
@@ -45,6 +46,11 @@
 			</releases>
 			<name>Cytoscape Releases</name>
 			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
+		</repository>
+		<repository>
+			<id>intact.nexus</id>
+			<name>IntAct Nexus</name>
+			<url>http://www.ebi.ac.uk/intact/maven/nexus/content/groups/public</url>
 		</repository>
 	</repositories>
 
@@ -223,6 +229,11 @@
 			<version>${cytoscape.api.version}</version>
 			<classifier>jar-with-dependencies</classifier>
 		</dependency>
+		<dependency>
+			<groupId>org.hupo.psi.mi.psicquic</groupId>
+			<artifactId>psicquic-client</artifactId>
+			<version>1.5.3</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
@@ -251,9 +262,9 @@
 	</profiles>
 
 	<scm>
-                <connection>scm:git:git://github.com/cytoscape/cytoscape-app-developer.git</connection>
-                <developerConnection>scm:git:git@github.com:cytoscape/cytoscape-app-developer.git</developerConnection>
-                <url>https://github.com/cytoscape/cytoscape-app-developer.git</url>
-        </scm>
+		<connection>scm:git:git://github.com/cytoscape/cytoscape-app-developer.git</connection>
+		<developerConnection>scm:git:git@github.com:cytoscape/cytoscape-app-developer.git</developerConnection>
+		<url>https://github.com/cytoscape/cytoscape-app-developer.git</url>
+	</scm>
 
 </project>
