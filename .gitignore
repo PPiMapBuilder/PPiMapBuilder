@@ -7,4 +7,8 @@ target/
 # Eclipse
 bin
 .settings/
+.project
+.classpath
 
+# Other
+deploy.sh
