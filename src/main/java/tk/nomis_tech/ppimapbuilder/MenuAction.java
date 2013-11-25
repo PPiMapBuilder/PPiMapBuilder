@@ -2,14 +2,8 @@ package tk.nomis_tech.ppimapbuilder;
 
 import java.awt.event.ActionEvent;
 
-
-import javax.swing.JOptionPane;
-
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
-import org.hupo.psi.mi.psicquic.wsclient.PsicquicClientException;
-import org.hupo.psi.mi.psicquic.wsclient.UniversalPsicquicClient;
-import org.hupo.psi.mi.psicquic.wsclient.result.MitabSearchResult;
 
 
 /**
@@ -30,8 +24,11 @@ public class MenuAction extends AbstractCyAction {
 	public void actionPerformed(ActionEvent e) {
 
 		// Write your own function here.
-		JOptionPane.showMessageDialog(null, "Hello Cytoscape World!");
+		//JOptionPane.showMessageDialog(null, "Hello Cytoscape World!");
 		
+		
+		
+		/*
 		UniversalPsicquicClient client = new UniversalPsicquicClient("http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/psicquic");
 
 		MitabSearchResult searchResult = null;
@@ -42,6 +39,6 @@ public class MenuAction extends AbstractCyAction {
 			e1.printStackTrace();
 		}
 
-		JOptionPane.showMessageDialog(null, "Interactions: " + searchResult.getTotalCount());
+		JOptionPane.showMessageDialog(null, "Interactions: " + searchResult.getTotalCount());*/
 	}
 }
