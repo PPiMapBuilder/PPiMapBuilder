@@ -6,11 +6,11 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import java.util.Iterator;
 
-public class UseWebServiceTask extends AbstractTask {
+public class Task extends AbstractTask {
 
 	private final WebServiceHelper webServiceHelper;
 
-	public UseWebServiceTask(WebServiceHelper webServiceHelper) {
+	public Task(WebServiceHelper webServiceHelper) {
 		this.webServiceHelper = webServiceHelper;
 	}
 

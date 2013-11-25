@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.cytoscape.io.webservice.WebServiceClient;
 
-// The class keep track of web-service available 
+/**
+ * Class keeping track of cytoscape web services
+ */
 public class WebServiceHelper {
 
 	private final Map<WebServiceClient, Map> webserviceMap;

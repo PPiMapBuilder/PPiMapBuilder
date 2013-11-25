@@ -4,7 +4,6 @@ import java.util.Properties;
 
 import org.cytoscape.io.webservice.WebServiceClient;
 import org.cytoscape.service.util.AbstractCyActivator;
-import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
 
 public class CyActivator extends AbstractCyActivator {
@@ -15,20 +14,9 @@ public class CyActivator extends AbstractCyActivator {
 
 	@Override
 	public void start(BundleContext bc) throws Exception {
-		/*
-		 * CyApplicationManager cyApplicationManager = getService(bc,
-		 * CyApplicationManager.class);
-		 * 
-		 * MenuAction action = new MenuAction(cyApplicationManager,
-		 * "Hello World App TT");
-		 * 
-		 * Properties properties = new Properties();
-		 * 
-		 * registerAllServices(bc, action, properties);
-		 */
 
 		WebServiceHelper webServiceHelper = new WebServiceHelper();
-		UseWebServiceTaskFactory useWebServiceTaskFactory = new UseWebServiceTaskFactory(
+		TaskFactory useWebServiceTaskFactory = new TaskFactory(
 				webServiceHelper);
 
 		Properties useWebServiceTaskFactoryProps = new Properties();
