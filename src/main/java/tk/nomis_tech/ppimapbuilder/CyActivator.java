@@ -1,34 +1,28 @@
 package tk.nomis_tech.ppimapbuilder;
 
-import java.util.Properties;
-
-import org.cytoscape.io.webservice.WebServiceClient;
-import org.cytoscape.service.util.AbstractCyActivator;
 import org.osgi.framework.BundleContext;
+import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.work.TaskFactory;
+import java.util.Properties;
+import org.cytoscape.io.webservice.WebServiceClient;
+
 
 public class CyActivator extends AbstractCyActivator {
-
 	public CyActivator() {
 		super();
 	}
 
-	@Override
-	public void start(BundleContext bc) throws Exception {
 
-		WebServiceHelper webServiceHelper = new WebServiceHelper();
-		TaskFactory useWebServiceTaskFactory = new TaskFactory(
-				webServiceHelper);
-
+	public void start(BundleContext bc) {
+		WebServiceHelper webServiceHelper = new WebServiceHelper();		
+		MenuTaskFactory useWebServiceTaskFactory= new MenuTaskFactory(webServiceHelper);
+		
 		Properties useWebServiceTaskFactoryProps = new Properties();
-		useWebServiceTaskFactoryProps.setProperty("preferredMenu",
-				"Apps.Samples");
-		useWebServiceTaskFactoryProps.setProperty("title", "Use Web Service");
-		registerService(bc, useWebServiceTaskFactory, TaskFactory.class,
-				useWebServiceTaskFactoryProps);
+		useWebServiceTaskFactoryProps.setProperty("preferredMenu","Apps.PPiMaPBuilder");
+		useWebServiceTaskFactoryProps.setProperty("title","Test");
+		registerService(bc,useWebServiceTaskFactory,TaskFactory.class, useWebServiceTaskFactoryProps);
 
-		registerServiceListener(bc, webServiceHelper, "addWebServiceClient",
-				"removeWebServiceClient", WebServiceClient.class);
-
+		registerServiceListener(bc,webServiceHelper,"addWebServiceClient","removeWebServiceClient",WebServiceClient.class);
 	}
-
 }
+
