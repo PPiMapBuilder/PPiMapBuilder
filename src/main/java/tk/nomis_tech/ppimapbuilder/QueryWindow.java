@@ -20,6 +20,7 @@ public class QueryWindow extends JFrame {
 			
 		});
 		getContentPane().add(startQuery);
+		getRootPane().setDefaultButton(startQuery);
 		
 		setLocationRelativeTo(null);
 	}
