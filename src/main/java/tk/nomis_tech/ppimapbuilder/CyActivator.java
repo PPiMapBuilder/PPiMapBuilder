@@ -1,28 +1,27 @@
 package tk.nomis_tech.ppimapbuilder;
 
-import org.osgi.framework.BundleContext;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.work.TaskFactory;
-import java.util.Properties;
-import org.cytoscape.io.webservice.WebServiceClient;
+import org.osgi.framework.BundleContext;
 
+import java.util.Properties;
 
 public class CyActivator extends AbstractCyActivator {
+	
+	public static BundleContext context;
+	
 	public CyActivator() {
 		super();
 	}
 
-
 	public void start(BundleContext bc) {
-		WebServiceHelper webServiceHelper = new WebServiceHelper();		
-		MenuTaskFactory useWebServiceTaskFactory= new MenuTaskFactory(webServiceHelper);
+		context = bc;
+		PMBMenuFactory factory = new PMBMenuFactory();
 		
-		Properties useWebServiceTaskFactoryProps = new Properties();
-		useWebServiceTaskFactoryProps.setProperty("preferredMenu","Apps.PPiMaPBuilder");
-		useWebServiceTaskFactoryProps.setProperty("title","Test");
-		registerService(bc,useWebServiceTaskFactory,TaskFactory.class, useWebServiceTaskFactoryProps);
-
-		registerServiceListener(bc,webServiceHelper,"addWebServiceClient","removeWebServiceClient",WebServiceClient.class);
+		Properties props = new Properties();
+		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
+		props.setProperty("title", "Query");
+		registerService(bc, factory, TaskFactory.class, props);
 	}
 }
 
