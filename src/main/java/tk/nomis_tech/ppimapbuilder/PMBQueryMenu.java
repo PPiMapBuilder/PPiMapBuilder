@@ -5,7 +5,10 @@ import javax.swing.SwingUtilities;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
-public class PMBMenu extends AbstractTask {
+/**
+ * The interaction query menu
+ */
+public class PMBQueryMenu extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {

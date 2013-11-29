@@ -6,6 +6,9 @@ import org.osgi.framework.BundleContext;
 
 import java.util.Properties;
 
+/**
+ * The starting point of the plug-in
+ */
 public class CyActivator extends AbstractCyActivator {
 	
 	public static BundleContext context;
@@ -14,6 +17,9 @@ public class CyActivator extends AbstractCyActivator {
 		super();
 	}
 
+	/**
+	 * This methods register all services of PPiMapBuilder
+	 */
 	public void start(BundleContext bc) {
 		context = bc;
 		PMBMenuFactory factory = new PMBMenuFactory();
