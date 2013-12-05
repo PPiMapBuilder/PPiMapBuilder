@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder;
+package tk.nomis_tech.ppimapbuilder.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,6 +28,7 @@ public class QueryWindow extends JFrame {
 		getContentPane().add(startQuery);
 		getRootPane().setDefaultButton(startQuery);
 		
+		setBounds(0, 0, 200, 100);
 		setLocationRelativeTo(null);
 	}
 }

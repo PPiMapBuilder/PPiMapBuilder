@@ -5,6 +5,8 @@ import javax.swing.SwingUtilities;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
+import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
+
 /**
  * The interaction query menu
  */
