@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder;
 
+import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import javax.swing.SwingUtilities;
 
 import org.cytoscape.work.AbstractTask;

@@ -5,7 +5,7 @@
 	<properties>
 		<bundle.symbolicName>tk.nomis_tech.ppimapbuilder</bundle.symbolicName>
 		<bundle.namespace>tk.nomis_tech.ppimapbuilder</bundle.namespace>
-		
+
 		<cytoscape.version>3.0.0</cytoscape.version>
 	</properties>
 
@@ -29,22 +29,10 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.0</version>
-				<!-- <executions>
-					<execution>
-						<id>default-testCompile</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>default-compile</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-				</executions>-->
+				<!-- <executions> <execution> <id>default-testCompile</id> <phase>test-compile</phase> 
+					<goals> <goal>testCompile</goal> </goals> </execution> <execution> <id>default-compile</id> 
+					<phase>compile</phase> <goals> <goal>compile</goal> </goals> </execution> 
+					</executions> -->
 				<configuration>	<!-- Cytoscape requires Java 1.6 -->
 					<source>1.6</source>
 					<target>1.6</target>
@@ -58,14 +46,9 @@
 				</configuration>
 			</plugin>
 
-			<!-- <plugin> SUREFIRE
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.7.1</version>
-				<configuration>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
-				</configuration>
-			</plugin> -->
+			<!-- <plugin> SUREFIRE <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
+				<version>2.7.1</version> <configuration> <redirectTestOutputToFile>true</redirectTestOutputToFile> 
+				</configuration> </plugin> -->
 
 			<plugin> <!-- BUNDLE with OSGI metadata (based on the osgi.bnd file) -->
 				<groupId>org.apache.felix</groupId>
@@ -79,7 +62,7 @@
 						<Export-Package>!${bundle.namespace}.*</Export-Package>
 						<Private-Package>${bundle.namespace}.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
-						<Embed-Dependency>psicquic-client</Embed-Dependency>
+						<Embed-Dependency>psicquic-client,cxf-rt-frontend-simple</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
 						<Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
@@ -111,7 +94,7 @@
 			<name>Cytoscape Releases</name>
 			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
 		</repository>
-		
+
 		<!-- PSICQUIC client repository (for external implementation) -->
 		<repository>
 			<id>intact.nexus</id>
@@ -121,13 +104,20 @@
 	</repositories>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-frontend-simple</artifactId>
+			<version>2.4.3</version>
+		</dependency>
+
 		<dependency> <!-- OSGI -->
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>4.2.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency> <!-- Cytoscape -->
 			<groupId>org.cytoscape</groupId>
 			<artifactId>service-api</artifactId>
@@ -146,21 +136,13 @@
 			<version>${cytoscape.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- Cytoscape webservices
-		<dependency>
-			<groupId>org.cytoscape</groupId>
-			<artifactId>webservice-api</artifactId>
-			<version>${cytoscape.version}</version>
-			<scope>provided</scope>
-		</dependency>-->
+		<!-- Cytoscape webservices <dependency> <groupId>org.cytoscape</groupId> 
+			<artifactId>webservice-api</artifactId> <version>${cytoscape.version}</version> 
+			<scope>provided</scope> </dependency> -->
 
-		<!-- Logging
-		<dependency> 
-			<groupId>org.ops4j.pax.logging</groupId>
-			<artifactId>pax-logging-api</artifactId>
-			<version>1.5.2</version>
-		</dependency>-->
-		
+		<!-- Logging <dependency> <groupId>org.ops4j.pax.logging</groupId> <artifactId>pax-logging-api</artifactId> 
+			<version>1.5.2</version> </dependency> -->
+
 		<!-- MigLayout Swing -->
 		<dependency>
 			<groupId>com.miglayout</groupId>
@@ -168,8 +150,8 @@
 			<version>4.2</version>
 		</dependency>
 
-		<!-- PSICQUIC Client (external implementation)-->
-		<dependency> 
+		<!-- PSICQUIC Client (external implementation) -->
+		<dependency>
 			<groupId>org.hupo.psi.mi.psicquic</groupId>
 			<artifactId>psicquic-client</artifactId>
 			<version>1.5.3</version>
