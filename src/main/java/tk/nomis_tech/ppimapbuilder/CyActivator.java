@@ -42,11 +42,10 @@ public class CyActivator extends AbstractCyActivator {
         CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc,CyNetworkFactory.class);
         CyNetworkManager cyNetworkManagerServiceRef = getService(bc,CyNetworkManager.class);
 
-        //Crate the view
+        //Create the view
         CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc,CyNetworkViewFactory.class);
         CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc,CyNetworkViewManager.class);
-        
-		
+
 		PMBCreateNetworkTaskFactory CreateNetworkfactory = new PMBCreateNetworkTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef,cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef,cyNetworkViewManagerServiceRef);
 
 		Properties NetworkProps = new Properties();
