@@ -28,16 +28,13 @@ public class QueryWindow extends JFrame {
         JButton startQuery = new JButton("Start");
         startQuery.addActionListener(new ActionListener() {
 
+            @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     PsicquicSimpleClient client = new PsicquicSimpleClient("http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/");
-
                     PsimiTabReader mitabReader = new PsimiTabReader();
-
                     InputStream result = client.getByQuery("brca2");
-
                     Collection<BinaryInteraction> binaryInteractions = mitabReader.read(result);
-
                     System.out.println("Interactions found: " + binaryInteractions.size());
 
                 } catch (IOException ex) {
