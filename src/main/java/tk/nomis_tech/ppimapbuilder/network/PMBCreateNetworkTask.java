@@ -3,11 +3,13 @@ package tk.nomis_tech.ppimapbuilder.network;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyRow;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
@@ -54,18 +56,39 @@ public class PMBCreateNetworkTask extends AbstractTask{
         CyNetwork myNet = cnf.createNetwork();
         myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
         
-        // Add nodes
-        CyNode node1, node2 = null;
-        for (BinaryInteraction interaction : binaryInteractions) {
+        // Add nodes        
+        HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
+        
+        
+        for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
         	
         	System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+
         			"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
         	
-        	// Add nodes
-        	node1 = myNet.addNode();
-        	myNet.getDefaultNodeTable().getRow(node1.getSUID()).set("name", interaction.getInteractorA().getIdentifiers().get(0).getIdentifier());
-        	node2 = myNet.addNode();
-        	myNet.getDefaultNodeTable().getRow(node2.getSUID()).set("name", interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+        	// Retrieve or create the first node
+        	CyNode node1 = null;
+        	String name1 = interaction.getInteractorA().getIdentifiers().get(0).getIdentifier();
+	        if (nodeNameMap.containsKey(name1)){
+	            node1 = nodeNameMap.get(name1);
+	        }
+	        else {
+	            node1 = myNet.addNode();
+	            CyRow attributes = myNet.getRow(node1);
+	            attributes.set("name", name1);
+	            nodeNameMap.put(name1, node1);
+	        }
+	        // Retrieve or create the second node
+	        CyNode node2 = null;
+        	String name2 = interaction.getInteractorB().getIdentifiers().get(0).getIdentifier();
+	        if (nodeNameMap.containsKey(name2)){
+	            node2 = nodeNameMap.get(name2);
+	        }
+	        else {
+	            node2 = myNet.addNode();
+	            CyRow attributes = myNet.getRow(node2);
+	            attributes.set("name", name2);
+	            nodeNameMap.put(name2, node2);
+	        }
         	
         	// Add edges
         	myNet.addEdge(node1, node2, true);
