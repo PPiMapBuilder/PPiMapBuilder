@@ -2,17 +2,20 @@ package tk.nomis_tech.ppimapbuilder.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 
-import org.hupo.psi.mi.psicquic.wsclient.PsicquicClientException;
+import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 
-import tk.nomis_tech.ppimapbuilder.psicquicclient.UniversalClient;
+import psidev.psi.mi.tab.PsimiTabException;
+import psidev.psi.mi.tab.PsimiTabReader;
+import psidev.psi.mi.tab.model.BinaryInteraction;
 
 /**
  * PPiMapBuilder interaction query window
@@ -28,33 +31,26 @@ public class QueryWindow extends JFrame {
 		startQuery.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				// print out proxy settings for debugging purposes
-				// System.setProperty("proxySet", "true");
-				// System.setProperty("http.proxyHost",
-				// "cache.univ-poitiers.fr");
-				// System.setProperty("http.proxyPort", "3128");
-				// System.setProperty("https.proxyHost",
-				// "cache.univ-poitiers.fr");
-				// System.setProperty("https.proxyPort", "3128");
-				// System.setProperty("socksProxyHost", "sox.univ-poitiers.fr");
-				// System.setProperty("socksProxyPort ", "1080");
-				UniversalClient uc;
 				try {
+					PsicquicSimpleClient client = new PsicquicSimpleClient(
+							"http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/");
 
-					uc = new UniversalClient();
-					System.out.println(uc.getInteractionFor("P07900"));
+					PsimiTabReader mitabReader = new PsimiTabReader();
+
+					InputStream result = client.getByQuery("brca2");
+
+					Collection<BinaryInteraction> binaryInteractions = mitabReader.read(result);
+
+					System.out.println("Interactions found: " + binaryInteractions.size());
 
 				} catch (IOException ex) {
-					Logger.getLogger(QueryWindow.class.getName()).log(
-							Level.SEVERE, null, ex);
-				} catch (ParseException ex) {
-					Logger.getLogger(QueryWindow.class.getName()).log(
-							Level.SEVERE, null, ex);
-				} catch (PsicquicClientException ex) {
-					Logger.getLogger(QueryWindow.class.getName()).log(
-							Level.SEVERE, null, ex);
+					ex.printStackTrace();
+				} catch (PsimiTabException e1) {
+					e1.printStackTrace();
 				}
 
+				QueryWindow.this.setVisible(false);
+				QueryWindow.this.dispose();
 			}
 
 		});

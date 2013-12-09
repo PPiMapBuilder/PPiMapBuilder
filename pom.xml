@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
 	<properties>
 		<bundle.symbolicName>tk.nomis_tech.ppimapbuilder</bundle.symbolicName>
@@ -9,7 +9,6 @@
 		<cytoscape.version>3.0.0</cytoscape.version>
 	</properties>
 
-	<modelVersion>4.0.0</modelVersion>
 	<groupId>tk.nomis_tech</groupId>
 	<artifactId>PPiMapBuilder</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -29,10 +28,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.0</version>
-				<!-- <executions> <execution> <id>default-testCompile</id> <phase>test-compile</phase> 
-					<goals> <goal>testCompile</goal> </goals> </execution> <execution> <id>default-compile</id> 
-					<phase>compile</phase> <goals> <goal>compile</goal> </goals> </execution> 
-					</executions> -->
 				<configuration>	<!-- Cytoscape requires Java 1.6 -->
 					<source>1.6</source>
 					<target>1.6</target>
@@ -59,11 +54,13 @@
 					<instructions>
 						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
-						<Export-Package>!${bundle.namespace}.*</Export-Package>
+
 						<Private-Package>${bundle.namespace}.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
-						<Embed-Dependency>psicquic-client,cxf-rt-frontend-simple</Embed-Dependency>
+						<Embed-Dependency>*;scope=compile|runtime;groupId=!org.cytoscape</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
+
+						<Export-Package>${bundle.namespace}.*;version="${project.version}"</Export-Package>
 						<Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
 				</configuration>
@@ -97,19 +94,13 @@
 
 		<!-- PSICQUIC client repository (for external implementation) -->
 		<repository>
-			<id>intact.nexus</id>
-			<name>IntAct Nexus</name>
+			<id>nexus</id>
+			<name>European Bioinformatics Institute</name>
 			<url>http://www.ebi.ac.uk/intact/maven/nexus/content/groups/public</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
-
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-frontend-simple</artifactId>
-			<version>2.4.3</version>
-		</dependency>
 
 		<dependency> <!-- OSGI -->
 			<groupId>org.osgi</groupId>
@@ -136,27 +127,23 @@
 			<version>${cytoscape.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- Cytoscape webservices <dependency> <groupId>org.cytoscape</groupId> 
-			<artifactId>webservice-api</artifactId> <version>${cytoscape.version}</version> 
-			<scope>provided</scope> </dependency> -->
-
-		<!-- Logging <dependency> <groupId>org.ops4j.pax.logging</groupId> <artifactId>pax-logging-api</artifactId> 
-			<version>1.5.2</version> </dependency> -->
 
 		<!-- MigLayout Swing -->
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
 			<version>4.2</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- PSICQUIC Client (external implementation) -->
 		<dependency>
 			<groupId>org.hupo.psi.mi.psicquic</groupId>
-			<artifactId>psicquic-client</artifactId>
-			<version>1.5.3</version>
+			<artifactId>psicquic-simple-client</artifactId>
+			<version>1.3.3</version>
 		</dependency>
 
 	</dependencies>
+
 
 </project>
