@@ -9,6 +9,8 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
 
+import tk.nomis_tech.ppimapbuilder.network.PMBCreateNetworkTaskFactory;
+
 import java.util.Properties;
 
 /**

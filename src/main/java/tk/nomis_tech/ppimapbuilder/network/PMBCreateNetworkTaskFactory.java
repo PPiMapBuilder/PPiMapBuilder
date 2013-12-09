@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder;
+package tk.nomis_tech.ppimapbuilder.network;
 
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;

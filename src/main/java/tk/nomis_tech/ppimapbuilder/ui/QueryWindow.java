@@ -3,9 +3,11 @@ package tk.nomis_tech.ppimapbuilder.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 
 import javax.swing.JButton;
@@ -43,6 +45,13 @@ public class QueryWindow extends JFrame {
 
 					System.out.println("Interactions found: " + binaryInteractions.size());
 
+//				     for (BinaryInteraction interaction : binaryInteractions)
+//				     {
+//				    	 System.out.println(interaction);
+//				     }
+				     
+				      
+					
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				} catch (PsimiTabException e1) {
