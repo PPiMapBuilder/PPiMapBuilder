@@ -2,10 +2,8 @@ package tk.nomis_tech.ppimapbuilder.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Collection;
 
 import javax.swing.JButton;
@@ -22,43 +20,42 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
  */
 public class QueryWindow extends JFrame {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public QueryWindow() {
-		setTitle("Interaction Query");
+    public QueryWindow() {
+        setTitle("Interaction Query");
 
-		JButton startQuery = new JButton("Start");
-		startQuery.addActionListener(new ActionListener() {
+        JButton startQuery = new JButton("Start");
+        startQuery.addActionListener(new ActionListener() {
 
-			public void actionPerformed(ActionEvent e) {
-				try {
-					PsicquicSimpleClient client = new PsicquicSimpleClient(
-							"http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/");
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    PsicquicSimpleClient client = new PsicquicSimpleClient("http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/");
 
-					PsimiTabReader mitabReader = new PsimiTabReader();
+                    PsimiTabReader mitabReader = new PsimiTabReader();
 
-					InputStream result = client.getByQuery("brca2");
+                    InputStream result = client.getByQuery("brca2");
 
-					Collection<BinaryInteraction> binaryInteractions = mitabReader.read(result);
+                    Collection<BinaryInteraction> binaryInteractions = mitabReader.read(result);
 
-					System.out.println("Interactions found: " + binaryInteractions.size());
+                    System.out.println("Interactions found: " + binaryInteractions.size());
 
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				} catch (PsimiTabException e1) {
-					e1.printStackTrace();
-				}
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (PsimiTabException e1) {
+                    e1.printStackTrace();
+                }
 
-				QueryWindow.this.setVisible(false);
-				QueryWindow.this.dispose();
-			}
+                QueryWindow.this.setVisible(false);
+                QueryWindow.this.dispose();
+            }
 
-		});
+        });
 
-		getContentPane().add(startQuery);
-		getRootPane().setDefaultButton(startQuery);
+        getContentPane().add(startQuery);
+        getRootPane().setDefaultButton(startQuery);
 
-		setBounds(0, 0, 200, 100);
-		setLocationRelativeTo(null);
-	}
+        setBounds(0, 0, 200, 100);
+        setLocationRelativeTo(null);
+    }
 }
