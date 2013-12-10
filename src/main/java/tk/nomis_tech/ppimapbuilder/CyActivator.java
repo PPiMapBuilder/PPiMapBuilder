@@ -8,7 +8,7 @@ import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
-
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import tk.nomis_tech.ppimapbuilder.network.PMBCreateNetworkTaskFactory;
 
 import java.util.Properties;
@@ -36,22 +36,27 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, factory, TaskFactory.class, props);
 
 		
-		//Create a simple network
+		// Network services
         CyNetworkNaming cyNetworkNamingServiceRef = getService(bc,CyNetworkNaming.class);
-        
         CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc,CyNetworkFactory.class);
         CyNetworkManager cyNetworkManagerServiceRef = getService(bc,CyNetworkManager.class);
 
-        //Create the view
+        // View services
         CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc,CyNetworkViewFactory.class);
         CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc,CyNetworkViewManager.class);
-
-		PMBCreateNetworkTaskFactory CreateNetworkfactory = new PMBCreateNetworkTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef,cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef,cyNetworkViewManagerServiceRef);
-
+        
+        // Layout services
+        CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
+		
+        // Network creation task factory
+        PMBCreateNetworkTaskFactory CreateNetworkfactory = new PMBCreateNetworkTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef,cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef,cyNetworkViewManagerServiceRef, layoutManagerServiceRef);
 		Properties NetworkProps = new Properties();
 		NetworkProps.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		NetworkProps.setProperty("title", "Network");
+		
+		// Register services
 		registerService(bc, CreateNetworkfactory, TaskFactory.class, NetworkProps);
-	}
+		
+		}
 }
 

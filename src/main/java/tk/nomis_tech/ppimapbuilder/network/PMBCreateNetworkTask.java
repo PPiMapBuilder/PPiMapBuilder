@@ -4,27 +4,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
-
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.view.layout.CyLayoutAlgorithm;
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
-
 import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 public class PMBCreateNetworkTask extends AbstractTask{
 
-	
+	// For the network
     private final CyNetworkManager netMgr;
     private final CyNetworkFactory cnf;
     private final CyNetworkNaming namingUtil;
@@ -33,15 +33,23 @@ public class PMBCreateNetworkTask extends AbstractTask{
     private final CyNetworkViewFactory cnvf;
     private final CyNetworkViewManager networkViewManager;
     
+    // For the layout
+    private final CyLayoutAlgorithmManager layoutManager;
+    
+    
     public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf,
-    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager){
-            this.netMgr = netMgr;
+    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan){
+            // For the network
+    		this.netMgr = netMgr;
             this.cnf = cnf;
             this.namingUtil = namingUtil;
             
             //For the view
             this.cnvf = cnvf;
             this.networkViewManager = networkViewManager;
+            
+            // For the layout
+            this.layoutManager = layoutMan;
     }
     
 	@Override
@@ -95,22 +103,12 @@ public class PMBCreateNetworkTask extends AbstractTask{
         }
         
         //Creation on the view
-        if (myNet == null)
-            return;
-        this.netMgr.addNetwork(myNet);
+        CyNetworkView myView = applyView(myNet);
 
-        final Collection<CyNetworkView> views = networkViewManager.getNetworkViews(myNet);
-        CyNetworkView myView = null;
-	    if(views.size() != 0)
-	            myView = views.iterator().next();
+	    // Layout
+        applyLayout(myView);
 	    
-	    if (myView == null) {
-	            // create a new view for my network
-	            myView = cnvf.createNetworkView(myNet);
-	            networkViewManager.addNetworkView(myView);
-	    } else {
-	            System.out.println("networkView already existed.");
-	    }
+        System.out.println("Done !");
 
 	}
 	
@@ -136,6 +134,33 @@ public class PMBCreateNetworkTask extends AbstractTask{
 		}
 		
 		return binaryInteractions;
+	}
+	
+	public CyNetworkView applyView(CyNetwork myNet) {
+		if (myNet == null)
+            return null;
+        this.netMgr.addNetwork(myNet);
+
+        final Collection<CyNetworkView> views = networkViewManager.getNetworkViews(myNet);
+        CyNetworkView myView = null;
+	    if(views.size() != 0)
+	            myView = views.iterator().next();
+	    
+	    if (myView == null) {
+	            // create a new view for my network
+	            myView = cnvf.createNetworkView(myNet);
+	            networkViewManager.addNetworkView(myView);
+	    } else {
+	            System.out.println("networkView already existed.");
+	    }
+	    return myView;
+	}
+	
+	public void applyLayout(CyNetworkView myView) {
+		CyLayoutAlgorithm layout = layoutManager.getLayout("force-directed");
+	    Object context = layout.createLayoutContext();
+        String layoutAttribute = null;
+        insertTasksAfterCurrentTask(layout.createTaskIterator(myView, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 	}
 	
 }
