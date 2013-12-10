@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
+
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -15,9 +16,12 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
+
 import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -36,9 +40,12 @@ public class PMBCreateNetworkTask extends AbstractTask{
     // For the layout
     private final CyLayoutAlgorithmManager layoutManager;
     
+    // For the visual style
+    private final VisualMappingManager vmm;
+    
     
     public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf,
-    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan){
+    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm){
             // For the network
     		this.netMgr = netMgr;
             this.cnf = cnf;
@@ -50,6 +57,9 @@ public class PMBCreateNetworkTask extends AbstractTask{
             
             // For the layout
             this.layoutManager = layoutMan;
+            
+            // For the visual style
+            this.vmm = vmm;
     }
     
 	@Override
@@ -67,11 +77,9 @@ public class PMBCreateNetworkTask extends AbstractTask{
         // Add nodes        
         HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
         
-        
         for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
         	
-        	System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+
-        			"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+        	//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
         	
         	// Retrieve or create the first node
         	CyNode node1 = null;
@@ -107,8 +115,11 @@ public class PMBCreateNetworkTask extends AbstractTask{
 
 	    // Layout
         applyLayout(myView);
+        
+        // Visual Style
+        applyVisualStyle(myView);
 	    
-        System.out.println("Done !");
+        //System.out.println("Done !");
 
 	}
 	
@@ -153,6 +164,7 @@ public class PMBCreateNetworkTask extends AbstractTask{
 	    } else {
 	            System.out.println("networkView already existed.");
 	    }
+	    
 	    return myView;
 	}
 	
@@ -161,6 +173,12 @@ public class PMBCreateNetworkTask extends AbstractTask{
 	    Object context = layout.createLayoutContext();
         String layoutAttribute = null;
         insertTasksAfterCurrentTask(layout.createTaskIterator(myView, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
+	}
+	
+	public void applyVisualStyle(CyNetworkView myView) {
+		VisualStyle vs = vmm.getDefaultVisualStyle();
+	    vs.apply(myView); 
+	    myView.updateView();
 	}
 	
 }
