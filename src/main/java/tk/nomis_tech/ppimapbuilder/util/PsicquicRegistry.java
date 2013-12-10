@@ -6,7 +6,11 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Retrieve the PSICQUIC registry in a very simple way. TODO: Use Registry and
@@ -49,16 +53,13 @@ public class PsicquicRegistry {
     /**
      * Structure to store service names and services URLs.
      */
-    private final HashMap<String, String> services;
+    private final ArrayList<PsicquicService> services = new ArrayList<PsicquicService>();;
 
     /**
      * Create the PsicquicRegistry object.
      *
-     * @throws MalformedURLException
-     * @throws IOException
      */
-    public PsicquicRegistry() throws MalformedURLException, IOException {
-        services = new HashMap<String, String>();
+    public PsicquicRegistry() {
     }
 
     /**
@@ -96,12 +97,14 @@ public class PsicquicRegistry {
      * @return
      * @throws MalformedURLException
      * @throws IOException
+     * @throws
+     * tk.nomis_tech.ppimapbuilder.util.PsicquicRegistry.BadFormatException
      */
-    public HashMap<String, String> getServices() throws IOException, MalformedURLException, BadFormatException {
+    public List<PsicquicService> getServices() throws IOException, MalformedURLException, BadFormatException {
         if (services.isEmpty()) {
             this.retrieveServices();
         }
-        return services;
+        return this.services;
     }
 
     /**
@@ -125,15 +128,16 @@ public class PsicquicRegistry {
         URLConnection yc;
         BufferedReader in;
         URL reg;
-
+        String line;
         switch (f) {
             case TXT:
                 String[] inputLine;
                 reg = new URL(registryTxtUrl);
                 yc = reg.openConnection();
                 in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
-                while ((inputLine = in.readLine().split("=")) != null) {
-                    services.put(inputLine[0], inputLine[1]);
+                while ((line = in.readLine()) != null) {
+                    inputLine = line.split("=");
+                    services.add(new PsicquicService(inputLine[0], inputLine[1].replace("psicquic", "current/search/")));
                 }
                 in.close();
                 break;
@@ -143,7 +147,6 @@ public class PsicquicRegistry {
                 reg = new URL(registryXmlUrl);
                 yc = reg.openConnection();
                 in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
-                String line;
                 while ((line = in.readLine()) != null) {
                     sb.append(line);
                 }
@@ -154,6 +157,12 @@ public class PsicquicRegistry {
         }
     }
 
-    public static void main(String[] args) {
+    public int size() {
+        return services.size();
     }
+
+    public boolean isEmpty() {
+        return services.isEmpty();
+    }
+
 }
