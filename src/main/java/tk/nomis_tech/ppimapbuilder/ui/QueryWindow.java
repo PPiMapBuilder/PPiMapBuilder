@@ -1,11 +1,14 @@
 package tk.nomis_tech.ppimapbuilder.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,8 +47,10 @@ public class QueryWindow extends JFrame {
 
 		initListeners();
 
-		setBounds(0, 0, 400, 200);
-		setResizable(false);
+		Dimension d = new Dimension(300, 200);
+		setBounds(new Rectangle(d));
+		setMinimumSize(d);
+		setResizable(true);
 		setLocationRelativeTo(JFrame.getFrames()[0]);
 	}
 
@@ -79,19 +84,20 @@ public class QueryWindow extends JFrame {
 
 			public void actionPerformed(ActionEvent e) {
 				try {
-					// official registry
-					PsicquicRegistry registry = new PsicquicRegistry();
-					registry.retrieveServices();
-					registry.remove("genemania"); // remove problematic (and
-													// dirty) DB
-
-					for (PsicquicService service : registry.getServices()) {
+					List<PsicquicService> selectedDatabases = QueryWindow.this.getSelectedDatabases();
+					Collection<BinaryInteraction> binaryInteractions = new ArrayList<BinaryInteraction>();
+					
+					for (PsicquicService service : selectedDatabases) {
 						// System.out.println(service.toString());
 						System.out.println("----- >>> " + service.getName() + "----------------------");
 						PsicquicSimpleClient client = new PsicquicSimpleClient( service.getRestUrl());
 						PsimiTabReader mitabReader = new PsimiTabReader();
-						InputStream result = client.getByInteractor("P04040");
-						Collection<BinaryInteraction> binaryInteractions = mitabReader .read(result);
+						InputStream result = client.getByQuery("P04040", PsicquicSimpleClient.MITAB25);
+						
+						//if(binaryInteractions == null)	binaryInteractions = mitabReader .read(result);
+						/*else*/ 
+						binaryInteractions.addAll(mitabReader.read(result));
+						
 						System.out.println("Interactions found: " + binaryInteractions.size());
 						System.out.println("---------------------------------------");
 					}
@@ -116,4 +122,10 @@ public class QueryWindow extends JFrame {
 			
 		});
 	}
+
+	public List<PsicquicService> getSelectedDatabases() {
+		return dsp.getSelectedDatabases();
+	}
+	
+	
 }
