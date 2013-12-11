@@ -14,18 +14,18 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-import org.hupo.psi.mi.psicquic.registry.ServiceType;
+import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 public class DatabaseSelectionPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private final LinkedHashMap<ServiceType, JCheckBox> databases;
+	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
 	public DatabaseSelectionPanel() {
 		setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(5, 5, 5, 5));
-		databases = new LinkedHashMap<ServiceType, JCheckBox>();
+		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
 		
 		final JLabel lblSourceDatabases = new JLabel("Source databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
@@ -46,20 +46,16 @@ public class DatabaseSelectionPanel extends JPanel {
 	 * Updates the database list with an list of String
 	 * @param dbs
 	 */
-	public void updateList(List<ServiceType> dbs) {
+	public void updateList(List<PsicquicService> dbs) {
 		// Creation of the database list
 		databases.clear();
 		panSourceDatabases.removeAll();
-		for (ServiceType db : dbs) {
+		for (PsicquicService db : dbs) {
 			JCheckBox j = new JCheckBox(db.getName(), true);
 			j.setBackground(Color.white);
 			databases.put(db, j);
 			
-			JPanel l = new JPanel(new BorderLayout());
-			l.setOpaque(false);
-			l.add(j, BorderLayout.CENTER);
-			l.add(new JLabel(db.getTags().toString().replaceAll("[\\[\\]]", "")), BorderLayout.EAST);
-			panSourceDatabases.add(l);
+			panSourceDatabases.add(j);
 		}
 	}
 	
@@ -67,11 +63,11 @@ public class DatabaseSelectionPanel extends JPanel {
 	 * Get the list of selected databases
 	 * @return list of database values
 	 */
-	public List<ServiceType> getSelectedDatabases() {
-		ArrayList<ServiceType> databaseList = new ArrayList<ServiceType>();
+	public List<PsicquicService> getSelectedDatabases() {
+		ArrayList<PsicquicService> databaseList = new ArrayList<PsicquicService>();
 		
 		// For each entry of the database linkedHashmap
-		for (Entry<ServiceType, JCheckBox> entry : databases.entrySet())
+		for (Entry<PsicquicService, JCheckBox> entry : databases.entrySet())
 			if (entry.getValue().isSelected()) // If the checkbox is selected
 				databaseList.add(entry.getKey()); // The database name is add into the list to be returned
 		
