@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.network;
+package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,9 +43,11 @@ public class PMBCreateNetworkTask extends AbstractTask{
     // For the visual style
     private final VisualMappingManager vmm;
     
+    private final Collection<BinaryInteraction> interactionResults;
+    
     
     public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf,
-    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm){
+    			CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm, Collection<BinaryInteraction> interactionResults){
             // For the network
     		this.netMgr = netMgr;
             this.cnf = cnf;
@@ -60,13 +62,14 @@ public class PMBCreateNetworkTask extends AbstractTask{
             
             // For the visual style
             this.vmm = vmm;
+            
+            this.interactionResults = interactionResults;
     }
     
 	@Override
-	public void run(TaskMonitor taskMonitor) throws Exception {
-		String id = "brca2";
-		Collection<BinaryInteraction> binaryInteractions = getBinaryInteractionsFromPsicquicQuery(id);
-		createNetworkFromBinaryInteractions (binaryInteractions);
+	public void run(TaskMonitor taskMonitor) {
+		if(!interactionResults.isEmpty())
+			createNetworkFromBinaryInteractions (interactionResults);
 	}
 	
 	public void createNetworkFromBinaryInteractions (Collection<BinaryInteraction> binaryInteractions) {
