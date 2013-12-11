@@ -9,79 +9,79 @@ import java.util.List;
  */
 public class PsicquicService {
 
-    protected String name;
-    protected String soapUrl;
-    protected String restUrl;
-    protected boolean active;
-    protected long count;
-    protected String version;
-    protected String organizationUrl;
-    protected boolean restricted;
-    protected List<String> tags;
+	protected String name;
+	protected String soapUrl;
+	protected String restUrl;
+	protected boolean active;
+	protected long count;
+	protected String version;
+	protected String organizationUrl;
+	protected boolean restricted;
+	protected List<String> tags;
 
-    public PsicquicService(String name, String soapUrl, String restUrl, String active, String count, String version, String organizationUrl, String restricted, List<String> tags) {
-        this.name = name;
-        this.soapUrl = soapUrl;
-        this.restUrl = restUrl;
-        this.active = active.equals("y");
-        this.count = Integer.parseInt(count);
-        this.version = version;
-        this.organizationUrl = organizationUrl;
-        this.restricted = restricted.equals("y");
-        this.tags = tags;
-    }
+	public PsicquicService(String name, String soapUrl, String restUrl, String active, String count, String version, String organizationUrl, String restricted, List<String> tags) {
+		this.name = name;
+		this.soapUrl = soapUrl;
+		this.restUrl = restUrl;
+		this.active = active.equals("y");
+		this.count = Integer.parseInt(count);
+		this.version = version;
+		this.organizationUrl = organizationUrl;
+		this.restricted = restricted.equals("y");
+		this.tags = tags;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public String getSoapUrl() {
-        return soapUrl;
-    }
+	public String getSoapUrl() {
+		return soapUrl;
+	}
 
-    public String getRestUrl() {
-        return restUrl;
-    }
+	public String getRestUrl() {
+		return restUrl;
+	}
 
-    public boolean isActive() {
-        return active;
-    }
+	public boolean isActive() {
+		return active;
+	}
 
-    public long getCount() {
-        return count;
-    }
+	public long getCount() {
+		return count;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public String getOrganizationUrl() {
-        return organizationUrl;
-    }
+	public String getOrganizationUrl() {
+		return organizationUrl;
+	}
 
-    public boolean isRestricted() {
-        return restricted;
-    }
+	public boolean isRestricted() {
+		return restricted;
+	}
 
-    public List<String> getTags() {
-        return tags;
-    }
+	public List<String> getTags() {
+		return tags;
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder("PsicquicService{" + "name=" + name + ", soapUrl=" + soapUrl + ", restUrl=" + restUrl + ", active=" + active + ", count=" + count + ", version=" + version + ", organizationUrl=" + organizationUrl + ", restricted=" + restricted + ", tags=");
-        
-        sb.append('[');
-        for (Iterator<String> it = tags.iterator(); it.hasNext();) {
-            String t = it.next();
-            sb.append(t);
-            if(it.hasNext()) {
-                sb.append(',');
-            }
-        }
-        sb.append("]}");
-        return sb.toString();
-    }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("PsicquicService{" + "name=" + name + ", soapUrl=" + soapUrl + ", restUrl=" + restUrl + ", active=" + active + ", count=" + count + ", version=" + version + ", organizationUrl=" + organizationUrl + ", restricted=" + restricted + ", tags=");
+
+		sb.append('[');
+		for (Iterator<String> it = tags.iterator(); it.hasNext();) {
+			String t = it.next();
+			sb.append(t);
+			if (it.hasNext()) {
+				sb.append(',');
+			}
+		}
+		sb.append("]}");
+		return sb.toString();
+	}
 
 }
 

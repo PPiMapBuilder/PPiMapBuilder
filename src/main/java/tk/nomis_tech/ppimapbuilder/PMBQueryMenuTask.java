@@ -1,17 +1,13 @@
 package tk.nomis_tech.ppimapbuilder;
 
 import java.io.IOException;
-import java.util.Collection;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.cytoscape.work.AbstractTask;
-import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskMonitor;
 
-import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicRegistry;
 
@@ -37,8 +33,7 @@ public class PMBQueryMenuTask extends AbstractTask {
 
 					qw.setVisible(true);
 				} catch (IOException e) {
-					JOptionPane.showMessageDialog(null,
-							"Unable to get PSICQUIC databases");
+					JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
 				}
 			}
 		});

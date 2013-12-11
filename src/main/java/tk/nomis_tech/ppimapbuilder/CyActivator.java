@@ -17,15 +17,13 @@ import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 
 import java.util.Properties;
 
-import javax.management.Query;
-
 /**
  * The starting point of the plug-in
  */
 public class CyActivator extends AbstractCyActivator {
-	
+
 	public static BundleContext context;
-	
+
 	public CyActivator() {
 		super();
 	}
@@ -43,35 +41,33 @@ public class CyActivator extends AbstractCyActivator {
 		TaskManager networkBuildTaskManager;
 		{
 			// Network services
-	        CyNetworkNaming cyNetworkNamingServiceRef = getService(bc,CyNetworkNaming.class);
-	        CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc,CyNetworkFactory.class);
-	        CyNetworkManager cyNetworkManagerServiceRef = getService(bc,CyNetworkManager.class);
+			CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
+			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
+			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
 
-	        // View services
-	        CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc,CyNetworkViewFactory.class);
-	        CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc,CyNetworkViewManager.class);
-	        
-	        // Layout services
-	        CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
-			
-	        // Visual Style services
-	        VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
-	        
-	        // Network creation task factory
-	        createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef,cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef,cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow);
+			// View services
+			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
+			CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc, CyNetworkViewManager.class);
+
+			// Layout services
+			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
+
+			// Visual Style services
+			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
+
+			// Network creation task factory
+			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow);
 			queryWindow.setCreateNetworkfactory(createNetworkfactory);
-	        registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
+			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			networkBuildTaskManager = getService(bc, TaskManager.class);
 			queryWindow.setTaskManager(networkBuildTaskManager);
 		}
-		
-		
+
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);
 		Properties props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Query");
 		registerService(bc, queryWindowTaskFactory, TaskFactory.class, props);
-		
+
 	}
 }
-

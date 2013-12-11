@@ -6,25 +6,13 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskManager;
-import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
-
-import psidev.psi.mi.tab.PsimiTabException;
-import psidev.psi.mi.tab.PsimiTabReader;
-import psidev.psi.mi.tab.model.BinaryInteraction;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
