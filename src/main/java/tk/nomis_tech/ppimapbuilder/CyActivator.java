@@ -14,7 +14,10 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -23,9 +26,19 @@ import java.util.Properties;
 public class CyActivator extends AbstractCyActivator {
 
 	public static BundleContext context;
-
+	public static List<Organism> listOrganism;
 	public CyActivator() {
 		super();
+		listOrganism = Arrays.asList(new Organism[]
+						{
+							new Organism("Homo sapiens", 9606),
+							new Organism("Arabidopsis thaliana", 3702),
+							new Organism("Caenorhabditis elegans", 6239),
+							new Organism("Caenorhabditis elegans", 7227),
+							new Organism("Mus musculus", 10090),
+							new Organism("Saccharomyces cerevisiae", 4932),
+							new Organism("Schizosaccharomyces pombe", 4896)
+						});
 	}
 
 	/**
