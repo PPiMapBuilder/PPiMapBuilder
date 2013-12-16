@@ -30,18 +30,21 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
+		String uniprotID = qw.getSelectedUniprotID();
+
+		if (!uniprotID.matches("^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$")) {
+			throw new Exception(uniprotID + " is not a valid Uniprot ID.");
+		}
+//		JOptionPane.showMessageDialog(null, "uniprot id identified: " + uniprotID);
 
 		for (PsicquicService service : selectedDatabases) {
 			try {
 				// System.out.println(service.toString());
-				System.out.println("----- >>> " + service.getName()
-					+ "----------------------");
-				PsicquicSimpleClient client = new PsicquicSimpleClient(
-					service.getRestUrl());
+				System.out.println("----- >>> " + service.getName() + "----------------------");
+				PsicquicSimpleClient client = new PsicquicSimpleClient(service.getRestUrl());
 				PsimiTabReader mitabReader = new PsimiTabReader();
-				InputStream result = client.getByQuery("P04040",
-					PsicquicSimpleClient.MITAB25);
 
+				InputStream result = client.getByInteractor(uniprotID, PsicquicSimpleClient.MITAB25);
 				// if(binaryInteractions == null) binaryInteractions = mitabReader
 				// .read(result);
 				/* else */
