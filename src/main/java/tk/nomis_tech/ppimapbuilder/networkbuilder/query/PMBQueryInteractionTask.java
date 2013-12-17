@@ -31,7 +31,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
-		Organism org = qw.getSelectedOrganism();
+		Organism org = qw.getSelectedRefOrganism();
 
 		for (PsicquicService service : selectedDatabases) {
 			try {

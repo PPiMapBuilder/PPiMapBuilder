@@ -130,7 +130,7 @@ public class QueryWindow extends JFrame {
 		return dsp.getSelectedDatabases();
 	}
 	
-	public Organism getSelectedOrganism() {
+	public Organism getSelectedRefOrganism() {
 		return org.getSelectedOrganism();
 	}
 
