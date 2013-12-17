@@ -34,7 +34,7 @@ public class CyActivator extends AbstractCyActivator {
 							new Organism("Homo sapiens", 9606),
 							new Organism("Arabidopsis thaliana", 3702),
 							new Organism("Caenorhabditis elegans", 6239),
-							new Organism("Caenorhabditis elegans", 7227),
+							new Organism("Drosophila Melanogaster", 7227),
 							new Organism("Mus musculus", 10090),
 							new Organism("Saccharomyces cerevisiae", 4932),
 							new Organism("Schizosaccharomyces pombe", 4896)

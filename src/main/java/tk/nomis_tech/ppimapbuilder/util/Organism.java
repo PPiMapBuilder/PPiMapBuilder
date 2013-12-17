@@ -20,7 +20,10 @@ public class Organism {
 		return taxId;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return name;
+	}
 	
 	
 }

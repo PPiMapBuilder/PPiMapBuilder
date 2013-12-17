@@ -33,7 +33,7 @@ public class DatabaseSelectionPanel extends JPanel {
 		panSourceDatabases = new JPanel();
 		panSourceDatabases.setBackground(Color.white);
 		panSourceDatabases.setBorder(new EmptyBorder(0, 0, 0, 0));
-		//scrollPaneSourceDatabases.setViewportView(panSourceDatabases);
+
 		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
 
 		// Source databases scrollpane containing a panel that will contain checkbox at display

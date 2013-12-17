@@ -29,7 +29,7 @@ public class PMBQueryMenuTask extends AbstractTask {
 			public void run() {
 				try {
 					PsicquicRegistry reg = new PsicquicRegistry();
-					qw.updateLists(reg.getServices());
+					qw.updateLists(reg.getServices(), CyActivator.listOrganism);
 
 					qw.setVisible(true);
 				} catch (IOException e) {
