@@ -8,13 +8,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.cytoscape.work.TaskManager;
+
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.ui.panel.ReferenceOrganismSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 /**
@@ -28,6 +32,7 @@ public class QueryWindow extends JFrame {
 	private DatabaseSelectionPanel dsp;
 	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 	private TaskManager taskManager;
+	private ReferenceOrganismSelectionPanel org;
 
 	public QueryWindow(PMBInteractionNetworkBuildTaskFactory createNetworkfactory, TaskManager taskManager) {
 		setTitle("PPiMapBuilder Query");
@@ -66,15 +71,20 @@ public class QueryWindow extends JFrame {
 		setLocationRelativeTo(JFrame.getFrames()[0]);
 	}
 
-	public void updateLists(List<PsicquicService> dbs) {
+	public void updateLists(List<PsicquicService> dbs, List<Organism> orgs) {
 		dsp.updateList(dbs);
+		org.updateList(orgs);
 	}
 
 	private JPanel initMainPanel() {
-		JPanel main = new JPanel(new BorderLayout());
+		JPanel main = new JPanel();
+		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
 		dsp = new DatabaseSelectionPanel();
-		main.add(dsp, BorderLayout.CENTER);
+		main.add(dsp);
+		
+		org = new ReferenceOrganismSelectionPanel();
+		main.add(org);
 
 		return main;
 	}
@@ -118,6 +128,10 @@ public class QueryWindow extends JFrame {
 
 	public List<PsicquicService> getSelectedDatabases() {
 		return dsp.getSelectedDatabases();
+	}
+	
+	public Organism getSelectedOrganism() {
+		return org.getSelectedOrganism();
 	}
 
 	public void setCreateNetworkfactory(

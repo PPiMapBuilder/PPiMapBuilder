@@ -13,6 +13,7 @@ import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 public class PMBQueryInteractionTask extends AbstractTask {
@@ -30,6 +31,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
+		Organism org = qw.getSelectedOrganism();
 
 		for (PsicquicService service : selectedDatabases) {
 			try {
@@ -39,7 +41,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				PsicquicSimpleClient client = new PsicquicSimpleClient(
 					service.getRestUrl());
 				PsimiTabReader mitabReader = new PsimiTabReader();
-				InputStream result = client.getByQuery("P04040",
+				InputStream result = client.getByQuery("id:P04040 AND species:"+org.getTaxId(),
 					PsicquicSimpleClient.MITAB25);
 
 				// if(binaryInteractions == null) binaryInteractions = mitabReader
