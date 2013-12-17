@@ -33,7 +33,8 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		String uniprotID = qw.getSelectedUniprotID();
 
 		if (!uniprotID.matches("^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$")) {
-			throw new Exception(uniprotID + " is not a valid Uniprot ID.");
+			throw new Exception(uniprotID + " is not a valid Uniprot ID.");	
+			// TODO: preload query to display number of result for the given id
 		}
 //		JOptionPane.showMessageDialog(null, "uniprot id identified: " + uniprotID);
 
