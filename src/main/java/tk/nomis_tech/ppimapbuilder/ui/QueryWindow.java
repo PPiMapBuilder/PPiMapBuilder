@@ -133,6 +133,11 @@ public class QueryWindow extends JFrame {
 		return dsp.getSelectedDatabases();
 	}
 
+	public List<Organism> getSelectedOrganisms() {
+		return ogs.getSelectedOrganisms();
+	}
+	
+	
 	public void setCreateNetworkfactory(
 			PMBInteractionNetworkBuildTaskFactory createNetworkfactory) {
 		this.createNetworkfactory = createNetworkfactory;
