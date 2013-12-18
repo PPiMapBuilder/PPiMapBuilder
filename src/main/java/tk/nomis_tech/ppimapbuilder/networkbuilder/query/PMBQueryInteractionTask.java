@@ -22,7 +22,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private QueryWindow qw;
 
 	public PMBQueryInteractionTask(
-		Collection<BinaryInteraction> interactionResults, QueryWindow qw) {
+			Collection<BinaryInteraction> interactionResults, QueryWindow qw) {
 		this.interactionResults = interactionResults;
 		this.qw = qw;
 	}
@@ -31,59 +31,63 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
-		
-		//For the uniprotID
+
+		// For the uniprotID
 		String uniprotID = qw.getSelectedUniprotID();
 
-		if (!uniprotID.matches("^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$")) {
-			throw new Exception(uniprotID + " is not a valid Uniprot ID.");	
+		if (!uniprotID
+				.matches("^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$")) {
+			throw new Exception(uniprotID + " is not a valid Uniprot ID.");
 			// TODO: preload query to display number of result for the given id
 		}
 
-		//For the reference Organism and the other organisms
+		// For the reference Organism and the other organisms
 		Organism org = qw.getSelectedRefOrganism();
 		List<Organism> selectedOrganisms = qw.getSelectedOrganisms();
-		
-		StringBuilder listTaxID = new StringBuilder(); 
-		listTaxID.append("(" + org.getTaxId() );
-		
-		if (!selectedOrganisms.isEmpty())
-		{
+
+		StringBuilder listTaxID = new StringBuilder();
+		listTaxID.append("(" + org.getTaxId());
+
+		if (!selectedOrganisms.isEmpty()) {
 			listTaxID.append(" OR ");
-		
-			for (Organism og : selectedOrganisms)
-			{
+
+			for (Organism og : selectedOrganisms) {
 				listTaxID.append(String.valueOf(og.getTaxId()));
-				if(!(selectedOrganisms.indexOf(og) == selectedOrganisms.size()-1))
+				if (!(selectedOrganisms.indexOf(og) == selectedOrganisms.size() - 1))
 					listTaxID.append(" OR ");
+			}
 		}
 		listTaxID.append(")");
-		for (PsicquicService service : selectedDatabases)
-		{
-				try {
-					// System.out.println(service.toString());
-					System.out.println("----- >>> " + service.getName()
+		for (PsicquicService service : selectedDatabases) {
+			try {
+				// System.out.println(service.toString());
+				System.out.println("----- >>> " + service.getName()
 						+ "----------------------");
-					PsicquicSimpleClient client = new PsicquicSimpleClient(
+				PsicquicSimpleClient client = new PsicquicSimpleClient(
 						service.getRestUrl());
-					PsimiTabReader mitabReader = new PsimiTabReader();
-					InputStream result = client.getByQuery("id:"+uniprotID+" AND species:"+listTaxID,
+				PsimiTabReader mitabReader = new PsimiTabReader();
+				InputStream result = client.getByQuery("id:" + uniprotID
+						+ " AND species:" + listTaxID,
 						PsicquicSimpleClient.MITAB25);
-				
-					
-					// if(binaryInteractions == null) binaryInteractions = mitabReader
-					// .read(result);
-					/* else */
-					interactionResults.addAll(mitabReader.read(result));
-	
-					System.out.println("Interactions found: " + interactionResults.size());
-					System.out.println("---------------------------------------");
-				} catch (IOException t) {
-					System.err.println("Interaction query failed on: " + service.getName());
-				} catch (PsimiTabException t) {
-					System.err.println("Interaction query failed on: " + service.getName());
-				}
+
+				// if(binaryInteractions == null) binaryInteractions =
+				// mitabReader
+				// .read(result);
+				/* else */
+				interactionResults.addAll(mitabReader.read(result));
+
+				System.out.println("Interactions found: "
+						+ interactionResults.size());
+				System.out.println("---------------------------------------");
+			} catch (IOException t) {
+				System.err.println("Interaction query failed on: "
+						+ service.getName());
+			} catch (PsimiTabException t) {
+				System.err.println("Interaction query failed on: "
+						+ service.getName());
 			}
+		}
+
 	}
 
 }
