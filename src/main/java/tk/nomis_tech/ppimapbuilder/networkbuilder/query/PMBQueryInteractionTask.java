@@ -30,8 +30,17 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
-		
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
+		
+		//For the uniprotID
+		String uniprotID = qw.getSelectedUniprotID();
+
+		if (!uniprotID.matches("^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$")) {
+			throw new Exception(uniprotID + " is not a valid Uniprot ID.");	
+			// TODO: preload query to display number of result for the given id
+		}
+
+		//For the reference Organism and the other organisms
 		Organism org = qw.getSelectedRefOrganism();
 		List<Organism> selectedOrganisms = qw.getSelectedOrganisms();
 		
@@ -47,8 +56,6 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				listTaxID.append(String.valueOf(og.getTaxId()));
 				if(!(selectedOrganisms.indexOf(og) == selectedOrganisms.size()-1))
 					listTaxID.append(" OR ");
-			}
-
 		}
 		listTaxID.append(")");
 		for (PsicquicService service : selectedDatabases)
@@ -60,7 +67,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					PsicquicSimpleClient client = new PsicquicSimpleClient(
 						service.getRestUrl());
 					PsimiTabReader mitabReader = new PsimiTabReader();
-					InputStream result = client.getByQuery("id:P04040 AND species:"+listTaxID,
+					InputStream result = client.getByQuery("id:"+uniprotID+" AND species:"+listTaxID,
 						PsicquicSimpleClient.MITAB25);
 				
 					
