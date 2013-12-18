@@ -20,6 +20,8 @@ import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTask
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.panel.OtherOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
+import tk.nomis_tech.ppimapbuilder.ui.panel.ReferenceOrganismSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 /**
@@ -34,6 +36,7 @@ public class QueryWindow extends JFrame {
 	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 	private TaskManager taskManager;
 	private OtherOrganismSelectionPanel ogs;
+	private ReferenceOrganismSelectionPanel org;
 
 	public QueryWindow(PMBInteractionNetworkBuildTaskFactory createNetworkfactory, TaskManager taskManager) {
 		setTitle("PPiMapBuilder Query");
@@ -76,6 +79,7 @@ public class QueryWindow extends JFrame {
 		dsp.updateList(dbs);
 		ogs.updateList(orgs);
 		
+		org.updateList(orgs);
 	}
 
 	private JPanel initMainPanel() {
@@ -88,7 +92,10 @@ public class QueryWindow extends JFrame {
 		ogs = new OtherOrganismSelectionPanel();
 		System.out.println("#6");
 		main.add(ogs);
-
+		main.add(dsp);
+		
+		org = new ReferenceOrganismSelectionPanel();
+		main.add(org);
 
 		return main;
 	}
@@ -131,6 +138,10 @@ public class QueryWindow extends JFrame {
 
 	public List<PsicquicService> getSelectedDatabases() {
 		return dsp.getSelectedDatabases();
+	}
+	
+	public Organism getSelectedRefOrganism() {
+		return org.getSelectedOrganism();
 	}
 
 	public List<Organism> getSelectedOrganisms() {

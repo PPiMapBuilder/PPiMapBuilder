@@ -22,7 +22,7 @@ public class Organism {
 	
 	@Override
 	public String toString() {
-		return name;
+		return this.getName();
 	}
 	
 	

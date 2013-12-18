@@ -30,24 +30,29 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
 		interactionResults.clear();
+		
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
+		Organism org = qw.getSelectedRefOrganism();
 		List<Organism> selectedOrganisms = qw.getSelectedOrganisms();
 		
 		StringBuilder listTaxID = new StringBuilder(); 
+		listTaxID.append("(" + org.getTaxId() );
+		
 		if (!selectedOrganisms.isEmpty())
 		{
-			listTaxID.append("(");
+			listTaxID.append(" OR ");
+		
 			for (Organism og : selectedOrganisms)
 			{
 				listTaxID.append(String.valueOf(og.getTaxId()));
 				if(!(selectedOrganisms.indexOf(og) == selectedOrganisms.size()-1))
 					listTaxID.append(" OR ");
 			}
-			listTaxID.append(")");
-			System.out.println(listTaxID);
-	
-			
-			for (PsicquicService service : selectedDatabases) {
+
+		}
+		listTaxID.append(")");
+		for (PsicquicService service : selectedDatabases)
+		{
 				try {
 					// System.out.println(service.toString());
 					System.out.println("----- >>> " + service.getName()
@@ -57,8 +62,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					PsimiTabReader mitabReader = new PsimiTabReader();
 					InputStream result = client.getByQuery("id:P04040 AND species:"+listTaxID,
 						PsicquicSimpleClient.MITAB25);
-					
-					System.out.println("id:P04040 AND species:"+listTaxID);
+				
 					
 					// if(binaryInteractions == null) binaryInteractions = mitabReader
 					// .read(result);
@@ -73,10 +77,6 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					System.err.println("Interaction query failed on: " + service.getName());
 				}
 			}
-		}
-		else {
-			System.out.println("No organisms selected");
-		}
 	}
 
 }
