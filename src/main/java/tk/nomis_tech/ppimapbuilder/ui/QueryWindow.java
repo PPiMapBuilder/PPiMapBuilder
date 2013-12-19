@@ -6,15 +6,26 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
 import java.util.List;
+import javax.swing.BoxLayout;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.cytoscape.work.TaskManager;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.ui.panel.OtherOrganismSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
+import tk.nomis_tech.ppimapbuilder.ui.panel.ReferenceOrganismSelectionPanel;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
+import tk.nomis_tech.ppimapbuilder.ui.panel.UniqueUniprotSelection;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 /**
@@ -26,13 +37,16 @@ public class QueryWindow extends JFrame {
 	private JButton startQuery;
 	private JButton cancel;
 	private DatabaseSelectionPanel dsp;
+	private UniqueUniprotSelection uus;
 	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 	private TaskManager taskManager;
+	private OtherOrganismSelectionPanel ogs;
+	private ReferenceOrganismSelectionPanel org;
 
 	public QueryWindow(PMBInteractionNetworkBuildTaskFactory createNetworkfactory, TaskManager taskManager) {
 		setTitle("PPiMapBuilder Query");
 		setLayout(new BorderLayout());
-		
+
 		this.createNetworkfactory = createNetworkfactory;
 		this.taskManager = taskManager;
 
@@ -66,15 +80,30 @@ public class QueryWindow extends JFrame {
 		setLocationRelativeTo(JFrame.getFrames()[0]);
 	}
 
-	public void updateLists(List<PsicquicService> dbs) {
+	public void updateLists(List<PsicquicService> dbs, List<Organism> orgs) {
 		dsp.updateList(dbs);
+		ogs.updateList(orgs);
+		
+		org.updateList(orgs);
 	}
 
 	private JPanel initMainPanel() {
-		JPanel main = new JPanel(new BorderLayout());
+		JPanel main = new JPanel();
+		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+
+
+		uus = new UniqueUniprotSelection();
+		main.add(uus);
 
 		dsp = new DatabaseSelectionPanel();
-		main.add(dsp, BorderLayout.CENTER);
+		main.add(dsp);
+		
+		ogs = new OtherOrganismSelectionPanel();
+		main.add(ogs);
+		
+		org = new ReferenceOrganismSelectionPanel();
+		main.add(org);
+
 
 		return main;
 	}
@@ -98,7 +127,7 @@ public class QueryWindow extends JFrame {
 
 				QueryWindow.this.setVisible(false);
 				QueryWindow.this.dispose();
-				
+
 				taskManager.execute(createNetworkfactory.createTaskIterator());
 				
 				
@@ -112,16 +141,28 @@ public class QueryWindow extends JFrame {
 				QueryWindow.this.setVisible(false);
 				QueryWindow.this.dispose();
 			}
-			
+
 		});
 	}
 
 	public List<PsicquicService> getSelectedDatabases() {
 		return dsp.getSelectedDatabases();
 	}
+	
+	public Organism getSelectedRefOrganism() {
+		return org.getSelectedOrganism();
+	}
+	public String getSelectedUniprotID() {
+		return uus.getSelectedUniprotID();
+	}
 
+	public List<Organism> getSelectedOrganisms() {
+		return ogs.getSelectedOrganisms();
+	}
+	
+	
 	public void setCreateNetworkfactory(
-			PMBInteractionNetworkBuildTaskFactory createNetworkfactory) {
+		PMBInteractionNetworkBuildTaskFactory createNetworkfactory) {
 		this.createNetworkfactory = createNetworkfactory;
 	}
 
