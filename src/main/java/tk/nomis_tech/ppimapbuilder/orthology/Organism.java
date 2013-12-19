@@ -4,7 +4,7 @@ package tk.nomis_tech.ppimapbuilder.orthology;
  *
  * @author dsi-nomistech
  */
-class Organism {
+public class Organism {
 
 	private String name;
 	private Integer ncbiTaxId;

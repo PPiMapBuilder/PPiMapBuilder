@@ -4,7 +4,7 @@ package tk.nomis_tech.ppimapbuilder.orthology;
  *
  * @author Kevin Gravouil
  */
-class UniprotId {
+public class UniprotId {
 
 	/**
 	 * Exception throwed when Uniprot ID is invalid.
