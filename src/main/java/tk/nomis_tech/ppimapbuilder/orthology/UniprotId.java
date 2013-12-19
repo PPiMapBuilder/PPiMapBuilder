@@ -11,9 +11,17 @@ class UniprotId {
 	 */
 	public class BadUniprotIdFormatException extends Exception {
 
+		/**
+		 * Exception throwed if String does not match Uniprot ID pattern.
+		 */
 		public BadUniprotIdFormatException() {
 		}
 
+		/**
+		 * Exception throwed if String does not match Uniprot ID pattern.
+		 *
+		 * @param message
+		 */
 		public BadUniprotIdFormatException(String message) {
 			super(message);
 		}
@@ -32,7 +40,7 @@ class UniprotId {
 
 	/**
 	 * Construc a Uniprot ID object if the given string is valid or throw an
- BadUniprotIdFormatException.
+	 * BadUniprotIdFormatException.
 	 *
 	 * @param uniprotId
 	 * @throws
@@ -46,12 +54,26 @@ class UniprotId {
 		}
 	}
 
+	/**
+	 * Get the Uniprot ID.
+	 *
+	 * @return
+	 */
 	public String getUniprotId() {
 		return uniprotId;
 	}
 
-	public void setUniprotId(String uniprotId) {
-		this.uniprotId = uniprotId;
+	/**
+	 * Set the Uniprot ID.
+	 *
+	 * @param uniprotId
+	 */
+	public void setUniprotId(String uniprotId) throws BadUniprotIdFormatException {
+		if (uniprotId.matches(pattern)) {
+			this.uniprotId = uniprotId;
+		} else {
+			throw new BadUniprotIdFormatException("Id is not Uniprot-like");
+		}
 	}
 
 	/**
