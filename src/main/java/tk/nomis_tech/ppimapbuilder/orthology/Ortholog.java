@@ -30,6 +30,11 @@ public class Ortholog {
 		}
 	};
 
+	/**
+	 * Convert a NCBI taxonomic ID to a InParanoid organism ID.
+	 * @param ncbiTaxId
+	 * @return 
+	 */
 	public static Integer translateTaxID(Integer ncbiTaxId) {
 		return Ortholog.ID_MAP.get(ncbiTaxId);
 	}
