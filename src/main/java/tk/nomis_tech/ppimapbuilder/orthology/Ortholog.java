@@ -16,21 +16,26 @@ public class Ortholog {
 	/**
 	 * NCBI Tax ID to InParanoid ID
 	 */
-	private static HashMap<Integer, Integer> ID_MAP;
+	private static HashMap<Integer, Integer> ID_MAP = new HashMap<Integer, Integer>() {
+		{
+			put(9031, 255); // Gallus gallus
+			put(9606, 264); // Homo sapiens
+			put(3702, 188); // Arabidopsis thaliana
+			put(6239, 229); // Caenorhabditis elegans
+			put(7227, 242); // Drosophila Melanogaster
+			put(10090, 128); // Mus musculus
+			put(4932, 208); // Saccharomyces cerevisiae
+			put(4896, 173); // Schizosaccharomyces pombe
+//				put(, ); // 
+		}
+	};
+
+	public static Integer translateTaxID(Integer ncbiTaxId) {
+		return Ortholog.ID_MAP.get(ncbiTaxId);
+	}
 
 	public Ortholog() {
 		this.orthologs = new HashMap<UniprotId, HashMap<Integer, UniprotId>>();
-		Ortholog.ID_MAP = new HashMap<Integer, Integer>() {{
-				put(9031, 255); // Gallus gallus
-				put(9606, 264); // Homo sapiens
-				put(3702, 188); // Arabidopsis thaliana
-				put(6239, 229); // Caenorhabditis elegans
-				put(7227, 242); // Drosophila Melanogaster
-				put(10090, 128); // Mus musculus
-				put(4932, 208); // Saccharomyces cerevisiae
-				put(4896, 173); // Schizosaccharomyces pombe
-//				put(, ); // 
-			}};
 	}
 
 	public void addOrtholog(UniprotId referenceID, Integer orthologOrganism, UniprotId orthologId) {
