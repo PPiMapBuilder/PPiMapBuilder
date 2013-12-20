@@ -2,14 +2,12 @@ package tk.nomis_tech.ppimapbuilder.util;
 
 public class Organism {
 	private final String name;
-	private final int taxId;
-	
-	
+	private final int ncbiTaxId;	
 	
 	public Organism(String name, int taxId) {
 		super();
 		this.name = name;
-		this.taxId = taxId;
+		this.ncbiTaxId = taxId;
 	}
 
 	public String getName() {
@@ -17,7 +15,7 @@ public class Organism {
 	}
 
 	public int getTaxId() {
-		return taxId;
+		return ncbiTaxId;
 	}
 	
 	@Override

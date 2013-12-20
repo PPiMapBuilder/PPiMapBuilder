@@ -48,7 +48,7 @@ public class InParanoidClient {
 		return species.keySet();
 	}
 
-	public static void getOrthologUniprotId(String uniprotId, Integer orthologNcbiTaxId) {
+	public static String getOrthologUniprotId(String uniprotId, Integer orthologNcbiTaxId) {
 		try {
 			InParanoidClient.url = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi?"
 				+ "idtype=proteinid;"
@@ -58,6 +58,7 @@ public class InParanoidClient {
 				+ "id=" + uniprotId + ";"
 				+ "specieslist=" + Ortholog.translateTaxID(orthologNcbiTaxId) + ";";
 
+			//System.out.println("#Query :"+InParanoidClient.url);
 			Document doc = Jsoup.connect(InParanoidClient.url).get();
 
 			for (Element e : doc.select("protein")) {
@@ -70,17 +71,22 @@ public class InParanoidClient {
 //						System.out.println("SPECIE: " + e.attr("speclong"));
 //						System.out.println("TAXID: " + e.attr("speclink").replace("http://www.uniprot.org/taxonomy/", ""));
 						System.out.println("Orthologous protein id: " + e.attr("prot_id") + " (score: " + e.attr("score") + ")");
+					
+						return e.attr("prot_id");
 					}
 				}
 			}
 		} catch (IOException ex) {
 			System.out.println("No ortholgs found.");
+			return null;
 		}
+		return null;
 	}
 
 	public static void testClient() {
 
 		ArrayList<Integer> orthotaxids = new ArrayList<Integer>() {
+			private static final long serialVersionUID = 1L;
 			{
 				add(10090);
 				add(3702);
@@ -88,7 +94,9 @@ public class InParanoidClient {
 			}
 		};
 
-		ArrayList<String> ids = new ArrayList() {
+		ArrayList<String> ids = new ArrayList<String>() {
+			private static final long serialVersionUID = 1L;
+
 			{
 				add("P07900");
 				add("P04040");
