@@ -1,10 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
-
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -20,10 +17,6 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
-
-import psidev.psi.mi.tab.PsimiTabException;
-import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 public class PMBCreateNetworkTask extends AbstractTask {
@@ -120,30 +113,6 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		applyVisualStyle(myView);
 
         //System.out.println("Done !");
-	}
-
-	public Collection<BinaryInteraction> getBinaryInteractionsFromPsicquicQuery(String id) {
-		Collection<BinaryInteraction> binaryInteractions = null;
-
-		try {
-			PsicquicSimpleClient client = new PsicquicSimpleClient(
-				"http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/");
-
-			PsimiTabReader mitabReader = new PsimiTabReader();
-
-			InputStream result = client.getByQuery(id);
-
-			binaryInteractions = mitabReader.read(result);
-
-			System.out.println("Interactions found: " + binaryInteractions.size());
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} catch (PsimiTabException e1) {
-			e1.printStackTrace();
-		}
-
-		return binaryInteractions;
 	}
 
 	public CyNetworkView applyView(CyNetwork myNet) {

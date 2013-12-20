@@ -23,11 +23,11 @@ import java.util.Properties;
 /**
  * The starting point of the plug-in
  */
-public class CyActivator extends AbstractCyActivator {
+public class PMBActivator extends AbstractCyActivator {
 
 	public static BundleContext context;
 	public static List<Organism> listOrganism;
-	public CyActivator() {
+	public PMBActivator() {
 		super();
 		listOrganism = Arrays.asList(new Organism[]
 						{

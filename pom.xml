@@ -56,7 +56,7 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
 
                         <Private-Package>${bundle.namespace}.*</Private-Package>
-                        <Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
+                        <Bundle-Activator>${bundle.namespace}.PMBActivator</Bundle-Activator>
                         <Embed-Dependency>*;scope=compile|runtime;groupId=!org.cytoscape</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
 
