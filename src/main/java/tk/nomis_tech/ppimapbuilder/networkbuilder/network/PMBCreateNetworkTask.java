@@ -2,6 +2,7 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
 import java.util.Collection;
 import java.util.HashMap;
+
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -17,7 +18,9 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
+
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import psidev.psi.mi.tab.model.CrossReference;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -76,9 +79,19 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
 
         	//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+			// TODO : treat cases without uniprotkb id	
+			
 			// Retrieve or create the first node
 			CyNode node1 = null;
-			String name1 = interaction.getInteractorA().getIdentifiers().get(0).getIdentifier();
+			String name1 = null;
+			for (CrossReference cr : interaction.getInteractorA().getIdentifiers()) {
+				if (cr.getDatabase().equals("uniprotkb")) {
+					name1 = cr.getIdentifier();
+					break;
+				}
+			} 
+			if (name1 == null) continue;
+			
 			if (nodeNameMap.containsKey(name1)) {
 				node1 = nodeNameMap.get(name1);
 			} else {
@@ -89,7 +102,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			}
 			// Retrieve or create the second node
 			CyNode node2 = null;
-			String name2 = interaction.getInteractorB().getIdentifiers().get(0).getIdentifier();
+			String name2 = null;
+			for (CrossReference cr : interaction.getInteractorB().getIdentifiers()) {
+				if (cr.getDatabase().equals("uniprotkb")) {
+					name2 = cr.getIdentifier();
+					break;
+				}
+			} 
+			if (name2 == null) continue;
+			
 			if (nodeNameMap.containsKey(name2)) {
 				node2 = nodeNameMap.get(name2);
 			} else {
