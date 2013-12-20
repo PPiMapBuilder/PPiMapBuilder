@@ -6,18 +6,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
-
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
-
-import org.cytoscape.service.util.internal.CyActivator;
-
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 public class OtherOrganismSelectionPanel extends JPanel {
 

@@ -2,20 +2,16 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
-
 import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import tk.nomis_tech.ppimapbuilder.orthology.InParanoidClient;
-import tk.nomis_tech.ppimapbuilder.orthology.Ortholog;
 import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
