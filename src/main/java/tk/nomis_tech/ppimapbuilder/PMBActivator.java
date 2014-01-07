@@ -19,6 +19,8 @@ import tk.nomis_tech.ppimapbuilder.util.Organism;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import org.cytoscape.model.CyTableFactory;
+import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 
 /**
  * The starting point of the plug-in
@@ -27,23 +29,26 @@ public class PMBActivator extends AbstractCyActivator {
 
 	public static BundleContext context;
 	public static List<Organism> listOrganism;
+
 	public PMBActivator() {
 		super();
-		listOrganism = Arrays.asList(new Organism[]
-						{
-							new Organism("Homo sapiens", 9606),
-							new Organism("Arabidopsis thaliana", 3702),
-							new Organism("Caenorhabditis elegans", 6239),
-							new Organism("Drosophila Melanogaster", 7227),
-							new Organism("Mus musculus", 10090),
-							new Organism("Saccharomyces cerevisiae", 4932),
-							new Organism("Schizosaccharomyces pombe", 4896)
-						});
+		listOrganism = Arrays.asList(new Organism[]{
+			new Organism("Homo sapiens", 9606),
+			new Organism("Arabidopsis thaliana", 3702),
+			new Organism("Caenorhabditis elegans", 6239),
+			new Organism("Drosophila Melanogaster", 7227),
+			new Organism("Mus musculus", 10090),
+			new Organism("Saccharomyces cerevisiae", 4932),
+			new Organism("Schizosaccharomyces pombe", 4896)
+		});
 	}
 
 	/**
 	 * This methods register all services of PPiMapBuilder
+	 *
+	 * @param bc
 	 */
+	@Override
 	public void start(BundleContext bc) {
 		context = bc;
 //
@@ -68,8 +73,12 @@ public class PMBActivator extends AbstractCyActivator {
 			// Visual Style services
 			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
 
+			// Data Table management
+			CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
+			MapTableToNetworkTablesTaskFactory mapTableToNetworkTablesTaskFactory = getService(bc, MapTableToNetworkTablesTaskFactory.class);
+
 			// Network creation task factory
-			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow);
+			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow, tableFactory, mapTableToNetworkTablesTaskFactory);
 			queryWindow.setCreateNetworkfactory(createNetworkfactory);
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			networkBuildTaskManager = getService(bc, TaskManager.class);
