@@ -2,16 +2,17 @@ package tk.nomis_tech.ppimapbuilder;
 
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
-import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
-
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
@@ -19,8 +20,6 @@ import tk.nomis_tech.ppimapbuilder.util.Organism;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import org.cytoscape.model.CyTableFactory;
-import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 
 /**
  * The starting point of the plug-in
