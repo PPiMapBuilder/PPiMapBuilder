@@ -19,10 +19,10 @@ public abstract class PsicquicResultTranslator {
 					retList.add(((Author) elt).getName());
 
 				} else if (elt instanceof CrossReference) {
-					retList.add(((CrossReference) elt).getText());
+					retList.add(((CrossReference) elt).getDatabase() + ":" + ((CrossReference) elt).getIdentifier());
 
 				} else if (elt instanceof Alias) {
-					retList.add(((Alias) elt).getName());
+					retList.add(((Alias) elt).getDbSource() + ":" + ((Alias) elt).getName());
 
 				} else if (elt instanceof Annotation) {
 					retList.add(((Annotation) elt).getText());
@@ -31,16 +31,16 @@ public abstract class PsicquicResultTranslator {
 					retList.add(((Checksum) elt).getChecksum());
 
 				} else if (elt instanceof Confidence) {
-					retList.add(((Confidence) elt).getText());
+					retList.add(((Confidence) elt).getType() + ":" + ((Confidence) elt).getValue());
 
 				} else if (elt instanceof Feature) {
-					retList.add(((Feature) elt).getText());
+					retList.add(((Feature) elt).getFeatureType() + ":" + ((Feature) elt).getText());
 
 				} else if (elt instanceof Organism) {
 					retList.add(((Organism) elt).getName());
 
 				} else if (elt instanceof Parameter) {
-					retList.add(((Parameter) elt).getValue());
+					retList.add(((Parameter) elt).getType() + ":" + ((Parameter) elt).getValue() + "." + ((Parameter) elt).getUnit() + ":");
 				}
 			}
 		}
