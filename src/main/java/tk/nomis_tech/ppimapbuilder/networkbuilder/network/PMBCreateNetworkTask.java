@@ -81,11 +81,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
 		CyTable edgeAttr = myNet.getDefaultEdgeTable();
 
-		edgeAttr.createColumn("BLUPBLUP", String.class, false);
-		edgeAttr.createColumn("TiTi", String.class, false);
-		edgeAttr.createListColumn("database.source", String.class, false);
-		edgeAttr.createListColumn("authors", String.class, false);
-		edgeAttr.createListColumn("det.method", String.class, false);
+		edgeAttr.createListColumn("source", String.class, false);
+		edgeAttr.createListColumn("detmethod", String.class, false);
+		edgeAttr.createListColumn("type", String.class, false);
+		edgeAttr.createListColumn("interaction_id", String.class, false);
+		edgeAttr.createListColumn("pubid", String.class, false);
+		edgeAttr.createListColumn("confidence", String.class, false);
 
 		// Add nodes        
 		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
@@ -141,9 +142,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			CyEdge myEdge = myNet.addEdge(node1, node2, true);
 			CyRow attributes = myNet.getRow(myEdge);
 
-			attributes.set("database.source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-			attributes.set("authors", PsicquicResultTranslator.convert(interaction.getAuthors()));
-			attributes.set("det.method", PsicquicResultTranslator.convert(interaction.getDetectionMethods()));
+			attributes.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
+			attributes.set("detmethod", PsicquicResultTranslator.convert(interaction.getDetectionMethods()));
+			attributes.set("type", PsicquicResultTranslator.convert(interaction.getInteractionTypes()));
+			attributes.set("interaction_id", PsicquicResultTranslator.convert(interaction.getInteractionAcs()));
+			attributes.set("pubid", PsicquicResultTranslator.convert(interaction.getPublications()));
+			attributes.set("confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
 
 		}
 
@@ -195,27 +199,4 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		myView.updateView();
 	}
 
-//	private void addEdgeData(BinaryInteraction interaction) {
-//		// Step 1: create a new table
-//		CyTable table = tableFactory.createTable("MyTable " + Integer.toString(numImports++), 
-//				   "name", String.class, true, true);
-//
-//		// create a column for the table
-//		String columnName = "MyColumn"; 
-//		table.createColumn(columnName, Integer.class, false);
-//		
-//		// Step 2: populate the table with some data
-//		String[] keys = {"YLL021W","YBR170C","YLR249W"}; //map to the the "name" column
-//		CyRow row = table.getRow(keys[0]);
-//		row.set(columnName, new Integer(2));
-//
-//		row = table.getRow(keys[1]);
-//		row.set(columnName, new Integer(3));
-//
-//		row = table.getRow(keys[2]);
-//		row.set(columnName, new Integer(4));
-//
-//		// Step 3: pass the new table to MapTableToNetworkTablesTaskFactory
-//		super.insertTasksAfterCurrentTask( mapTableToNetworkTablesTaskFactory.createTaskIterator(table) );
-//	}
 }
