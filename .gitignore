@@ -4,6 +4,10 @@
 # Maven
 target/
 
+# IntelliJ
+.idea/
+*.iml
+
 # Eclipse
 bin
 .settings/

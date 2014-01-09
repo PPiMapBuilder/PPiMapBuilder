@@ -1,13 +1,18 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import org.cytoscape.model.CyEdge;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -18,9 +23,11 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
+import psidev.psi.mi.tab.model.Author;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
+import tk.nomis_tech.ppimapbuilder.util.PsicquicResultTranslator;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -72,15 +79,22 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		// Create an empty network
 		CyNetwork myNet = cnf.createNetwork();
 		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
+		CyTable edgeAttr = myNet.getDefaultEdgeTable();
+
+		edgeAttr.createListColumn("source", String.class, false);
+		edgeAttr.createListColumn("detmethod", String.class, false);
+		edgeAttr.createListColumn("type", String.class, false);
+		edgeAttr.createListColumn("interaction_id", String.class, false);
+		edgeAttr.createListColumn("pubid", String.class, false);
+		edgeAttr.createListColumn("confidence", String.class, false);
 
 		// Add nodes        
 		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
 
 		for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
 
-        	//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+			//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
 			// TODO : treat cases without uniprotkb id	
-			
 			// Retrieve or create the first node
 			CyNode node1 = null;
 			String name1 = null;
@@ -89,9 +103,11 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					name1 = cr.getIdentifier();
 					break;
 				}
-			} 
-			if (name1 == null) continue;
-			
+			}
+			if (name1 == null) {
+				continue;
+			}
+
 			if (nodeNameMap.containsKey(name1)) {
 				node1 = nodeNameMap.get(name1);
 			} else {
@@ -108,9 +124,11 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					name2 = cr.getIdentifier();
 					break;
 				}
-			} 
-			if (name2 == null) continue;
-			
+			}
+			if (name2 == null) {
+				continue;
+			}
+
 			if (nodeNameMap.containsKey(name2)) {
 				node2 = nodeNameMap.get(name2);
 			} else {
@@ -120,8 +138,17 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeNameMap.put(name2, node2);
 			}
 
-			// Add edges
-			myNet.addEdge(node1, node2, true);
+			// Add edges & attributes
+			CyEdge myEdge = myNet.addEdge(node1, node2, true);
+			CyRow attributes = myNet.getRow(myEdge);
+
+			attributes.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
+			attributes.set("detmethod", PsicquicResultTranslator.convert(interaction.getDetectionMethods()));
+			attributes.set("type", PsicquicResultTranslator.convert(interaction.getInteractionTypes()));
+			attributes.set("interaction_id", PsicquicResultTranslator.convert(interaction.getInteractionAcs()));
+			attributes.set("pubid", PsicquicResultTranslator.convert(interaction.getPublications()));
+			attributes.set("confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
+
 		}
 
 		//Creation on the view
@@ -133,7 +160,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		// Visual Style
 		applyVisualStyle(myView);
 
-        //System.out.println("Done !");
+		//System.out.println("Done !");
 	}
 
 	public CyNetworkView applyView(CyNetwork myNet) {

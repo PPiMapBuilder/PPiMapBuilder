@@ -2,16 +2,17 @@ package tk.nomis_tech.ppimapbuilder;
 
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
-import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
-
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
@@ -27,23 +28,26 @@ public class PMBActivator extends AbstractCyActivator {
 
 	public static BundleContext context;
 	public static List<Organism> listOrganism;
+
 	public PMBActivator() {
 		super();
-		listOrganism = Arrays.asList(new Organism[]
-						{
-							new Organism("Homo sapiens", 9606),
-							new Organism("Arabidopsis thaliana", 3702),
-							new Organism("Caenorhabditis elegans", 6239),
-							new Organism("Drosophila Melanogaster", 7227),
-							new Organism("Mus musculus", 10090),
-							new Organism("Saccharomyces cerevisiae", 4932),
-							new Organism("Schizosaccharomyces pombe", 4896)
-						});
+		listOrganism = Arrays.asList(new Organism[]{
+			new Organism("Homo sapiens", 9606),
+			new Organism("Arabidopsis thaliana", 3702),
+			new Organism("Caenorhabditis elegans", 6239),
+			new Organism("Drosophila Melanogaster", 7227),
+			new Organism("Mus musculus", 10090),
+			new Organism("Saccharomyces cerevisiae", 4932),
+			new Organism("Schizosaccharomyces pombe", 4896)
+		});
 	}
 
 	/**
 	 * This methods register all services of PPiMapBuilder
+	 *
+	 * @param bc
 	 */
+	@Override
 	public void start(BundleContext bc) {
 		context = bc;
 //
@@ -68,8 +72,12 @@ public class PMBActivator extends AbstractCyActivator {
 			// Visual Style services
 			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
 
+			// Data Table management
+			CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
+			MapTableToNetworkTablesTaskFactory mapTableToNetworkTablesTaskFactory = getService(bc, MapTableToNetworkTablesTaskFactory.class);
+
 			// Network creation task factory
-			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow);
+			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow, tableFactory, mapTableToNetworkTablesTaskFactory);
 			queryWindow.setCreateNetworkfactory(createNetworkfactory);
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			networkBuildTaskManager = getService(bc, TaskManager.class);
