@@ -13,8 +13,10 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
+
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 
 import java.util.Arrays;
@@ -53,6 +55,7 @@ public class PMBActivator extends AbstractCyActivator {
 //
 //		//QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
+		SettingWindow settingWindow = new SettingWindow();
 
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 		TaskManager networkBuildTaskManager;
@@ -89,6 +92,12 @@ public class PMBActivator extends AbstractCyActivator {
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Query");
 		registerService(bc, queryWindowTaskFactory, TaskFactory.class, props);
+		
+		PMBSettingMenuTaskFactory settingsWindowTaskFactory = new PMBSettingMenuTaskFactory(settingWindow);
+		props = new Properties();
+		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
+		props.setProperty("title", "Settings");
+		registerService(bc, settingsWindowTaskFactory, TaskFactory.class, props);
 
 	}
 }
