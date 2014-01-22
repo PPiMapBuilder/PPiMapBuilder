@@ -6,18 +6,22 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
 import org.cytoscape.work.TaskManager;
+
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.panel.OtherOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.ui.panel.ReferenceOrganismSelectionPanel;
-import tk.nomis_tech.ppimapbuilder.ui.panel.UniqueUniprotSelection;
+import tk.nomis_tech.ppimapbuilder.ui.panel.UniprotSelection;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 /**
@@ -29,7 +33,7 @@ public class QueryWindow extends JFrame {
 	private JButton startQuery;
 	private JButton cancel;
 	private DatabaseSelectionPanel dsp;
-	private UniqueUniprotSelection uus;
+	private UniprotSelection uus;
 	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 	private TaskManager taskManager;
 	private OtherOrganismSelectionPanel ogs;
@@ -64,7 +68,7 @@ public class QueryWindow extends JFrame {
 		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
 
-		uus = new UniqueUniprotSelection();
+		uus = new UniprotSelection();
 		main.add(uus);
 
 		dsp = new DatabaseSelectionPanel();
@@ -124,8 +128,9 @@ public class QueryWindow extends JFrame {
 	public Organism getSelectedRefOrganism() {
 		return org.getSelectedOrganism();
 	}
-	public String getSelectedUniprotID() {
-		return uus.getSelectedUniprotID();
+	
+	public ArrayList<String> getSelectedUniprotID() {
+		return uus.getIdentifers();
 	}
 
 	public List<Organism> getSelectedOrganisms() {
