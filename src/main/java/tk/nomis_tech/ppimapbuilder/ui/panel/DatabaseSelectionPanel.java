@@ -51,12 +51,25 @@ public class DatabaseSelectionPanel extends JPanel {
 		// Creation of the database list
 		databases.clear();
 		panSourceDatabases.removeAll();
+		
+		// Two loops to order by active service
 		for (PsicquicService db : dbs) {
-			JCheckBox j = new JCheckBox(db.getName(), true);
-			j.setBackground(Color.white);
-			databases.put(db, j);
-
-			panSourceDatabases.add(j);
+			if (db.isActive()) {
+				JCheckBox j = new JCheckBox(db.getName(), true);
+				j.setEnabled(true);
+				databases.put(db, j);
+	
+				panSourceDatabases.add(j);
+			}
+		}
+		for (PsicquicService db : dbs) {
+			if (!db.isActive()) {
+				JCheckBox j = new JCheckBox(db.getName(), true);
+				j.setEnabled(false);
+				databases.put(db, j);
+	
+				panSourceDatabases.add(j);
+			}
 		}
 	}
 

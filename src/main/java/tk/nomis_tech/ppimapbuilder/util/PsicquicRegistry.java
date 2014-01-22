@@ -119,9 +119,6 @@ public class PsicquicRegistry {
 				tags.add(elt.text());
 			}
 
-			System.out.print("# ");
-			System.out.println(e.select("active").first().text());
-			System.out.println(e.select("restricted").first().text());
 			services.add(
 				new PsicquicService(
 					e.select("name").first().text(),
