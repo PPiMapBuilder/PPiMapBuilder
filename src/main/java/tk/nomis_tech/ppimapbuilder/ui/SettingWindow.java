@@ -26,7 +26,7 @@ import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 public class SettingWindow extends JFrame {
 
 	private static final long serialVersionUID = 1L;
-	private JButton startQuery;
+	private JButton saveSettings;
 	private JButton cancel;
 	private DatabaseSettingPanel dsp;
 	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
@@ -38,7 +38,7 @@ public class SettingWindow extends JFrame {
 
 		add(initMainPanel(), BorderLayout.CENTER);
 		add(initBottomPanel(), BorderLayout.SOUTH);
-		getRootPane().setDefaultButton(startQuery);
+		getRootPane().setDefaultButton(saveSettings);
 
 		initListeners();
 		
@@ -67,16 +67,16 @@ public class SettingWindow extends JFrame {
 		JPanel bottom = new JPanel(new GridLayout(1, 1));
 
 		cancel = new JButton("Cancel");
-		startQuery = new JButton("Save");
+		saveSettings = new JButton("Save");
 
 		bottom.add(cancel);
-		bottom.add(startQuery);
+		bottom.add(saveSettings);
 
 		return bottom;
 	}
 
 	private void initListeners() {
-		startQuery.addActionListener(new ActionListener() {
+		saveSettings.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
 
