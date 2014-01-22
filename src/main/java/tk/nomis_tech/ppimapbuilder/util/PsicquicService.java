@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  *
- * @author Kévin Gravouil
+ * @author Kï¿½vin Gravouil
  */
 public class PsicquicService {
 
@@ -23,11 +23,11 @@ public class PsicquicService {
 		this.name = name;
 		this.soapUrl = soapUrl;
 		this.restUrl = restUrl;
-		this.active = active.equals("y");
+		this.active = active.equals("true");
 		this.count = Integer.parseInt(count);
 		this.version = version;
 		this.organizationUrl = organizationUrl;
-		this.restricted = restricted.equals("y");
+		this.restricted = restricted.equals("true");
 		this.tags = tags;
 	}
 
