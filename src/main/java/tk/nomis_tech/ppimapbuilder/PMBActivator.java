@@ -15,6 +15,8 @@ import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
@@ -52,12 +54,17 @@ public class PMBActivator extends AbstractCyActivator {
 	@Override
 	public void start(BundleContext bc) {
 		context = bc;
-//
-//		//QueryWindow
+
+		//QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
 		SettingWindow settingWindow = new SettingWindow();
+		
+		// Settings
+		PMBSettings.setDatabaseList(null);
 
+		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
+		PMBSettingSaveTaskFactory saveSettingFactory;
 		TaskManager networkBuildTaskManager;
 		{
 			// Network services
@@ -85,6 +92,13 @@ public class PMBActivator extends AbstractCyActivator {
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			networkBuildTaskManager = getService(bc, TaskManager.class);
 			queryWindow.setTaskManager(networkBuildTaskManager);
+			
+			// Save settings task factory
+			saveSettingFactory = new PMBSettingSaveTaskFactory();
+			settingWindow.setSaveSettingFactory(saveSettingFactory);
+			registerService(bc, saveSettingFactory, TaskFactory.class, new Properties());
+			networkBuildTaskManager = getService(bc, TaskManager.class);
+			settingWindow.setTaskManager(networkBuildTaskManager);
 		}
 
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);

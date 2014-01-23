@@ -6,6 +6,7 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -15,9 +16,9 @@ import javax.swing.JPanel;
 
 import org.cytoscape.work.TaskManager;
 
-import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.panel.DatabaseSettingPanel;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 /**
@@ -29,7 +30,7 @@ public class SettingWindow extends JFrame {
 	private JButton saveSettings;
 	private JButton cancel;
 	private DatabaseSettingPanel dsp;
-	private PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
+	private PMBSettingSaveTaskFactory saveSettingFactory;
 	private TaskManager taskManager;
 
 	public SettingWindow() {
@@ -83,9 +84,13 @@ public class SettingWindow extends JFrame {
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
 
-				taskManager.execute(createNetworkfactory.createTaskIterator());
-				
-				
+				ArrayList<String> databases = new ArrayList<String>();
+				for (PsicquicService s : getSelectedDatabases()) {
+					databases.add(s.getName());
+				}
+				PMBSettings.setDatabaseList(databases);
+				taskManager.execute(saveSettingFactory.createTaskIterator());
+
 			}
 
 		});
@@ -98,6 +103,19 @@ public class SettingWindow extends JFrame {
 			}
 
 		});
+	}
+	
+	public List<PsicquicService> getSelectedDatabases() {
+		return dsp.getSelectedDatabases();
+	}
+	
+	public void setSaveSettingFactory(
+			PMBSettingSaveTaskFactory saveSettingFactory) {
+		this.saveSettingFactory = saveSettingFactory;
+	}
+	
+	public void setTaskManager(TaskManager taskManager) {
+		this.taskManager = taskManager;
 	}
 
 }
