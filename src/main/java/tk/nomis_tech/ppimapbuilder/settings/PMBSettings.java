@@ -25,7 +25,7 @@ public abstract class PMBSettings {
 	
 	public static void writeSettings() {
 		try {
-            FileOutputStream fileOut = new FileOutputStream(System.getProperty("user.home")+"/CytoscapeConfiguration/PPiMapBuilder/"+"settings.sav");
+            FileOutputStream fileOut = new FileOutputStream(System.getProperty("user.home")+"/CytoscapeConfiguration/"+"ppimapbuilder.settings");
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             out.writeObject(PMBSettings.getDatabaseList());
             out.close();
@@ -40,7 +40,7 @@ public abstract class PMBSettings {
 	
 	public static void readSettings() {
 		try {
-            FileInputStream fileIn = new FileInputStream(System.getProperty("user.home")+"/CytoscapeConfiguration/PPiMapBuilder/"+"settings.sav");
+            FileInputStream fileIn = new FileInputStream(System.getProperty("user.home")+"/CytoscapeConfiguration/"+"ppimapbuilder.settings");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             PMBSettings.setDatabaseList((ArrayList<String>) in.readObject());
             in.close();
