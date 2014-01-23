@@ -28,7 +28,7 @@ public class DatabaseSettingPanel extends JPanel {
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
 
-		final JLabel lblSourceDatabases = new JLabel("Source databases:");
+		final JLabel lblSourceDatabases = new JLabel("Preferred databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
 
 		panSourceDatabases = new JPanel();
