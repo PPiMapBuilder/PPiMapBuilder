@@ -42,6 +42,7 @@ public class QueryWindow extends JFrame {
 	public QueryWindow() {
 		setTitle("PPiMapBuilder Query");
 		setLayout(new BorderLayout());
+		setMinimumSize(new Dimension(800, 600));
 
 		add(initMainPanel(), BorderLayout.CENTER);
 		add(initBottomPanel(), BorderLayout.SOUTH);
@@ -59,7 +60,7 @@ public class QueryWindow extends JFrame {
 	public void updateLists(List<PsicquicService> dbs, List<Organism> orgs) {
 		dsp.updateList(dbs);
 		ogs.updateList(orgs);
-		
+
 		org.updateList(orgs);
 	}
 
@@ -67,19 +68,17 @@ public class QueryWindow extends JFrame {
 		JPanel main = new JPanel();
 		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-
 		uus = new UniprotSelection();
 		main.add(uus);
 
 		dsp = new DatabaseSelectionPanel();
 		main.add(dsp);
-		
+
 		ogs = new OtherOrganismSelectionPanel();
 		main.add(ogs);
-		
+
 		org = new ReferenceOrganismSelectionPanel();
 		main.add(org);
-
 
 		return main;
 	}
@@ -105,8 +104,7 @@ public class QueryWindow extends JFrame {
 				QueryWindow.this.dispose();
 
 				taskManager.execute(createNetworkfactory.createTaskIterator());
-				
-				
+
 			}
 
 		});
@@ -124,11 +122,11 @@ public class QueryWindow extends JFrame {
 	public List<PsicquicService> getSelectedDatabases() {
 		return dsp.getSelectedDatabases();
 	}
-	
+
 	public Organism getSelectedRefOrganism() {
 		return org.getSelectedOrganism();
 	}
-	
+
 	public ArrayList<String> getSelectedUniprotID() {
 		return uus.getIdentifers();
 	}
@@ -136,8 +134,7 @@ public class QueryWindow extends JFrame {
 	public List<Organism> getSelectedOrganisms() {
 		return ogs.getSelectedOrganisms();
 	}
-	
-	
+
 	public void setCreateNetworkfactory(
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory) {
 		this.createNetworkfactory = createNetworkfactory;
