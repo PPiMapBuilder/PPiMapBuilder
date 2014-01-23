@@ -17,18 +17,18 @@ import javax.swing.border.EmptyBorder;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
-public class DatabaseSelectionPanel extends JPanel {
+public class DatabaseSettingPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
-	public DatabaseSelectionPanel() {
+	public DatabaseSettingPanel() {
 		setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
 
-		final JLabel lblSourceDatabases = new JLabel("Source databases:");
+		final JLabel lblSourceDatabases = new JLabel("Preferred databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
 
 		panSourceDatabases = new JPanel();
@@ -53,38 +53,13 @@ public class DatabaseSelectionPanel extends JPanel {
 		databases.clear();
 		panSourceDatabases.removeAll();
 		
-		// Checked and active
 		for (PsicquicService db : dbs) {
-			if (PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
-				j.setEnabled(true);
-				j.setSelected(true);
-				databases.put(db, j);
-	
-				panSourceDatabases.add(j);
-			}
-		}
-		// Checked and inactive
-		for (PsicquicService db : dbs) {
-			if (PMBSettings.getDatabaseList().contains(db.getName()) && !db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
-				j.setEnabled(false);
-				j.setSelected(false);
-				databases.put(db, j);
-	
-				panSourceDatabases.add(j);
-			}
-		}
-		// Unchecked but active
-		for (PsicquicService db : dbs) {
-			if (!PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
-				j.setEnabled(true);
-				j.setSelected(false);
-				databases.put(db, j);
-	
-				panSourceDatabases.add(j);
-			}
+			JCheckBox j = new JCheckBox(db.getName(), true);
+			j.setEnabled(true);
+			j.setSelected(PMBSettings.getDatabaseList().contains(db.getName()));
+			databases.put(db, j);
+
+			panSourceDatabases.add(j);
 		}
 	}
 

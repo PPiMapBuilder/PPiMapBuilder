@@ -21,7 +21,7 @@ public class PsicquicRegistry {
 	/**
 	 * The base URL for PSICQUIC registry.
 	 */
-	private static final String registryXmlUrl = "http://www.ebi.ac.uk/Tools/webservices/psicquic/registry/registry?action=ACTIVE&format=xml";
+	private static final String registryXmlUrl = "http://www.ebi.ac.uk/Tools/webservices/psicquic/registry/registry?action=STATUS&format=xml";
 	/**
 	 * Structure to store service names and services URLs.
 	 */
@@ -126,7 +126,7 @@ public class PsicquicRegistry {
 					e.select("restUrl").first().text(),
 					e.select("active").first().text(),
 					e.select("count").first().text(),
-					e.select("version").first().text(),
+					e.select("version").equals("")?e.select("version").first().text():"",
 					e.select("organizationUrl").first().text(),
 					e.select("restricted").first().text(),
 					tags
