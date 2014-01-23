@@ -60,7 +60,7 @@ public class PMBActivator extends AbstractCyActivator {
 		SettingWindow settingWindow = new SettingWindow();
 		
 		// Settings
-		PMBSettings.setDatabaseList(null);
+		PMBSettings.readSettings();
 
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;

@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 public class DatabaseSelectionPanel extends JPanel {
@@ -52,20 +53,34 @@ public class DatabaseSelectionPanel extends JPanel {
 		databases.clear();
 		panSourceDatabases.removeAll();
 		
-		// Two loops to order by active service
+		// Checked and active
 		for (PsicquicService db : dbs) {
-			if (db.isActive()) {
+			if (PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(true);
+				j.setSelected(true);
 				databases.put(db, j);
 	
 				panSourceDatabases.add(j);
 			}
 		}
+		// Checked and inactive
 		for (PsicquicService db : dbs) {
-			if (!db.isActive()) {
+			if (PMBSettings.getDatabaseList().contains(db.getName()) && !db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(false);
+				j.setSelected(false);
+				databases.put(db, j);
+	
+				panSourceDatabases.add(j);
+			}
+		}
+		// Unchecked but active
+		for (PsicquicService db : dbs) {
+			if (!PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
+				JCheckBox j = new JCheckBox(db.getName(), true);
+				j.setEnabled(true);
+				j.setSelected(false);
 				databases.put(db, j);
 	
 				panSourceDatabases.add(j);

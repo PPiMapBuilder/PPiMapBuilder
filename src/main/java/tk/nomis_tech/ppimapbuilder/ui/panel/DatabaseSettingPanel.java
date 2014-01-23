@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
+import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
 
 public class DatabaseSettingPanel extends JPanel {
@@ -51,9 +52,11 @@ public class DatabaseSettingPanel extends JPanel {
 		// Creation of the database list
 		databases.clear();
 		panSourceDatabases.removeAll();
+		
 		for (PsicquicService db : dbs) {
 			JCheckBox j = new JCheckBox(db.getName(), true);
-			j.setBackground(Color.white);
+			j.setEnabled(true);
+			j.setSelected(PMBSettings.getDatabaseList().contains(db.getName()));
 			databases.put(db, j);
 
 			panSourceDatabases.add(j);

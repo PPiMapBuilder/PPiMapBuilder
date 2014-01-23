@@ -10,7 +10,6 @@ public class PMBSettingSaveTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor taskMonitor) {
-		System.out.println("save settings !!!");
 		PMBSettings.writeSettings();
 	}
 
