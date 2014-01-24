@@ -15,6 +15,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.GOCategory;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.GeneOntologyModel;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
 
 public class UniProtService {
@@ -79,8 +81,46 @@ public class UniProtService {
 			break;
 		}
 		
+		// PROTEIN CREATION
 		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, taxId, proteinName, reviewed);
 		prot.setSynonymGeneNames(synonymGeneNames);
+		
+		// GENE ONTOLOGIES
+		for (Element e : doc.select("dbReference")) {
+			if (e.attr("type").equals("GO")) {
+				String id = e.attr("id");
+				GOCategory category = null;
+				String term = null;
+				for (Element f: e.select("property")) {
+					if (f.attr("type").equals("term")) {
+						String value = f.attr("value");
+						String[] values = value.split(":");
+						if (values[0].equals("C")) {
+							category = GOCategory.CELLULAR_COMPONENT;
+						}
+						else if (values[0].equals("F")) {
+							category = GOCategory.MOLECULAR_FUNCTION;
+						}
+						else if (values[0].equals("P")) {
+							category = GOCategory.BIOLOGICAL_PROCESS;
+						}
+						term = values[1];
+						break;
+					}
+				}
+				GeneOntologyModel go = new GeneOntologyModel(id, term, category);
+				if (category == GOCategory.CELLULAR_COMPONENT) {
+					prot.addCellularComponent(go);
+				}
+				else if (category == GOCategory.BIOLOGICAL_PROCESS) {
+					prot.addBiologicalProcess(go);
+				}
+				else if (category == GOCategory.MOLECULAR_FUNCTION) {
+					prot.addMolecularFunction(go);
+				}
+			}
+		}
+		
 		return prot;
 		
 	}

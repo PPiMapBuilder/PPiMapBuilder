@@ -99,6 +99,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeAttr.createColumn("protein_name", String.class, false);
 		nodeAttr.createColumn("tax_id", String.class, false);
 		nodeAttr.createColumn("reviewed", String.class, false);
+		nodeAttr.createListColumn("cellular_components", String.class, false);
+		nodeAttr.createListColumn("biological_processes", String.class, false);
+		nodeAttr.createListColumn("molecular_functions", String.class, false);
 
 		// Add nodes        
 		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
@@ -151,6 +154,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
 				attributesNode1.set("protein_name", prot.getProteinName());
 				attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
+				attributesNode1.set("cellular_components", prot.getCellularComponentsAsStringList());
+				attributesNode1.set("biological_processes", prot.getBiologicalProcessesAsStringList());
+				attributesNode1.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
 				
 			}
 			
@@ -172,6 +178,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
 				attributesNode2.set("protein_name", prot.getProteinName());
 				attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
+				attributesNode2.set("cellular_components", prot.getCellularComponentsAsStringList());
+				attributesNode2.set("biological_processes", prot.getBiologicalProcessesAsStringList());
+				attributesNode2.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
 			}			
 			
 			// Add edges & attributes

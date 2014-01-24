@@ -8,6 +8,9 @@ public class UniProtProtein extends AbstractProtein {
 	private ArrayList<String> synonymGeneNames = new ArrayList<String>();
 	private String proteinName;
 	private boolean reviewed;
+	private ArrayList<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
+	private ArrayList<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
+	private ArrayList<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
 	
 	public UniProtProtein(String uniprotId, String geneName, Integer taxId, String proteinName, boolean reviewed) {
 		super(uniprotId, taxId);
@@ -15,7 +18,82 @@ public class UniProtProtein extends AbstractProtein {
 		this.geneName = geneName;
 		this.reviewed = reviewed;
 	}
+
+	public ArrayList<GeneOntologyModel> getCellularComponents() {
+		return cellularComponents;
+	}
 	
+	public ArrayList<String> getCellularComponentsAsStringList() {
+		
+		ArrayList<String> list = new ArrayList<String>();
+		for (GeneOntologyModel go : this.cellularComponents) {
+			list.add(go.toString());
+		}
+		return list;
+	}
+
+	public void setCellularComponents(
+			ArrayList<GeneOntologyModel> cellularComponents) {
+		this.cellularComponents = cellularComponents;
+	}
+	
+	public void addCellularComponent(GeneOntologyModel go) {
+		this.cellularComponents.add(go);
+	}
+
+	public ArrayList<GeneOntologyModel> getBiologicalProcesses() {
+		return biologicalProcesses;
+	}
+	
+	public ArrayList<String> getBiologicalProcessesAsStringList() {
+		
+		ArrayList<String> list = new ArrayList<String>();
+		for (GeneOntologyModel go : this.biologicalProcesses) {
+			list.add(go.toString());
+		}
+		return list;
+	}
+
+	public void setBiologicalProcesses(
+			ArrayList<GeneOntologyModel> biologicalProcesses) {
+		this.biologicalProcesses = biologicalProcesses;
+	}
+	
+	public void addBiologicalProcess(GeneOntologyModel go) {
+		this.biologicalProcesses.add(go);
+	}
+
+	public ArrayList<GeneOntologyModel> getMolecularFunctions() {
+		return molecularFunctions;
+	}
+	
+	public ArrayList<String> getMolecularFunctionsAsStringList() {
+		
+		ArrayList<String> list = new ArrayList<String>();
+		for (GeneOntologyModel go : this.molecularFunctions) {
+			list.add(go.toString());
+		}
+		return list;
+	}
+
+	public void setMolecularFunctions(
+			ArrayList<GeneOntologyModel> molecularFunctions) {
+		this.molecularFunctions = molecularFunctions;
+	}
+	
+	public void addMolecularFunction(GeneOntologyModel go) {
+		this.molecularFunctions.add(go);
+	}
+	
+	public String molecularFunctionsToString() {
+		String text = "";
+		for (GeneOntologyModel go : this.molecularFunctions) {
+			text+=go.toString();
+			text+=",";
+		}
+		return text.substring(0, text.length()-1);
+	}
+
 	public ArrayList<String> getSynonymGeneNames() {
 		return synonymGeneNames;
 	}

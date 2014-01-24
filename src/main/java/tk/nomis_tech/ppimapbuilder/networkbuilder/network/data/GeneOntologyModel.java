@@ -39,7 +39,7 @@ public class GeneOntologyModel {
 
 	@Override
 	public String toString() {
-		return "{id:" + identifier + ",term:" + term + "category:" + category+"}";
+		return "{id:" + identifier + ",term:" + term+"}";
 	}
 
 }
