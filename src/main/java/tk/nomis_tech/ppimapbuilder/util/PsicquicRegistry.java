@@ -13,8 +13,6 @@ import org.jsoup.nodes.Element;
 /**
  * Retrieve the PSICQUIC registry in a very simple way. TODO: Use Registry and
  * XML file
- *
- * @author Kevin Gravouil, Guillaume Cornut
  */
 public class PsicquicRegistry {
 
