@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import org.cytoscape.model.CyEdge;
 
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -23,11 +23,13 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import psidev.psi.mi.tab.model.Author;
 
+import psidev.psi.mi.tab.model.Author;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicResultTranslator;
+import tk.nomis_tech.ppimapbuilder.util.UniProtService;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -79,14 +81,24 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		// Create an empty network
 		CyNetwork myNet = cnf.createNetwork();
 		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
+		
+		// Edge attributes
 		CyTable edgeAttr = myNet.getDefaultEdgeTable();
-
 		edgeAttr.createListColumn("source", String.class, false);
 		edgeAttr.createListColumn("detmethod", String.class, false);
 		edgeAttr.createListColumn("type", String.class, false);
 		edgeAttr.createListColumn("interaction_id", String.class, false);
 		edgeAttr.createListColumn("pubid", String.class, false);
 		edgeAttr.createListColumn("confidence", String.class, false);
+		
+		// Node attributes
+		CyTable nodeAttr = myNet.getDefaultNodeTable();
+		nodeAttr.createColumn("uniprot_id", String.class, false);
+		nodeAttr.createColumn("gene_name", String.class, false);
+		nodeAttr.createListColumn("synonym_gene_names", String.class, false);
+		nodeAttr.createColumn("protein_name", String.class, false);
+		nodeAttr.createColumn("tax_id", String.class, false);
+		nodeAttr.createColumn("reviewed", String.class, false);
 
 		// Add nodes        
 		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
@@ -94,8 +106,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
 
 			//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
-			// TODO : treat cases without uniprotkb id	
-			// Retrieve or create the first node
+			// TODO : treat cases without uniprotkb id
+			
+			// Retrieve the first node name
 			CyNode node1 = null;
 			String name1 = null;
 			for (CrossReference cr : interaction.getInteractorA().getIdentifiers()) {
@@ -107,16 +120,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			if (name1 == null) {
 				continue;
 			}
-
-			if (nodeNameMap.containsKey(name1)) {
-				node1 = nodeNameMap.get(name1);
-			} else {
-				node1 = myNet.addNode();
-				CyRow attributes = myNet.getRow(node1);
-				attributes.set("name", name1);
-				nodeNameMap.put(name1, node1);
-			}
-			// Retrieve or create the second node
+			// Retrieve the second node name
 			CyNode node2 = null;
 			String name2 = null;
 			for (CrossReference cr : interaction.getInteractorB().getIdentifiers()) {
@@ -128,7 +132,29 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			if (name2 == null) {
 				continue;
 			}
-
+			
+			// Retrieve or create the first node
+			if (nodeNameMap.containsKey(name1)) {
+				node1 = nodeNameMap.get(name1);
+			} else {
+				node1 = myNet.addNode();
+				CyRow attributes = myNet.getRow(node1);
+				attributes.set("name", name1);
+				nodeNameMap.put(name1, node1);
+				
+				// Add attributes to first node
+				UniProtProtein prot = UniProtService.getUniprotProtein(name1);
+				CyRow attributesNode1 = myNet.getRow(node1);
+				attributesNode1.set("uniprot_id", prot.getUniprotId());
+				attributesNode1.set("tax_id", String.valueOf(prot.getTaxId()));
+				attributesNode1.set("gene_name", prot.getGeneName());
+				attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
+				attributesNode1.set("protein_name", prot.getProteinName());
+				attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
+				
+			}
+			
+			// Retrieve or create the second node
 			if (nodeNameMap.containsKey(name2)) {
 				node2 = nodeNameMap.get(name2);
 			} else {
@@ -136,12 +162,21 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				CyRow attributes = myNet.getRow(node2);
 				attributes.set("name", name2);
 				nodeNameMap.put(name2, node2);
-			}
-
+				
+				// Add attributes to second node
+				UniProtProtein prot = UniProtService.getUniprotProtein(name2);
+				CyRow attributesNode2 = myNet.getRow(node2);
+				attributesNode2.set("uniprot_id", prot.getUniprotId());
+				attributesNode2.set("tax_id", String.valueOf(prot.getTaxId()));
+				attributesNode2.set("gene_name", prot.getGeneName());
+				attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
+				attributesNode2.set("protein_name", prot.getProteinName());
+				attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
+			}			
+			
 			// Add edges & attributes
 			CyEdge myEdge = myNet.addEdge(node1, node2, true);
 			CyRow attributes = myNet.getRow(myEdge);
-
 			attributes.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
 			attributes.set("detmethod", PsicquicResultTranslator.convert(interaction.getDetectionMethods()));
 			attributes.set("type", PsicquicResultTranslator.convert(interaction.getInteractionTypes()));

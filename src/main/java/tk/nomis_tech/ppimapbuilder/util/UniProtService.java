@@ -1,13 +1,25 @@
 package tk.nomis_tech.ppimapbuilder.util;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
+
+import javax.swing.Box.Filler;
+import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
+
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
 
 public class UniProtService {
 
-	private static final String UNIPROT_SERVER = "http://www.uniprot.org/";
-	private static final Logger LOG = Logger.getAnonymousLogger();
+	private static final String uniprotUrl = "http://www.uniprot.org/uniprot/";
 
 	private UniProtService instance;
 
@@ -17,82 +29,65 @@ public class UniProtService {
 		return instance;
 	}
 
-	public void fillProteinData(UniProtProtein prot) {
+	private static UniProtProtein retrieveProteinData(String uniprotId) {
 
-	}
-
-	private void buildRequest(String tool) throws Exception {
-
-		StringBuilder locationBuilder = new StringBuilder(UNIPROT_SERVER + tool + "/?");
-		Parameter[] params;
-		for(Parameter p: params){
-			if (i > 0)
-				locationBuilder.append('&');
-			locationBuilder.append(params);
+		Document doc = null;
+		try {
+			Connection conn = Jsoup.connect(uniprotUrl+uniprotId+".xml");
+			doc = conn.get();
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
-
-		String location = locationBuilder.toString();
-		URL url = new URL(location);
-		LOG.info("Submitting...");
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		HttpURLConnection.setFollowRedirects(true);
-		conn.setDoInput(true);
-		conn.connect();
-
-		int status = conn.getResponseCode();
-		while (true) {
-			int wait = 0;
-			String header = conn.getHeaderField("Retry-After");
-			if (header != null)
-				wait = Integer.valueOf(header);
-			if (wait == 0)
-				break;
-			LOG.info("Waiting (" + wait + ")...");
-			conn.disconnect();
-			Thread.sleep(wait * 1000);
-			conn = (HttpURLConnection) new URL(location).openConnection();
-			conn.setDoInput(true);
-			conn.connect();
-			status = conn.getResponseCode();
+		Integer taxId = null;
+		String geneName = null;
+		ArrayList<String> synonymGeneNames = new ArrayList<String>();
+		String proteinName = null;
+		boolean reviewed = false;
+		
+		// TAX ID
+		for (Element e : doc.select("organism")) {
+			taxId = Integer.valueOf(e.select("dbReference").attr("id")); // There is no problem, this is in the same way each time
+			break;
 		}
-		if (status == HttpURLConnection.HTTP_OK) {
-			LOG.info("Got a OK reply");
-			InputStream reader = conn.getInputStream();
-			URLConnection.guessContentTypeFromStream(reader);
-			StringBuilder builder = new StringBuilder();
-			int a = 0;
-			while ((a = reader.read()) != -1) {
-				builder.append((char) a);
+		
+		// GENE NAME AND SYNONYMS
+		for (Element e : doc.select("gene")) {
+			for (Element f : e.select("name")) {
+				if (f.attr("type").equals("primary")) { // If the type is primary, this is the main name (sometimes there is no primary gene name :s)
+					geneName = f.text();
+				}
+				else { // Else, we store the names as synonyms
+					synonymGeneNames.add(f.text());
+				}
 			}
-			System.out.println(builder.toString());
-		} else
-			LOG.severe("Failed, got " + conn.getResponseMessage() + " for "
-					+ location);
-		conn.disconnect();
-	}
-
-	public static void main(String[] args)
-			throws Exception {
-		run("mapping", new Parameter[]{
-				new Parameter("from", "ACC"),
-				new Parameter("to", "P_REFSEQ_AC"),
-				new Parameter("format", "tab"),
-				new Parameter("query", "P13368 P20806 Q9UM73 P97793 Q17192"),
-		});
-	}
-
-	private static class Parameter {
-		private final String name;
-		private final String value;
-
-		public Parameter(String name, String value) throws UnsupportedEncodingException {
-			this.name = URLEncoder.encode(name, "UTF-8");
-			this.value = URLEncoder.encode(value, "UTF-8");
 		}
-
-		@Override
-		public String toString() {
-			return name + "=" + value;
+		
+		// PROTEIN NAME
+		for (Element e : doc.select("protein")) {
+			if (!e.select("recommendedName").isEmpty()) { // We retrieve the recommended name
+				proteinName = e.select("recommendedName").select("fullName").text();
+			}
+			else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exist, we take the submitted name (usually from TrEMBL but not always)
+				proteinName = e.select("submittedName").select("fullName").text();
+			}
+			break;
 		}
+		
+		// REVIEWED
+		for (Element e : doc.select("entry")) {
+			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot")?true:false; // If the protein comes from Swiss-Prot, it is reviewed
+			break;
+		}
+		
+		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, taxId, proteinName, reviewed);
+		prot.setSynonymGeneNames(synonymGeneNames);
+		return prot;
+		
 	}
+	
+	public static UniProtProtein getUniprotProtein(String uniprotid) {
+		UniProtProtein prot = retrieveProteinData(uniprotid);
+		return prot;
+	}
+
 }

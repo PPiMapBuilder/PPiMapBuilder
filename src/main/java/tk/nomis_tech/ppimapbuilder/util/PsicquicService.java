@@ -3,10 +3,6 @@ package tk.nomis_tech.ppimapbuilder.util;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- *
- * @author Kévin Gravouil
- */
 public class PsicquicService {
 
 	protected String name;
