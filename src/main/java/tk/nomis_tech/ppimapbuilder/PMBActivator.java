@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder;
 
+import tk.nomis_tech.ppimapbuilder.ui.PMBResultPanel;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyTableFactory;
@@ -20,11 +21,15 @@ import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.util.UniProtService;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import org.cytoscape.application.swing.CyAction;
+import org.cytoscape.application.swing.CySwingApplication;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.application.swing.CytoPanelState;
 
 /**
  * The starting point of the plug-in
@@ -59,7 +64,7 @@ public class PMBActivator extends AbstractCyActivator {
 		//QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
 		SettingWindow settingWindow = new SettingWindow();
-		
+
 		// Settings
 		PMBSettings.readSettings();
 
@@ -72,6 +77,12 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
 			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
 			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
+
+			// Swing panel services	
+			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
+			PMBResultPanel pmbControlPanel = new PMBResultPanel();
+			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
+			registerService(bc, pmbControlPanel, CytoPanelComponent.class, new Properties());
 
 			// View services
 			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
@@ -93,7 +104,7 @@ public class PMBActivator extends AbstractCyActivator {
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			networkBuildTaskManager = getService(bc, TaskManager.class);
 			queryWindow.setTaskManager(networkBuildTaskManager);
-			
+
 			// Save settings task factory
 			saveSettingFactory = new PMBSettingSaveTaskFactory();
 			settingWindow.setSaveSettingFactory(saveSettingFactory);
@@ -107,7 +118,7 @@ public class PMBActivator extends AbstractCyActivator {
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Query");
 		registerService(bc, queryWindowTaskFactory, TaskFactory.class, props);
-		
+
 		PMBSettingMenuTaskFactory settingsWindowTaskFactory = new PMBSettingMenuTaskFactory(settingWindow);
 		props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
