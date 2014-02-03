@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
 
 /**
  *
@@ -82,40 +86,18 @@ public class InParanoidClient {
 		}
 		return null;
 	}
-
-	public static void testClient() {
-
-		ArrayList<Integer> orthotaxids = new ArrayList<Integer>() {
-			private static final long serialVersionUID = 1L;
-			{
-				add(10090);
-				add(3702);
-				add(6239);
-			}
-		};
-
-		ArrayList<String> ids = new ArrayList<String>() {
-			private static final long serialVersionUID = 1L;
-
-			{
-				add("P07900");
-				add("P04040");
-				add("Q04565");
-				add("Q9C519");
-				add("P69891");
-				add("P02091");
-				add("P02008");
-			}
-		};
-		for (Integer orthotaxid : orthotaxids) {
-			System.out.println("--------[" + orthotaxid + "]-----------------------------------");
-			// tests
-			for (String id : ids) {
-				System.out.println("==" + id);
-				InParanoidClient.getOrthologUniprotId(id, orthotaxid);
-			}
-
-		}
-
+	
+	/**
+	 * Search ortholog for an UniProtProtein
+	 * @param prot the protein from which the ortholog will be retrieved
+	 * @param taxid the taxonomy identifier of the organism in which the ortholog will be searched
+	 */
+	public static boolean searchOrthologForUniprotProtein(UniProtProtein prot, Integer taxid) {
+		String orthologId = getOrthologUniprotId(prot.getUniprotId(), taxid);
+		
+		if(orthologId == null) return false;
+		
+		prot.addOrtholog(new OrthologProtein(orthologId, taxid));
+		return true;
 	}
 }

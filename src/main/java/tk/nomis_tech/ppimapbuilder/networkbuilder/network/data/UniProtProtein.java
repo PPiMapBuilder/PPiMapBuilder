@@ -1,6 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UniProtProtein extends AbstractProtein {
 
@@ -11,6 +12,8 @@ public class UniProtProtein extends AbstractProtein {
 	private ArrayList<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
 	private ArrayList<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
 	private ArrayList<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
+	
+	private final HashMap<Integer, OrthologProtein> orthologs = new HashMap<Integer, OrthologProtein>();
 	
 	public UniProtProtein(String uniprotId, String geneName, Integer taxId, String proteinName, boolean reviewed) {
 		super(uniprotId, taxId);
@@ -30,6 +33,14 @@ public class UniProtProtein extends AbstractProtein {
 			list.add(go.toString());
 		}
 		return list;
+	}
+	
+	public OrthologProtein getOrthologByTaxid(Integer taxid) {
+		return orthologs.get(taxid);
+	}
+	
+	public OrthologProtein addOrtholog(OrthologProtein prot) {
+		return orthologs.put(prot.getTaxId(), prot);
 	}
 
 	public void setCellularComponents(

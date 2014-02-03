@@ -85,5 +85,10 @@ public class UniprotId {
 	public static boolean isValid(String uniprotId) {
 		return uniprotId.matches(pattern);
 	}
+	
+	@Override
+	public String toString() {
+		return uniprotId;
+	}
 
 }
