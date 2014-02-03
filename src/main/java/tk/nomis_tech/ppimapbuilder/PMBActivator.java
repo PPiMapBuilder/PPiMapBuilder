@@ -1,6 +1,13 @@
 package tk.nomis_tech.ppimapbuilder;
 
-import tk.nomis_tech.ppimapbuilder.ui.PMBResultPanel;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+
+import org.cytoscape.application.swing.CySwingApplication;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyTableFactory;
@@ -20,16 +27,8 @@ import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
+import tk.nomis_tech.ppimapbuilder.ui.panel.ResultPanel;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import org.cytoscape.application.swing.CyAction;
-import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.application.swing.CytoPanelComponent;
-import org.cytoscape.application.swing.CytoPanelName;
-import org.cytoscape.application.swing.CytoPanelState;
 
 /**
  * The starting point of the plug-in
@@ -80,9 +79,9 @@ public class PMBActivator extends AbstractCyActivator {
 
 			// Swing panel services	
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
-			PMBResultPanel pmbControlPanel = new PMBResultPanel();
+			ResultPanel pmbResultPanel = new ResultPanel();
 			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
-			registerService(bc, pmbControlPanel, CytoPanelComponent.class, new Properties());
+			registerService(bc, pmbResultPanel, CytoPanelComponent.class, new Properties());
 
 			// View services
 			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
