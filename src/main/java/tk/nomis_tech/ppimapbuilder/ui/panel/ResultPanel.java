@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package tk.nomis_tech.ppimapbuilder.ui.panel;
 
 import java.awt.BorderLayout;
@@ -14,30 +8,31 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.AbstractListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
+import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
 import net.miginfocom.swing.MigLayout;
-import javax.swing.JProgressBar;
-import javax.swing.JTree;
 
-/**
- * 
- * @author dsi-nomistech
- */
 public class ResultPanel extends javax.swing.JPanel {
 
 	/**
 	 * Creates new form ResultPanel
 	 */
+
+	ImageIcon urlIcon = new ImageIcon(getClass().getResource("external_link_icon.gif"));
+	private final JLabel lblReviewed = new JLabel(new ImageIcon(getClass().getResource("star.png")));
+	private final JLabel lblUnreviewed = new JLabel(new ImageIcon(getClass().getResource("unstar.png")));
+
 	public ResultPanel() {
 		setBorder(null);
 		setLayout(new BorderLayout(0, 0));
@@ -49,7 +44,7 @@ public class ResultPanel extends javax.swing.JPanel {
 		final JPanel panel = new JPanel();
 		panel.setBorder(null);
 		scrollPane.setViewportView(panel);
-		panel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right][grow][]", "[][][][][][::50px,grow][30px:80px,grow 66][50px:150px,grow]"));
+		panel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right][grow][]", "[][][][][][::50px,grow][30px:80px,grow 66][30px:80px,grow]"));
 
 		JLabel lblPtnname = new JLabel("Catalase");
 		lblPtnname.setBorder(new EmptyBorder(3, 3, 3, 3));
@@ -59,11 +54,32 @@ public class ResultPanel extends javax.swing.JPanel {
 		JLabel lblUniprotId = new JLabel("Uniprot ID:");
 		panel.add(lblUniprotId, "cell 0 1,alignx left");
 
+		panel.add(lblReviewed, "cell 2 0,alignx right,aligny center");
+
+		JLabel lblExtLink1 = new JLabel(urlIcon);
+		lblExtLink1.setToolTipText("Access external link");
+		panel.add(lblExtLink1, "cell 2 1,alignx right,aligny center");
+
+		JLabel lblExtLink2 = new JLabel(urlIcon);
+		lblExtLink2.setToolTipText("Access external link");
+		panel.add(lblExtLink2, "cell 2 2,alignx right,aligny center");
+
+		JLabel lblExtLink3 = new JLabel(urlIcon);
+		lblExtLink3.setToolTipText("Access external link");
+		panel.add(lblExtLink3, "cell 2 3,alignx right,aligny center");
+
+		JLabel lblExtLink4 = new JLabel(urlIcon);
+		lblExtLink4.setToolTipText("Access external link");
+		panel.add(lblExtLink4, "cell 2 4,alignx right,aligny center");
+
 		JLabel lblEcNumber = new JLabel("EC Number:");
 		panel.add(lblEcNumber, "flowx,cell 0 2,alignx left");
 
 		JLabel label_1 = new JLabel("1.11.1.6");
 		panel.add(label_1, "cell 1 2");
+
+		JLabel label = new JLabel();
+		panel.add(label, "cell 1 2");
 
 		JLabel lblNewLabel = new JLabel("Organism:");
 		panel.add(lblNewLabel, "cell 0 3,alignx left");
@@ -83,7 +99,7 @@ public class ResultPanel extends javax.swing.JPanel {
 		final JScrollPane scrollPane_1 = new JScrollPane();
 		panel.add(scrollPane_1, "cell 1 5,grow");
 
-		final JList list = new JList();
+		final JList<String> list = new JList<String>();
 		list.setModel(new AbstractListModel() {
 			String[] values = new String[] { "toto", "itit" };
 
@@ -105,9 +121,7 @@ public class ResultPanel extends javax.swing.JPanel {
 		panel.add(toggleButton, "cell 2 5,alignx center,aligny top");
 
 		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(new TitledBorder(new LineBorder(new Color(180, 180,
-				180), 1, true), "Orthologs", TitledBorder.LEADING,
-				TitledBorder.TOP, null, null));
+		panel_1.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		panel.add(panel_1, "cell 0 6 3 1,grow");
 
 		ItemListener itemListener = new ItemListener() {
@@ -115,12 +129,10 @@ public class ResultPanel extends javax.swing.JPanel {
 			public void itemStateChanged(ItemEvent arg0) {
 				int state = arg0.getStateChange();
 				if (state == ItemEvent.SELECTED) {
-					System.out.println("Selected");
 					toggleButton.setText("-");
 					scrollPane_1.setVisible(true);
 
 				} else {
-					System.out.println("Deselected");
 					toggleButton.setText("+");
 					scrollPane_1.setVisible(false);
 				}
@@ -131,22 +143,20 @@ public class ResultPanel extends javax.swing.JPanel {
 
 		JLabel lblP = new JLabel("P04040");
 		panel.add(lblP, "cell 1 1");
-				
-				JScrollPane scrollPane_2 = new JScrollPane();
-				scrollPane_2.setBorder(null);
-				panel.add(scrollPane_2, "cell 0 7 3 1,grow");
-		
-				final JPanel panel_2 = new JPanel();
-				scrollPane_2.setViewportView(panel_2);
-				panel_2.setBorder(new TitledBorder(new LineBorder(new Color(180, 180,
-						180), 1, true), "Gene Ontology", TitledBorder.LEADING,
-						TitledBorder.TOP, null, null));
-				panel_2.setLayout(new BorderLayout(0, 0));
-				
-				JTree tree = new JTree();
-				tree.setRootVisible(false);
-				tree.setOpaque(false);
-				panel_2.add(tree);
+
+		JScrollPane scrollPane_2 = new JScrollPane();
+		scrollPane_2.setBorder(null);
+		panel.add(scrollPane_2, "cell 0 7 3 1,grow");
+
+		final JPanel panel_2 = new JPanel();
+		scrollPane_2.setViewportView(panel_2);
+		panel_2.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_2.setLayout(new BorderLayout(0, 0));
+
+		JTree tree = new JTree();
+		tree.setRootVisible(false);
+		tree.setOpaque(false);
+		panel_2.add(tree);
 		initComponents();
 	}
 
@@ -166,8 +176,7 @@ public class ResultPanel extends javax.swing.JPanel {
 
 	public static void main(String[] argv) {
 		try {
-			UIManager
-					.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 		} catch (Exception e) {
 		}
 		JFrame j = new JFrame();
