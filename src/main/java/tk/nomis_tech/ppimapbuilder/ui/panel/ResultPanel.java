@@ -37,9 +37,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	/**
 	 * Creates new form ResultPanel
 	 */
-
-	private ImageIcon logo = new ImageIcon(getClass().getResource("logo.png"));
-
 	private ImageIcon urlIcon = new ImageIcon(getClass().getResource("external_link_icon.gif"));
 	private final JLabel lblReviewed = new JLabel(new ImageIcon(getClass().getResource("star.png")));
 	private final JLabel lblUnreviewed = new JLabel(new ImageIcon(getClass().getResource("unstar.png")));
@@ -68,7 +65,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		scrollPane.setViewportView(mainPanel);
 		mainPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right][grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
 
-//		 setDefaultView();
+		// setDefaultView();
 		setTestProteinView();
 
 		initComponents();
