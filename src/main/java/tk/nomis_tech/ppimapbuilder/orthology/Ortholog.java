@@ -26,7 +26,6 @@ public class Ortholog {
 			put(10090, 128); // Mus musculus
 			put(4932, 208); // Saccharomyces cerevisiae
 			put(4896, 173); // Schizosaccharomyces pombe
-//				put(, ); // 
 		}
 	};
 

@@ -1,8 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.orthology;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -52,14 +52,17 @@ public class InParanoidClient {
 		return species.keySet();
 	}
 
-	public static String getOrthologUniprotId(String uniprotId, Integer orthologNcbiTaxId) {
+	/**
+	 * Search ortholog protein using UniProt identifier
+	 */
+	public static String getOrthologUniprotId(String uniProtId, Integer orthologNcbiTaxId) {
 		try {
 			InParanoidClient.url = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi?"
 				+ "idtype=proteinid;"
 				+ "all_or_selection=selection;"
 				+ "scorelimit=0.05;"
 				+ "rettype=xml;"
-				+ "id=" + uniprotId + ";"
+				+ "id=" + uniProtId + ";"
 				+ "specieslist=" + Ortholog.translateTaxID(orthologNcbiTaxId) + ";";
 
 			//System.out.println("#Query :"+InParanoidClient.url);
@@ -84,6 +87,13 @@ public class InParanoidClient {
 			System.out.println("No ortholgs found.");
 			return null;
 		}
+		return null;
+	}
+	
+	/**
+	 * Search 
+	 */
+	public List<String> getOrthologUniprotIds(List<String> uniprotIds, Integer orthologNcbiTaxId, final int NB_THREAD) {
 		return null;
 	}
 	

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
+
 public class InParanoidClientTest {
 
 	@Test
@@ -36,6 +38,20 @@ public class InParanoidClientTest {
 			}
 
 		}
+	}
+	
+	@Test
+	public void test2() {
+		boolean expected = true;
+		boolean actual = InParanoidClient.searchOrthologForUniprotProtein(new UniProtProtein("P04040", null, 9606, null, true), 9606);
+		assertTrue(actual == expected);
+	}
+	
+	@Test
+	public void test3() {
+		boolean expected = true;
+		boolean actual = InParanoidClient.searchOrthologForUniprotProtein(new UniProtProtein("P04040", null, 9606, null, true), 9606);
+		assertTrue(actual == expected);
 	}
 
 }

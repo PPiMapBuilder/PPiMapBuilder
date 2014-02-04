@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.util;
 
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -16,8 +17,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
+
 import com.google.common.collect.Lists;
 
+import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
@@ -57,15 +61,15 @@ public class InteractionsUtil {
 		}
 
 		// Calculate the estimated url query length
-		final int baseURLLength = 100;
+		final int BASE_URL_LENGTH = 100;
 		int estimatedURLQueryLength = 0;
-		int idLength = 0, baseQueryLength = 0;
+		int idParamLength = 0, baseParamLength = 0;
 		{
 			try {
-				idLength = URLEncoder.encode(idB.toString(), "UTF-8").length();
-				baseQueryLength = URLEncoder.encode(baseQuery.toString()+idA.toString(), "UTF-8").length();
+				idParamLength = URLEncoder.encode(idB.toString(), "UTF-8").length() + URLEncoder.encode(idA.toString(), "UTF-8").length();
+				baseParamLength = URLEncoder.encode(baseQuery.toString(), "UTF-8").length();
 
-				estimatedURLQueryLength = baseURLLength + baseQueryLength + idLength;
+				estimatedURLQueryLength = BASE_URL_LENGTH + baseParamLength + idParamLength;
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
@@ -74,51 +78,82 @@ public class InteractionsUtil {
 		// Slice the query in multiple queries if the result MiQL query is
 		// bigger than maxQuerySize
 		List<MiQLExpressionBuilder> queries = new ArrayList<MiQLExpressionBuilder>();
-		final int maxQuerySize = baseURLLength + baseQueryLength + 50;
+		final int MAX_QUERY_SIZE = BASE_URL_LENGTH + baseParamLength + 250;
 		{
-			if (estimatedURLQueryLength > maxQuerySize) {
-				//int stepLength = (int) Math.ceil((double) sourceProteins.size() / (double) nbQuery);
-				int stepLength = (int) Math.ceil((double)(prots.size() * (maxQuerySize - baseQueryLength - baseURLLength)) / (double) idLength);
-				int nbQuery = (int) Math.ceil((double) prots.size() / (double) stepLength);
-				
+			if (estimatedURLQueryLength > MAX_QUERY_SIZE) {
+
+				final int STEP_LENGTH = (int) Math.ceil((double) (MAX_QUERY_SIZE - BASE_URL_LENGTH - baseParamLength) * sourceProteins.size()
+						/ (double) idParamLength);
+				final int NB_TRUNCATION = (int) Math.ceil((double) sourceProteins.size() / (double) STEP_LENGTH);
+
+				System.out.println("N# proteins: " + sourceProteins.size());
+				System.out.println("N# queries: " + NB_TRUNCATION);
+
+				// Generate truncated protein listing
+				// Ex: "prot1", "prot2", "prot3", "prot4" => ("prot1", "prot2"), ("prot3", "prot4")
+				final List<MiQLExpressionBuilder> protsExprs = new ArrayList<MiQLExpressionBuilder>();
 				int pos = 0;
-				for (int i = 0; i < nbQuery; i++) {
+				for (int i = 0; i < NB_TRUNCATION; i++) {
 					int from = pos;
-					int to = Math.min(from + stepLength, sourceProteins.size());
-					
+					int to = Math.min(from + STEP_LENGTH, sourceProteins.size());
+
 					MiQLExpressionBuilder protsTruncated = new MiQLExpressionBuilder();
 					protsTruncated.addAll(sourceProteins.subList(from, to));
-					idB = new MiQLParameterBuilder("idB", protsTruncated);
-					
-					MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
-					q.addCondition(Operator.AND, idA);
-					q.addCondition(Operator.AND, idB);
-					queries.add(q);
-					
+					protsExprs.add(protsTruncated);
+
 					pos = to;
+				}
+				MiQLExpressionBuilder protsIdA, protsIdB;
+				for (int i = 0; i < protsExprs.size(); i++) {
+					protsIdA = protsExprs.get(i);
+
+					for (int j = i; j < protsExprs.size(); j++) {
+						protsIdB = protsExprs.get(j);
+						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
+						q.addCondition(Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
+						q.addCondition(Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
+						queries.add(q);
+						// System.out.println(q);
+					}
 				}
 			} else {
 				baseQuery.addCondition(Operator.AND, idA);
 				baseQuery.addCondition(Operator.AND, idB);
 				queries.add(baseQuery);
 			}
+			System.gc();
 		}
-		
+
+		System.out.println(queries.size());
+
 		// Executing all MiQL query in threads
 		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		{
-			final int nbThread = 5;
-			List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
-			ExecutorService executor = Executors.newFixedThreadPool(nbThread);
+			// Thread manager
+			ExecutorService executor = Executors.newSingleThreadExecutor();// newFixedThreadPool(3);
 			CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(executor);
 
 			// Launch queries in thread
+			final ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 9);
+			List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
 			for (final MiQLExpressionBuilder query : queries) {
 				interactionRequests.add(completionService.submit(new Callable<List<BinaryInteraction>>() {
 					@Override
 					public List<BinaryInteraction> call() throws Exception {
-						ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, nbThread);
-						return client.getByQuery(query.toString());
+						List<BinaryInteraction> result = null;
+
+						final int MAX_TRY = 2;
+						int i = 0;
+						while (result == null) {
+							try {
+								result = (List<BinaryInteraction>) client.getByQuery(query.toString());
+							} catch (Exception e) {
+								if (++i >= MAX_TRY)
+									throw e;
+							}
+						}
+
+						return result;
 					}
 				}));
 			}
@@ -126,11 +161,11 @@ public class InteractionsUtil {
 			// Collect all interaction results
 			for (int i = 0; i < interactionRequests.size(); i++) {
 				Future<List<BinaryInteraction>> req = interactionRequests.get(i);
-
+				System.gc();
 				try {
 					results.addAll(completionService.take().get());
 				} catch (ExecutionException e) {
-					System.err.println("Interaction query #" + i + " failed- " + e.getMessage());
+					System.err.println("Interaction query #" + i + " failed -> " + e.getMessage());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -139,10 +174,9 @@ public class InteractionsUtil {
 
 		return results;
 	}
-	
+
 	/**
-	 * Converts a Collection&lt;EncoreInteraction&gt; into a
-	 * List&lt;BinaryInteraction&lt;Interactor&gt;&gt;
+	 * Converts a Collection&lt;EncoreInteraction&gt; into a List&lt;BinaryInteraction&lt;Interactor&gt;&gt;
 	 */
 	public static List<BinaryInteraction> convertEncoreInteraction(Collection<EncoreInteraction> interactions) {
 		List<BinaryInteraction> convertedInteractions = new ArrayList<BinaryInteraction>(interactions.size());
@@ -211,9 +245,8 @@ public class InteractionsUtil {
 	}
 
 	/**
-	 * Remove all interaction from a list if at least one of the interactor
-	 * doesn't have an "uniprotkb" identifier. Also sort the identifiers of
-	 * interactor to make uniprotkb appear first
+	 * Remove all interaction from a list if at least one of the interactor doesn't have an "uniprotkb" identifier. Also sort the
+	 * identifiers of interactor to make uniprotkb appear first
 	 */
 	public static Collection<BinaryInteraction> filterNonUniprot(Collection<BinaryInteraction> interactions) {
 		List<BinaryInteraction> out = new ArrayList<BinaryInteraction>();
@@ -227,7 +260,7 @@ public class InteractionsUtil {
 					binaryInteraction.getInteractorB() })) {
 
 				List<CrossReference> ids = interactor.getIdentifiers();
-				//ids.addAll(interactor.getAlternativeIdentifiers());
+				// ids.addAll(interactor.getAlternativeIdentifiers());
 
 				if (ids.size() == 1 && !ids.get(0).getDatabase().equals("uniprotkb")) {
 					ok = false;

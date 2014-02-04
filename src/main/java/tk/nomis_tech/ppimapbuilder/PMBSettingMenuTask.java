@@ -28,7 +28,7 @@ public class PMBSettingMenuTask extends AbstractTask {
 			@Override
 			public void run() {
 				try {
-					PsicquicRegistry reg = new PsicquicRegistry();
+					PsicquicRegistry reg = PsicquicRegistry.getInstance();
 					sw.updateLists(reg.getServices());
 
 					sw.setVisible(true);

@@ -23,8 +23,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private final Collection<BinaryInteraction> interactionResults;
 	private QueryWindow qw;
 
-	public PMBQueryInteractionTask(
-			Collection<BinaryInteraction> interactionResults, QueryWindow qw) {
+	public PMBQueryInteractionTask(Collection<BinaryInteraction> interactionResults, QueryWindow qw) {
 		this.interactionResults = interactionResults;
 		this.qw = qw;
 	}
@@ -33,61 +32,63 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	public void run(TaskMonitor monitor) throws Exception {
 		interactionResults.clear();
 		monitor.setTitle("PSIQUIC interaction query");
-		
+
 		Organism refOrg = qw.getSelectedRefOrganism();
 		List<String> proteinOfInterest = qw.getSelectedUniprotID();
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
 		List<Organism> otherOrgs = qw.getSelectedOrganisms();
-		
+
 		List<BinaryInteraction> referenceInteractions = new ArrayList<BinaryInteraction>();
 
 		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(selectedDatabases, 3);
-		
-		double max = proteinOfInterest.size() + 2.0;
-		
+
+		final double NB_STEP = proteinOfInterest.size() + 2.0;
+
 		int step = 0;
 		for (; step < proteinOfInterest.size(); step++) {
 			String uniprotID = proteinOfInterest.get(step);
-			
-			monitor.setStatusMessage("Searching interaction of "+uniprotID+"...");
-			monitor.setProgress((step+1.0)/max);
-			
+
+			monitor.setStatusMessage("Searching interaction of " + uniprotID + "...");
+			monitor.setProgress((step + 1.0) / NB_STEP);
+
 			if (!UniprotId.isValid(uniprotID))
-				throw new Exception(uniprotID + " is not a valid Uniprot ID."); 
-			
-			/*String prot = InParanoidClient.getOrthologUniprotId(uniprotID, refOrg.getTaxId());
-			if(prot == null) 
-				throw new Exception(uniprotID + " not found in reference organism.");
-			*/
-			
-			List<BinaryInteraction> interactions = client.getByQuery("species:"+refOrg.getTaxId()+" AND id:"+uniprotID);
-			System.out.println(uniprotID+" interactions:"+interactions.size());
-			
-			//Search interactions
+				throw new Exception(uniprotID + " is not a valid Uniprot ID.");
+
+			/*
+			 * String prot = InParanoidClient.getOrthologUniprotId(uniprotID,
+			 * refOrg.getTaxId()); if(prot == null) throw new
+			 * Exception(uniprotID + " not found in reference organism.");
+			 */
+
+			List<BinaryInteraction> interactions = client.getByQuery("species:" + refOrg.getTaxId() + " AND id:" + uniprotID);
+			System.out.println(uniprotID + " interactions:" + interactions.size());
+
+			// Search interactions
 			referenceInteractions.addAll(interactions);
 		}
-		System.out.println("reference interactions: "+referenceInteractions.size());
-		
-		//Filter non uniprot protein interaction
+		System.out.println("reference interactions: " + referenceInteractions.size());
+
+		// Filter non uniprot protein interaction
 		referenceInteractions = (List<BinaryInteraction>) InteractionsUtil.filterNonUniprot(referenceInteractions);
-		System.out.println("after filtering "+referenceInteractions.size());
-		
-		//Find interactors list (without protein of interest)
+		System.out.println("after filtering " + referenceInteractions.size());
+
+		// Find interactors list (without protein of interest)
 		List<String> interactors = InteractionsUtil.getInteractorsBinary(referenceInteractions);
 		interactors.removeAll(proteinOfInterest);
-		
-		//Add secondary interactions
+
+		// Add secondary interactions
 		monitor.setStatusMessage("Searching secondary interactions...");
-		monitor.setProgress(((++step)+1.0)/max);
-		referenceInteractions.addAll(InteractionsUtil.getInteractionBetweenProtein(new HashSet<String>(interactors), refOrg.getTaxId(), selectedDatabases));
-		
+		monitor.setProgress(((++step) + 1.0) / NB_STEP);
+		referenceInteractions.addAll(InteractionsUtil.getInteractionBetweenProtein(new HashSet<String>(interactors), refOrg.getTaxId(),
+				selectedDatabases));
+
 		System.out.println("interactions before cluster " + referenceInteractions.size());
-		
-		//Remove duplicate interactions
+
+		// Remove duplicate interactions
 		monitor.setStatusMessage("Clustering interactions...");
-		monitor.setProgress(((++step)+1.0)/max);
+		monitor.setProgress(((++step) + 1.0) / NB_STEP);
 		Collection<EncoreInteraction> clusterInteraction = InteractionsUtil.clusterInteraction(referenceInteractions);
-		
+
 		System.out.println("interactions after cluster " + clusterInteraction.size());
 		referenceInteractions = InteractionsUtil.convertEncoreInteraction(clusterInteraction);
 		System.out.println("interactions after convert " + referenceInteractions.size());

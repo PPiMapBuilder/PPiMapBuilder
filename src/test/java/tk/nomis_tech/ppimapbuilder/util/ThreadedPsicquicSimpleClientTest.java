@@ -12,7 +12,7 @@ public class ThreadedPsicquicSimpleClientTest {
 
 	@BeforeClass
 	public static void init() throws IOException {
-		List<PsicquicService> services = (new PsicquicRegistry()).getServices();
+		List<PsicquicService> services = PsicquicRegistry.getInstance().getServices();
 		client = new ThreadedPsicquicSimpleClient(services, services.size());
 	}
 
