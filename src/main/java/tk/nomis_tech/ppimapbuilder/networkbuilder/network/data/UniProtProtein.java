@@ -7,14 +7,24 @@ public class UniProtProtein extends AbstractProtein {
 	private String geneName;
 	private ArrayList<String> synonymGeneNames = new ArrayList<String>();
 	private String proteinName;
+	private String ecNumber;
+	public String getEcNumber() {
+		return ecNumber;
+	}
+
+	public void setEcNumber(String ecNumber) {
+		this.ecNumber = ecNumber;
+	}
+
 	private boolean reviewed;
 	private ArrayList<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
 	private ArrayList<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
 	private ArrayList<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
 	
-	public UniProtProtein(String uniprotId, String geneName, Integer taxId, String proteinName, boolean reviewed) {
+	public UniProtProtein(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
 		super(uniprotId, taxId);
 		this.proteinName = proteinName;
+		this.ecNumber = ecNumber;
 		this.geneName = geneName;
 		this.reviewed = reviewed;
 	}

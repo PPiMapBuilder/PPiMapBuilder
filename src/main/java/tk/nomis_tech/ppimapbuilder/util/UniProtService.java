@@ -45,6 +45,7 @@ public class UniProtService {
 		ArrayList<String> synonymGeneNames = new ArrayList<String>();
 		String proteinName = null;
 		boolean reviewed = false;
+		String ec_number = "";
 		
 		// TAX ID
 		for (Element e : doc.select("organism")) {
@@ -80,11 +81,17 @@ public class UniProtService {
 			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot")?true:false; // If the protein comes from Swiss-Prot, it is reviewed
 			break;
 		}
-		
+
+		// EC NUMBER
+		for (Element e : doc.select("ecNumber")) {
+			ec_number = e.val();
+			break;
+		}
+
 		// PROTEIN CREATION
-		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, taxId, proteinName, reviewed);
+		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, ec_number, taxId, proteinName, reviewed);
 		prot.setSynonymGeneNames(synonymGeneNames);
-		
+
 		// GENE ONTOLOGIES
 		for (Element e : doc.select("dbReference")) {
 			if (e.attr("type").equals("GO")) {
@@ -124,7 +131,7 @@ public class UniProtService {
 		return prot;
 		
 	}
-	
+
 	public static UniProtProtein getUniprotProtein(String uniprotid) {
 		UniProtProtein prot = retrieveProteinData(uniprotid);
 		return prot;
