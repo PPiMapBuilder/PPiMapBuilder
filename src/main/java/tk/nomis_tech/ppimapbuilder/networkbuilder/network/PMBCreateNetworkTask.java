@@ -81,10 +81,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	public void createNetworkFromBinaryInteractions(Collection<BinaryInteraction> binaryInteractions) {
 		// Create an empty network
 		CyNetwork myNet = cnf.createNetwork();
-		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
+		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
 		CyTable netAttr = myNet.getDefaultNetworkTable();
-		netAttr.createColumn("type", String.class, true);
-		myNet.getRow(myNet).set("type", "PPiMapBuilder");
+		netAttr.createColumn("created by", String.class, true);
+		myNet.getRow(myNet).set("created by", "PPiMapBuilder");
 
 		// Edge attributes
 		CyTable edgeAttr = myNet.getDefaultEdgeTable();
