@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,9 +28,9 @@ import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.Author;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProtein;
 import tk.nomis_tech.ppimapbuilder.util.PsicquicResultTranslator;
-import tk.nomis_tech.ppimapbuilder.util.UniProtService;
+import tk.nomis_tech.ppimapbuilder.util.UniProtEntryClient;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -146,18 +147,21 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeNameMap.put(name1, node1);
 				
 				// Add attributes to first node
-				UniProtProtein prot = UniProtService.getUniprotProtein(name1);
-				CyRow attributesNode1 = myNet.getRow(node1);
-				attributesNode1.set("uniprot_id", prot.getUniprotId());
-				attributesNode1.set("tax_id", String.valueOf(prot.getTaxId()));
-				attributesNode1.set("gene_name", prot.getGeneName());
-				attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
-				attributesNode1.set("protein_name", prot.getProteinName());
-				attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
-				attributesNode1.set("cellular_components", prot.getCellularComponentsAsStringList());
-				attributesNode1.set("biological_processes", prot.getBiologicalProcessesAsStringList());
-				attributesNode1.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
-				
+				try {
+					UniProtProtein prot = UniProtEntryClient.getInstance().retrieveProteinData(name1);
+					CyRow attributesNode1 = myNet.getRow(node1);
+					attributesNode1.set("uniprot_id", prot.getUniprotId());
+					attributesNode1.set("tax_id", String.valueOf(prot.getTaxId()));
+					attributesNode1.set("gene_name", prot.getGeneName());
+					attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
+					attributesNode1.set("protein_name", prot.getProteinName());
+					attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
+					attributesNode1.set("cellular_components", prot.getCellularComponentsAsStringList());
+					attributesNode1.set("biological_processes", prot.getBiologicalProcessesAsStringList());
+					attributesNode1.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			
 			// Retrieve or create the second node
@@ -170,17 +174,21 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeNameMap.put(name2, node2);
 				
 				// Add attributes to second node
-				UniProtProtein prot = UniProtService.getUniprotProtein(name2);
-				CyRow attributesNode2 = myNet.getRow(node2);
-				attributesNode2.set("uniprot_id", prot.getUniprotId());
-				attributesNode2.set("tax_id", String.valueOf(prot.getTaxId()));
-				attributesNode2.set("gene_name", prot.getGeneName());
-				attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
-				attributesNode2.set("protein_name", prot.getProteinName());
-				attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
-				attributesNode2.set("cellular_components", prot.getCellularComponentsAsStringList());
-				attributesNode2.set("biological_processes", prot.getBiologicalProcessesAsStringList());
-				attributesNode2.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
+				try {
+					UniProtProtein prot = UniProtEntryClient.getInstance().retrieveProteinData(name2);
+					CyRow attributesNode2 = myNet.getRow(node2);
+					attributesNode2.set("uniprot_id", prot.getUniprotId());
+					attributesNode2.set("tax_id", String.valueOf(prot.getTaxId()));
+					attributesNode2.set("gene_name", prot.getGeneName());
+					attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
+					attributesNode2.set("protein_name", prot.getProteinName());
+					attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
+					attributesNode2.set("cellular_components", prot.getCellularComponentsAsStringList());
+					attributesNode2.set("biological_processes", prot.getBiologicalProcessesAsStringList());
+					attributesNode2.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}			
 			
 			// Add edges & attributes

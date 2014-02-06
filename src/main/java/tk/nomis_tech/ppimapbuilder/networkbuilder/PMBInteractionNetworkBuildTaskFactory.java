@@ -21,7 +21,7 @@ import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 
 /**
- * PPiMapBuilder app sub menu
+ * PPiMapBuilder network query and build
  */
 public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 

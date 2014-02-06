@@ -2,6 +2,7 @@ package tk.nomis_tech.ppimapbuilder.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,7 +27,15 @@ public class InteractionsUtilTest {
 
 	@BeforeClass
 	public static void init() throws IOException, PsimiTabException {
-		services = (PsicquicRegistry.getInstance()).getServices();
+		services = new ArrayList<PsicquicService>(){{
+			add(PsicquicRegistry.getInstance().getService("intact", false));
+			add(PsicquicRegistry.getInstance().getService("bind", false));
+//			add(PsicquicRegistry.getInstance().getService("biogrid", false));
+//			add(PsicquicRegistry.getInstance().getService("uniprot", false));
+//			add(PsicquicRegistry.getInstance().getService("dip", false));
+//			add(PsicquicRegistry.getInstance().getService("apid", false));
+//			add(PsicquicRegistry.getInstance().getService("mint", false));
+		}};
 
 		PsicquicSimpleClient client = new PsicquicSimpleClient(PsicquicRegistry.getInstance().getService("intact", false).getRestUrl());
 		PsimiTabReader mitabReader = new PsimiTabReader();
@@ -111,14 +120,13 @@ public class InteractionsUtilTest {
 				"Q13952", "Q14344", "Q62132", "Q99677", "Q9UG90", "Q9BZH6", "Q9BQD3", "B4E025", "O60603", "Q01955", "Q92794", "Q5NHX7",
 				"Q92791", "Q5NHX6", "Q5NI96", "Q5NHX9", "Q92793", "Q5NHX8", "Q5NHX3", "Q5NI93", "Q01959", "Q5NHX5", "P10644", "Q8WTV0",
 				"Q6SA08", "C0LZJ3" }));
-		Collections.shuffle(services);
-		List<BinaryInteraction> res = InteractionsUtil.getInteractionBetweenProtein(prots, 9606, services.subList(0, 11));
-		System.out.println(res.size());
-
+		List<BinaryInteraction> res = InteractionsUtil.getInteractionBetweenProtein(prots, 9606, services);
+		System.out.println("before cluster: "+res.size());
+		System.out.println("after cluster: "+ InteractionsUtil.clusterInteraction(res).size());
 	}
 
 	// @Test
-	public void networkExpansion() {
+	public void networkExpansion() throws Exception {
 		List<BinaryInteraction> res;
 		List<String> prots;
 		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 5);

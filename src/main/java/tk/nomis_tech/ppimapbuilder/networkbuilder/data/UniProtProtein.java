@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.networkbuilder.network.data;
+package tk.nomis_tech.ppimapbuilder.networkbuilder.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -141,7 +141,19 @@ public class UniProtProtein extends AbstractProtein {
 		this.proteinName = proteinName;
 	}
 	
-	
-
-
+	/**
+	 * Mostly for debug
+	 */
+	@Override
+	public String toString() {
+		StringBuilder out = new StringBuilder();
+		out.append("{");
+		out.append("id:").append(uniprotId).append(", ");
+		out.append("taxId:").append(taxId).append(", ");
+		out.append("proteinName:").append(proteinName).append(", ");
+		out.append("geneName:").append(geneName).append(", ");
+		out.append("reviewed:").append(reviewed);
+		out.append("}");
+		return out.toString();
+	}
 }

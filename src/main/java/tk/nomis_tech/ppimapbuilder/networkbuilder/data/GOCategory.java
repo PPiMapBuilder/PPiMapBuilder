@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.networkbuilder.network.data;
+package tk.nomis_tech.ppimapbuilder.networkbuilder.data;
 
 public enum GOCategory {
 

@@ -1,6 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.orthology;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -30,12 +31,25 @@ public class Ortholog {
 	};
 
 	/**
-	 * Convert a NCBI taxonomic ID to a InParanoid organism ID.
+	 * Converts a NCBI taxonomic ID to a InParanoid organism ID.
 	 * @param ncbiTaxId
 	 * @return 
 	 */
 	public static Integer translateTaxID(Integer ncbiTaxId) {
 		return Ortholog.ID_MAP.get(ncbiTaxId);
+	}
+	
+	/**
+	 * Converts a InParanoid organism ID to a NCBI taxonomic ID .
+	 * @param inparanoidID
+	 * @return
+	 */
+	public static Integer translateInparanoidID(Integer inparanoidID) {
+		for(Entry<Integer, Integer> entry : ID_MAP.entrySet()) {
+			if(entry.getValue().equals(inparanoidID))
+				return entry.getKey();
+		}
+		return null;
 	}
 
 	public Ortholog() {

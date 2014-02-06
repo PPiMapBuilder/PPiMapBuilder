@@ -20,7 +20,7 @@ import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.util.UniProtService;
+import tk.nomis_tech.ppimapbuilder.util.UniProtEntryClient;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,10 +1,9 @@
 package tk.nomis_tech.ppimapbuilder.util;
 
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -18,19 +17,10 @@ import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import psidev.psi.mi.tab.model.Interactor;
-import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
-import uk.ac.ebi.enfin.mi.cluster.Encore2Binary;
-import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
-import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
-
-import com.google.common.collect.Lists;
 
 /**
- * An advanced PSICQUIC simple client capable of querying multiple service with
- * multiple thread.<br/>
- * Also makes a cluster (MiCluster) of resulted interaction to remove
- * duplicates.
+ * An advanced PSICQUIC simple client capable of querying multiple service with multiple thread.<br/>
+ * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
 public class ThreadedPsicquicSimpleClient {
 
@@ -38,10 +28,9 @@ public class ThreadedPsicquicSimpleClient {
 	private final int NB_THREAD;
 
 	/**
-	 * @param serviceRestUrl
-	 *            list of PSICQUIC service REST url
-	 * @param nbThread
-	 *            number of parallel request that need to be sent
+	 * Constructs a new ThreadedPsicquicSimpleClient
+	 * @param services list of PSICQUIC services that will be use during query
+	 * @param NB_THREAD number of parallel request that need to be sent
 	 */
 	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, final int NB_THREAD) {
 		this.services = services;
@@ -49,10 +38,9 @@ public class ThreadedPsicquicSimpleClient {
 	}
 
 	/**
-	 * Same as PsicquicSimpleClient.getByQuery but with threaded request over
-	 * multiple PSICQUIC service
+	 * Same as PsicquicSimpleClient.getByQuery but with threaded request over multiple PSICQUIC services
 	 */
-	public List<BinaryInteraction> getByQuery(final String query) {
+	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
 		final List<Future<List<BinaryInteraction>>> requests = new ArrayList<Future<List<BinaryInteraction>>>();
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(
@@ -63,8 +51,7 @@ public class ThreadedPsicquicSimpleClient {
 			requests.add(completionService.submit(new Callable<List<BinaryInteraction>>() {
 				@Override
 				public List<BinaryInteraction> call() throws Exception {
-					if(service.getName().contains("GeneMANIA")) return new ArrayList<BinaryInteraction>();
-					
+					// if(service.getName().contains("GeneMANIA")) return new ArrayList<BinaryInteraction>();
 					List<BinaryInteraction> result = null;
 
 					final int MAX_TRY = 2;
@@ -77,8 +64,9 @@ public class ThreadedPsicquicSimpleClient {
 							final PsimiTabReader mitabReader = new PsimiTabReader();
 							result = (List<BinaryInteraction>) mitabReader.read(mitabResult);
 						} catch (Exception e) {
-							if (++i >= MAX_TRY) throw e;
-							//System.out.println("Retrying "+service.getName()+" interaction query");
+							if (++i >= MAX_TRY)
+								throw e;
+							// System.out.println("Retrying "+service.getName()+" interaction query");
 						}
 					}
 
@@ -90,12 +78,24 @@ public class ThreadedPsicquicSimpleClient {
 		// Collect all interaction results
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		for (int i = 0; i < requests.size(); i++) {
-			Future<List<BinaryInteraction>> req = requests.get(i);
-
+			Future<List<BinaryInteraction>> take = null;
 			try {
-				results.addAll(completionService.take().get());
+				take = completionService.take();
+				results.addAll(take.get());
 			} catch (ExecutionException e) {
-				System.err.println(e.getMessage() + " -> " + e.getCause().getCause().getMessage());
+				Throwable cause = e.getCause();
+
+				if (cause != null) {
+					if(cause instanceof SocketTimeoutException) {
+						//Connection failed to a remote database (error from the database)
+						System.err.println(services.get(requests.indexOf(take)).getName()+" server error");
+					}
+					else if(cause instanceof UnknownHostException) {
+						//No internet connection to the database
+						System.err.println(services.get(requests.indexOf(take)).getName()+" connection failed");
+					}
+				} else
+					throw e;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -104,23 +104,54 @@ public class ThreadedPsicquicSimpleClient {
 
 		return results;
 	}
+	
+	/**
+	 * Gets cumulative list of interaction from a list of MiQL query
+	 */
+	public List<BinaryInteraction> getByQueries(final List<String> queries) throws Exception {
+		// Thread manager
+		ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
+		CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(executor);
 
-	private class InteractionQueryResult {
-		private final List<BinaryInteraction> interactions;
-		private final PsicquicService sourceDatabase;
+		// Launch queries in thread
+		List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
+		for (final String query : queries) {
+			interactionRequests.add(completionService.submit(new Callable<List<BinaryInteraction>>() {
+				@Override
+				public List<BinaryInteraction> call() throws Exception {
+					List<BinaryInteraction> result = null;
 
-		public InteractionQueryResult(List<BinaryInteraction> interactions, PsicquicService sourceDatabase) {
-			super();
-			this.interactions = interactions;
-			this.sourceDatabase = sourceDatabase;
+					final int MAX_TRY = 2;
+					int i = 0;
+					while (result == null) {
+						try {
+							result = (List<BinaryInteraction>) getByQuery(query);
+							// System.out.println((queries.indexOf(query)+1)+"/"+queries.size());
+						} catch (Exception e) {
+							if (++i >= MAX_TRY)
+								throw e;
+						}
+					}
+
+					return result;
+				}
+			}));
 		}
 
-		public List<BinaryInteraction> getInteractions() {
-			return interactions;
+		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
+		// Collect all interaction results
+		for (int i = 0; i < interactionRequests.size(); i++) {
+			try {
+				results.addAll(completionService.take().get());
+			} catch (ExecutionException e) {
+				// if(!(e.getCause() instanceof NullPointerException)) {
+				System.err.println("Interaction query failed -> " + e.getMessage());
+				throw e;
+				// }
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-
-		public PsicquicService getSourceDatabase() {
-			return sourceDatabase;
-		}
+		return results;
 	}
 }

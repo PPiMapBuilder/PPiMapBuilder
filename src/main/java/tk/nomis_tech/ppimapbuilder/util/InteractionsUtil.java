@@ -1,6 +1,5 @@
 package tk.nomis_tech.ppimapbuilder.util;
 
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -9,29 +8,19 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
-
-import com.google.common.collect.Lists;
-
-import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
 import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
 import tk.nomis_tech.ppimapbuilder.util.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLParameterBuilder;
 import tk.nomis_tech.ppimapbuilder.util.miql.MiQLExpressionBuilder.Operator;
+import tk.nomis_tech.ppimapbuilder.util.miql.MiQLParameterBuilder;
 import uk.ac.ebi.enfin.mi.cluster.Encore2Binary;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
+
+import com.google.common.collect.Lists;
 
 /**
  * Group of method useful for manipulation of interaction list
@@ -77,8 +66,8 @@ public class InteractionsUtil {
 
 		// Slice the query in multiple queries if the result MiQL query is
 		// bigger than maxQuerySize
-		List<MiQLExpressionBuilder> queries = new ArrayList<MiQLExpressionBuilder>();
-		final int MAX_QUERY_SIZE = BASE_URL_LENGTH + baseParamLength + 250;
+		final List<String> queries = new ArrayList<String>();
+		final int MAX_QUERY_SIZE = BASE_URL_LENGTH + baseParamLength + 950;//TODO check difference in result when changing url length
 		{
 			if (estimatedURLQueryLength > MAX_QUERY_SIZE) {
 
@@ -106,72 +95,32 @@ public class InteractionsUtil {
 				MiQLExpressionBuilder protsIdA, protsIdB;
 				for (int i = 0; i < protsExprs.size(); i++) {
 					protsIdA = protsExprs.get(i);
-
+					//System.out.println(protsIdA);
+					
 					for (int j = i; j < protsExprs.size(); j++) {
 						protsIdB = protsExprs.get(j);
 						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
 						q.addCondition(Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
 						q.addCondition(Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
-						queries.add(q);
-						// System.out.println(q);
+						queries.add(q.toString());
+						//System.out.println(q);
 					}
 				}
 			} else {
 				baseQuery.addCondition(Operator.AND, idA);
 				baseQuery.addCondition(Operator.AND, idB);
-				queries.add(baseQuery);
+				queries.add(baseQuery.toString());
 			}
 			System.gc();
 		}
 
-		System.out.println(queries.size());
+		//System.out.println(queries.size());
 
-		// Executing all MiQL query in threads
+		// Executing all MiQL queries using ThreadedPsicquicSimpleClient
 		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		{
-			// Thread manager
-			ExecutorService executor = Executors.newSingleThreadExecutor();// newFixedThreadPool(3);
-			CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(executor);
-
-			// Launch queries in thread
-			final ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 9);
-			List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
-			for (final MiQLExpressionBuilder query : queries) {
-				interactionRequests.add(completionService.submit(new Callable<List<BinaryInteraction>>() {
-					@Override
-					public List<BinaryInteraction> call() throws Exception {
-						List<BinaryInteraction> result = null;
-
-						final int MAX_TRY = 2;
-						int i = 0;
-						while (result == null) {
-							try {
-								result = (List<BinaryInteraction>) client.getByQuery(query.toString());
-							} catch (Exception e) {
-								if (++i >= MAX_TRY)
-									throw e;
-							}
-						}
-
-						return result;
-					}
-				}));
-			}
-
-			// Collect all interaction results
-			for (int i = 0; i < interactionRequests.size(); i++) {
-				Future<List<BinaryInteraction>> req = interactionRequests.get(i);
-				System.gc();
-				try {
-					results.addAll(completionService.take().get());
-				} catch (ExecutionException e) {
-					System.err.println("Interaction query #" + i + " failed -> " + e.getMessage());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
+		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 3);
+		results.addAll(client.getByQueries(queries));
+		
 		return results;
 	}
 
