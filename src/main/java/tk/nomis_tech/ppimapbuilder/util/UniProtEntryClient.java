@@ -3,7 +3,9 @@ package tk.nomis_tech.ppimapbuilder.util;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -17,6 +19,8 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+
+import com.google.common.collect.Iterables;
 
 import tk.nomis_tech.ppimapbuilder.networkbuilder.data.GOCategory;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.data.GeneOntologyModel;
@@ -142,16 +146,18 @@ public class UniProtEntryClient {
 		
 		return prot;
 	}
-	
-	public HashMap<String, UniProtProtein> retrieveProteinsData(List<String> uniProtIds) throws IOException {
+
+	/**
+	 * Retrieves UniProt entry data of a list of protein using threaded execution pool
+	 */
+	public HashMap<String, UniProtProtein> retrieveProteinsData(Collection<String> uniProtIds) throws IOException {
+		final ArrayList<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
 		final List<Future<UniProtProtein>> requests = new ArrayList<Future<UniProtProtein>>();
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<UniProtProtein> completionService = new ExecutorCompletionService<UniProtProtein>(executor);
-
+		
 		// For each protein => search UniProt entry
-		for (int i = 0; i < uniProtIds.size(); i++) {
-			final String uniProtId = uniProtIds.get(i);
-
+		for (final String uniProtId : uniProtIdsArray) {
 			requests.add(completionService.submit(new Callable<UniProtProtein>() {
 				@Override
 				public UniProtProtein call() throws Exception {
@@ -179,7 +185,7 @@ public class UniProtEntryClient {
 				Future<UniProtProtein> take = completionService.take();
 				UniProtProtein result = take.get();
 				if(result != null)
-					results.put(uniProtIds.get(requests.indexOf(take)), result);
+					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
 				if(cause instanceof IOException)

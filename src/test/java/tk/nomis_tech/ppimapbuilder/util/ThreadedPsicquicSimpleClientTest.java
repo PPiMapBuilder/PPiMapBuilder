@@ -1,7 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.util;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.BeforeClass;
@@ -10,6 +11,7 @@ import org.junit.Test;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import com.google.common.collect.Lists;
+
 
 public class ThreadedPsicquicSimpleClientTest {
 
@@ -26,24 +28,22 @@ public class ThreadedPsicquicSimpleClientTest {
 		});
 		services = PsicquicRegistry.getInstance().getServices();*/
 
-		services = new ArrayList<PsicquicService>() {
-			{
-				add(PsicquicRegistry.getInstance().getService("intact", false));
-				add(PsicquicRegistry.getInstance().getService("bind", false));
-				add(PsicquicRegistry.getInstance().getService("biogrid", false));
-				add(PsicquicRegistry.getInstance().getService("dip", false));
-				add(PsicquicRegistry.getInstance().getService("uniprot", false));
-				add(PsicquicRegistry.getInstance().getService("apid", false));
-				add(PsicquicRegistry.getInstance().getService("mint", false));
-			}
-		};
+		services = Arrays.asList(new PsicquicService[]{
+			PsicquicRegistry.getInstance().getService("intact", false),
+			PsicquicRegistry.getInstance().getService("bind", false),
+			PsicquicRegistry.getInstance().getService("biogrid", false),
+			PsicquicRegistry.getInstance().getService("dip", false),
+			PsicquicRegistry.getInstance().getService("uniprot", false),
+			PsicquicRegistry.getInstance().getService("apid", false),
+			PsicquicRegistry.getInstance().getService("mint", false)
+		});
 
 		client = new ThreadedPsicquicSimpleClient(services, 3);
 	}
 
 	@Test
 	public void testGetByQuery() throws Exception {
-		List<BinaryInteraction> byQuery = client.getByQuery("identifier:P04040");
+		Collection byQuery = client.getByQuery("identifier:P04040");
 		
 		//System.out.println(byQuery.size());
 	}

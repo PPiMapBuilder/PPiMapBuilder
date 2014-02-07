@@ -64,7 +64,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			monitor.setStatusMessage("Searching interaction for protein of interest");
 			monitor.setProgress(++step / NB_STEP);
 			{
-				//TODO verify protein id, remove duplicate protein id
+				//TODO verify protein id
 				List<String> queries = new ArrayList<String>(); 
 				for (String uniProtId : proteinOfInterest) {
 					if (!UniprotId.isValid(uniProtId))
@@ -76,6 +76,8 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 			System.out.println("interactions: "+referenceInteractions.size());
 			
+			//TODO stop here if no interaction was found
+			
 			// Filter non uniprot protein interaction
 			referenceInteractions = (List<BinaryInteraction>) InteractionsUtil.filterNonUniprot(referenceInteractions);
 			
@@ -84,11 +86,11 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			monitor.setProgress(++step / NB_STEP);
 			{
 				// Find interactors list (without protein of interest)
-				List<String> interactors = InteractionsUtil.getInteractorsBinary(referenceInteractions);
+				HashSet<String> interactors = new HashSet<String>(InteractionsUtil.getInteractorsBinary(referenceInteractions));
 				interactors.removeAll(proteinOfInterest);
 				
 				// Search interactions between interactors
-				referenceInteractions.addAll(InteractionsUtil.getInteractionBetweenProtein(new HashSet<String>(interactors), refOrg.getTaxId(),
+				referenceInteractions.addAll(InteractionsUtil.getInteractionBetweenProtein(interactors, refOrg.getTaxId(),
 						selectedDatabases));
 			}
 			
@@ -103,11 +105,15 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		//Get protein UniProt entries
 		monitor.setStatusMessage("Downloading UniProt protein entries...");
 		monitor.setProgress(++step / NB_STEP);
-		List<String> referenceInteractors = InteractionsUtil.getInteractorsEncore(clusterInteraction);
-		List<UniProtProtein> interactors; 
+		HashSet<String> referenceInteractors;
+		HashSet<UniProtProtein> interactors; 
 		{
+			//Get reference interactors
+			referenceInteractors = new HashSet<String>(InteractionsUtil.getInteractorsEncore(clusterInteraction));
+			referenceInteractors.addAll(proteinOfInterest);
+			
 			HashMap<String, UniProtProtein> uniProtProteins = UniProtEntryClient.getInstance().retrieveProteinsData(referenceInteractors);
-			interactors = new ArrayList<UniProtProtein>(uniProtProteins.values());
+			interactors = new HashSet<UniProtProtein>(uniProtProteins.values());
 
 			System.out.println(referenceInteractors);
 		}
@@ -120,7 +126,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			//Get orthologs of interactors
 			monitor.setStatusMessage("Find interactors orthologs...");
 			monitor.setProgress(++step / NB_STEP);
-			final HashMap<String,HashMap<Integer,String>> searchOrthologForUniprotProtein = new HashMap<String, HashMap<Integer,String>>();
+			final HashMap<String,HashMap<Integer,String>> orthologs = new HashMap<String, HashMap<Integer,String>>();
 			{
 				final List<Integer> otherOrgsTaxIds = new ArrayList<Integer>(){{
 					for(Organism org: otherOrgs) 
@@ -130,37 +136,37 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				System.out.println("n# protein: "+interactors.size());
 				System.out.println("n# org: "+otherOrgsTaxIds.size());
 				
-				try {					
-					searchOrthologForUniprotProtein.putAll(InParanoidClient.getInstance().searchOrthologForUniprotProtein(interactors, otherOrgsTaxIds));
+				try {
+					InParanoidClient inParanoidClient = new InParanoidClient(9, 0.85);
+					orthologs.putAll(inParanoidClient.searchOrthologForUniprotProtein(interactors, otherOrgsTaxIds));
 				} finally{}
 			}
 			
 			//Get ortholog interactions
 			monitor.setStatusMessage("Find orthologs's interactions...");
 			monitor.setProgress(++step / NB_STEP);
-			HashMap<Integer, List<BinaryInteraction>> orthologInteractions = new HashMap<Integer, List<BinaryInteraction>>();
+			HashMap<Integer, Collection<EncoreInteraction>> orthologInteractionResults = new HashMap<Integer, Collection<EncoreInteraction>>();
 			{
 				//TODO maybe search orthologs interactions using thread
 				//For each other organism
 				for(final Organism org: otherOrgs) {
 					HashSet<String> prots = new HashSet<String>(){{
-						for(HashMap<Integer,String> ortho: searchOrthologForUniprotProtein.values()){
+						for(HashMap<Integer,String> ortho: orthologs.values()){
 							String id = ortho.get(org.getTaxId());
 							if(id != null) add(id);
 						}
 					}};
 										
 					//Search all interactions for orthologs found in this organism
-					List<BinaryInteraction> interactionBetweenProtein = InteractionsUtil.getInteractionBetweenProtein(prots, org.getTaxId(), selectedDatabases);
+					Collection<EncoreInteraction> interactionBetweenOrthologs = InteractionsUtil.clusterInteraction(InteractionsUtil.getInteractionBetweenProtein(prots, org.getTaxId(), selectedDatabases));
 					
 					//Store interactions found for this organism
-					orthologInteractions.put(org.getTaxId(), interactionBetweenProtein);
+					orthologInteractionResults.put(org.getTaxId(), interactionBetweenOrthologs);
 					System.out.println("ORG:" + org.getTaxId() + " -> " + prots.size()+" proteins found");
-					System.out.println("ORG:" + org.getTaxId() + " -> " + interactionBetweenProtein.size()+" interactions found");
+					System.out.println("ORG:" + org.getTaxId() + " -> " + interactionBetweenOrthologs.size()+" interactions found");
 				}
 			}			
 		}
-		
 		
 		//Convert for network build
 		referenceInteractions = InteractionsUtil.convertEncoreInteraction(clusterInteraction);

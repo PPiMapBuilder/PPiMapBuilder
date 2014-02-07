@@ -58,7 +58,6 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.tableFactory = tableFactory;
 		this.mapTableToNetworkTablesTaskFactory = mapTableToNetworkTablesTaskFactory;
 		this.interactionResults = new ArrayList<BinaryInteraction>();
-
 	}
 
 	@Override

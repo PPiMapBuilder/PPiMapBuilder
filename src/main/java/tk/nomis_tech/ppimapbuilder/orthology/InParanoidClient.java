@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -15,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -31,65 +34,73 @@ public class InParanoidClient {
 	private static InParanoidClient _instance;
 	
 	private final String baseUrl = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi";
-	private int NB_THREAD = 3;
-	private double scoreLimit = 0.85;
+	final private int NB_THREAD;
+	final private double scoreLimit;
 	
-	private InParanoidClient() {}
-
 	/**
-	 * Gets the singleton instance of InParanoidClient
+	 * Constructs a InParanoid client with specified specified score limit and a default number of thread: 3
 	 */
-	public static InParanoidClient getInstance() {
-		if(_instance == null)
-			_instance = new InParanoidClient();
-		return _instance;
+	public InParanoidClient(double scoreLimit) {
+		this(3, scoreLimit);
 	}
 	
+	/**
+	 * Constructs a InParanoid client with specified number of thread and specified score
+	 */
+	public InParanoidClient(int nB_THREAD, double scoreLimit) {
+		NB_THREAD = nB_THREAD;
+		this.scoreLimit = scoreLimit;
+	}
+
 	/**
 	 * Search orthologs of a protein in a specified organisms
 	 * @throws IOException if a connection error occurred 
 	 */
-	public HashMap<Integer, String> getOrthologs(String uniProtId, List<Integer> taxIds) throws IOException {
+	public HashMap<Integer, String> getOrthologsSingleProtein(String uniProtId, Collection<Integer> taxIds) throws IOException {
 		HashMap<Integer, String> out = new HashMap<Integer, String>();
 
-		// Create request URL
-		StringBuilder reqURL = new StringBuilder(baseUrl)
-				.append("?id=").append(uniProtId)
-				.append("&idtype=proteinid")
-				.append("&all_or_selection=all")
-				//.append(";scorelimit=").append(scoreLimit) // <= Inparanoid doesn't filter score very well
-				.append("&rettype=xml");
+		// Create request paramters
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("id", uniProtId);
+		params.put("idtype", "proteinid");
+		params.put("all_or_selection", "all");
+		params.put("rettype", "xml");
 
-		// Add organism list to request URL
+		/*// Add organism list to request URL
 		for (Integer taxId : taxIds) {
 			Integer org = Ortholog.translateTaxID(taxId);
 			if(org != null) {
 				reqURL.append("&specieslist=").append(org);
 			}
 			else System.err.println("Org id conversion failed [taxid:"+taxId+"]");
-		}
+		}*/
 		
-		String req = reqURL.toString();
+		//System.out.println(req);
 		
 		Document doc = null;
 		
-		//Load xml response file (with multiple try)
-		final int MAX_TRY = 2;
+		// Load xml response file (with multiple try)
+		final int MAX_TRY = 4;
 		int pos = 0;
 		IOException lastError = null;
 		do{
 			try {
-				doc = Jsoup.connect(req).get();
+				Connection connect = Jsoup.connect(baseUrl);
+				connect.timeout(12000);
+				connect.data(params);
+				doc = connect.get();
 			} catch (HttpStatusException e) {
-				if (e.getStatusCode() == 500) return out; //protein ortholog not found
+				if (e.getStatusCode() == 500) 
+					return out; //protein ortholog not found or inparanoid server down
 				lastError = new IOException(e);
 			} catch(SocketTimeoutException e) {
 				//Connection response timeout
 				lastError = new IOException(e);
 			}
-		} while(++pos < MAX_TRY);
+		} while(++pos <= MAX_TRY);
 		
 		if(doc == null) throw lastError;
+		//System.out.println("done with "+(pos-1)+" try");
 		
 		//For each cluster of ortholog
 		for (Element speciesPair : doc.select("speciespair")) {
@@ -129,31 +140,23 @@ public class InParanoidClient {
 	/**
 	 * Search orthologs of proteins in desired organisms
 	 */
-	public HashMap<String, HashMap<Integer, String>> getOrthologsProteins(List<String> uniProtIds, final List<Integer> taxIds) throws IOException {
+	public HashMap<String, HashMap<Integer, String>> getOrthologsMultipleProtein(Collection<String> uniProtIds, final Collection<Integer> taxIds) throws IOException {
 		final List<Future<HashMap<Integer, String>>> requests = new ArrayList<Future<HashMap<Integer, String>>>();
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<HashMap<Integer, String>> completionService = new ExecutorCompletionService<HashMap<Integer, String>>(executor);
 
 		// For each protein => search orthologs in organisms
-		for (int i = 0; i < uniProtIds.size(); i++) {
-			final String uniProtId = uniProtIds.get(i);
-
+		for (final String uniProtId: uniProtIds) {
 			requests.add(completionService.submit(new Callable<HashMap<Integer, String>>() {
 				@Override
 				public HashMap<Integer, String> call() throws Exception {
 					HashMap<Integer, String> result = null;
 					
-					final int MAX_TRY = 2;
-					int i = 0;
-					do {
-						try {
-							result = getOrthologs(uniProtId, taxIds);
-						} catch (UnknownHostException e) {
-							return null;
-						} finally {
-							i++;
-						}
-					} while (result == null || i > MAX_TRY);
+					try {
+						result = getOrthologsSingleProtein(uniProtId, taxIds);
+					} catch (UnknownHostException e) {
+						return null;
+					}
 
 					return result;
 				}
@@ -161,13 +164,14 @@ public class InParanoidClient {
 		}
 
 		// Collect all ortholog results
+		final List<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
 		final HashMap<String, HashMap<Integer, String>> results = new HashMap<String, HashMap<Integer, String>>();
-		for (int i = 0; i < requests.size(); i++) {
+		for (Future<HashMap<Integer, String>> req: requests) {
 			try {
 				Future<HashMap<Integer, String>> take = completionService.take();
 				HashMap<Integer, String> result = take.get();
 				if(result != null)
-					results.put(uniProtIds.get(requests.indexOf(take)), result);
+					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
 				if(cause instanceof IOException)
@@ -183,16 +187,6 @@ public class InParanoidClient {
 	}
 	
 	/**
-	 * Search ortholog protein in a specified organism
-	 * @throws IOException if a connection error occurred 
-	 */
-	public String getOrtholog(String uniProtId, Integer orthologNcbiTaxId) throws IOException {
-		List<Integer> org = new ArrayList<Integer>();
-		org.add(orthologNcbiTaxId);
-		return getOrthologs(uniProtId, org).get(orthologNcbiTaxId);
-	}
-
-	/**
 	 * Search ortholog for an UniProtProtein
 	 * @param prot
 	 *            the protein from which the ortholog will be retrieved
@@ -201,18 +195,23 @@ public class InParanoidClient {
 	 * @throws IOException
 	 *             if connection error occurs
 	 */
-	public HashMap<String, HashMap<Integer, String>> searchOrthologForUniprotProtein(final List<UniProtProtein> prots, List<Integer> taxIds) throws IOException {
+	public HashMap<String, HashMap<Integer, String>> searchOrthologForUniprotProtein(final Collection<UniProtProtein> prots, Collection<Integer> taxIds) throws IOException {
+		final List<Integer> taxIdsArray = new ArrayList<Integer>(taxIds);
+		
 		List<String> protIds = new ArrayList<String>(){{
-			for (UniProtProtein uniProtProtein : prots) {
-				add(uniProtProtein.getUniprotId());
+			Iterator<UniProtProtein> it = prots.iterator();
+			while (it.hasNext()) {
+				add(((UniProtProtein) it.next()).getUniprotId());
 			}
 		}};
 		
-		HashMap<String, HashMap<Integer, String>> orthologsProteins = getOrthologsProteins(protIds, taxIds);
+		HashMap<String, HashMap<Integer, String>> orthologsProteins = getOrthologsMultipleProtein(protIds, taxIdsArray);
 
 		for (Map.Entry<String, HashMap<Integer, String>> orthologProts: orthologsProteins.entrySet()) {
 			for(Map.Entry<Integer, String> ortholog: orthologProts.getValue().entrySet()) {
-				for(UniProtProtein prot: prots) {
+				Iterator<UniProtProtein> it = prots.iterator();
+				while (it.hasNext()) {
+					UniProtProtein prot = (UniProtProtein) it.next();
 					if(prot.getUniprotId().equals(orthologProts.getKey())) {
 						prot.addOrtholog(new OrthologProtein(ortholog.getValue(), ortholog.getKey()));
 					}
