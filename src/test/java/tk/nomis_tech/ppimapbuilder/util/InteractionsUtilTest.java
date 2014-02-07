@@ -138,7 +138,7 @@ public class InteractionsUtilTest {
 
 		int i = 0;
 		do {
-			prots = InteractionsUtil.getInteractorsBinary(client.getByQuery(query.toString()));
+			prots = InteractionsUtil.getInteractorsBinary(client.getByQuery(query.toString()), 9606);
 			System.out.println(prots);
 			System.out.println(prots.size());
 			MiQLExpressionBuilder protsE = new MiQLExpressionBuilder();
