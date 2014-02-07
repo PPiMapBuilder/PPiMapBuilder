@@ -179,10 +179,10 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static List<String> getInteractorsBinary(Collection<BinaryInteraction> interactions) {
+	public static List<String> getInteractorsBinary(Collection<BinaryInteraction> interactions, int refTaxId) {
 		HashSet<String> interactors = new HashSet<String>();
 
-		Iterator<BinaryInteraction> iterator = filterNonUniprot(interactions).iterator();
+		Iterator<BinaryInteraction> iterator = filterNonUniprotAndNonRefOrg(interactions, refTaxId).iterator();
 		while (iterator.hasNext()) {
 			BinaryInteraction interaction = iterator.next();
 
@@ -197,7 +197,7 @@ public class InteractionsUtil {
 	 * Remove all interaction from a list if at least one of the interactor doesn't have an "uniprotkb" identifier. Also sort the
 	 * identifiers of interactor to make uniprotkb appear first
 	 */
-	public static Collection<BinaryInteraction> filterNonUniprot(Collection<BinaryInteraction> interactions) {
+	public static Collection<BinaryInteraction> filterNonUniprotAndNonRefOrg(Collection<BinaryInteraction> interactions, int refTaxId) {
 		List<BinaryInteraction> out = new ArrayList<BinaryInteraction>();
 
 		Iterator<BinaryInteraction> it = interactions.iterator();
@@ -229,6 +229,9 @@ public class InteractionsUtil {
 					ok = false;
 					break;
 				}
+				
+				if(!interactor.getOrganism().getTaxid().equals(refTaxId+""))
+					ok = false;
 
 				List<CrossReference> sortedIdentifiers = new ArrayList<CrossReference>();
 				ids.remove(uniprot);
@@ -237,8 +240,7 @@ public class InteractionsUtil {
 				interactor.setIdentifiers(sortedIdentifiers);
 			}
 
-			if (ok)
-				out.add(binaryInteraction);
+			if (ok) out.add(binaryInteraction);
 		}
 
 		return out;

@@ -26,7 +26,7 @@ public class MiQLParameterBuilder extends AbstractMiQLQueryElement {
 		this(name, (Object)value);
 	}
 	
-	private MiQLParameterBuilder(String name, Object value) {
+	public MiQLParameterBuilder(String name, Object value) {
 		super(name+":");
 		
 		if(value instanceof AbstractMiQLQueryElement) add((AbstractMiQLQueryElement) value);

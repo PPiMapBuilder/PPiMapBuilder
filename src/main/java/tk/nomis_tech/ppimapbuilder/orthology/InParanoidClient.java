@@ -59,7 +59,7 @@ public class InParanoidClient {
 	public HashMap<Integer, String> getOrthologsSingleProtein(String uniProtId, Collection<Integer> taxIds) throws IOException {
 		HashMap<Integer, String> out = new HashMap<Integer, String>();
 
-		// Create request paramters
+		// Create request parameters
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("id", uniProtId);
 		params.put("idtype", "proteinid");

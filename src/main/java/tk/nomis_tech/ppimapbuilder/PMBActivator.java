@@ -1,5 +1,9 @@
 package tk.nomis_tech.ppimapbuilder;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyTableFactory;
@@ -10,8 +14,12 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.work.AbstractTaskFactory;
+import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskFactory;
+import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TaskMonitor;
 import org.osgi.framework.BundleContext;
 
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
@@ -20,11 +28,6 @@ import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.util.UniProtEntryClient;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
 
 /**
  * The starting point of the plug-in
@@ -66,8 +69,9 @@ public class PMBActivator extends AbstractCyActivator {
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 		PMBSettingSaveTaskFactory saveSettingFactory;
-		TaskManager networkBuildTaskManager;
 		{
+			TaskManager networkBuildTaskManager = getService(bc, TaskManager.class);
+			
 			// Network services
 			CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
 			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
@@ -91,28 +95,27 @@ public class PMBActivator extends AbstractCyActivator {
 			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef, cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow, tableFactory, mapTableToNetworkTablesTaskFactory);
 			queryWindow.setCreateNetworkfactory(createNetworkfactory);
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
-			networkBuildTaskManager = getService(bc, TaskManager.class);
 			queryWindow.setTaskManager(networkBuildTaskManager);
 			
 			// Save settings task factory
 			saveSettingFactory = new PMBSettingSaveTaskFactory();
 			settingWindow.setSaveSettingFactory(saveSettingFactory);
 			registerService(bc, saveSettingFactory, TaskFactory.class, new Properties());
-			networkBuildTaskManager = getService(bc, TaskManager.class);
 			settingWindow.setTaskManager(networkBuildTaskManager);
 		}
 
+		// Query window menu
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);
 		Properties props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Query");
 		registerService(bc, queryWindowTaskFactory, TaskFactory.class, props);
-		
+
+		// Setting window menu
 		PMBSettingMenuTaskFactory settingsWindowTaskFactory = new PMBSettingMenuTaskFactory(settingWindow);
 		props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Settings");
 		registerService(bc, settingsWindowTaskFactory, TaskFactory.class, props);
-
 	}
 }
