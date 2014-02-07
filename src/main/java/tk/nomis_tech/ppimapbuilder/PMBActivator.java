@@ -74,21 +74,16 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
 			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
 
-			// Result panel
+			// Result panel (protein & interaction s)
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
 			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
-
 			OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
 			ResultPanel pmbResultPanel = new ResultPanel(openBrowser);
-
 			registerService(bc, pmbResultPanel, CytoPanelComponent.class, new Properties());
 
 			int index = cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).indexOfComponent(pmbResultPanel);
-			if (index > 0) {
+			if (index > 0)
 				cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setSelectedIndex(index);
-				System.out.println("selected");
-			} else
-				System.out.println("nope.");
 
 			// Result panel action
 			ResultPanelAction rpa = new ResultPanelAction(pmbResultPanel);
