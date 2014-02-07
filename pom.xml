@@ -137,6 +137,11 @@
 			<artifactId>vizmap-api</artifactId>
 			<version>${cytoscape.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>swing-util-api</artifactId>
+			<version>${cytoscape.version}</version>
+		</dependency>
 
 		<!-- MigLayout Swing -->
 		<dependency>
