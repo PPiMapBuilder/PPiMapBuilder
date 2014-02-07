@@ -8,110 +8,221 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
-
-import org.cytoscape.application.swing.CytoPanelComponent;
-import org.cytoscape.application.swing.CytoPanelName;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.util.swing.OpenBrowser;
+
+import tk.nomis_tech.ppimapbuilder.orthology.Ortholog;
+import tk.nomis_tech.ppimapbuilder.util.JHyperlinkLabel;
+
+import com.eclipsesource.json.JsonObject;
+
+/**
+ * Creates new ResultPanel form
+ */
+@SuppressWarnings("serial")
 public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponent {
 
-	private final String title = "PPiMapBuilder";
+	/**
+	 * Tab title in Cytoscape Result panel
+	 */
+	private final String title = "PPiMapBuilder summary";
+
+	private static final ImageIcon PMB_LOGO = new ImageIcon(ResultPanel.class.getResource("/pmblogo.png"));
 
 	/**
-	 * Creates new form ResultPanel
+	 * Cytoscape service to open link into web browser
 	 */
-	private ImageIcon urlIcon = new ImageIcon(getClass().getResource("external_link_icon.gif"));
-	private final JLabel lblReviewed = new JLabel(new ImageIcon(getClass().getResource("star.png")));
-	private final JLabel lblUnreviewed = new JLabel(new ImageIcon(getClass().getResource("unstar.png")));
+	private final OpenBrowser openBrowser;
 
-	private final JPanel mainPanel;
+	/**
+	 * Icon for external links
+	 */
+	private static final ImageIcon ICN_EXTERNAL_LINK = new ImageIcon(ResultPanel.class.getResource("external_link_icon.gif"));
+	/**
+	 * Icon for reviewed protein
+	 */
+	private static final ImageIcon ICN_REVIEWED = new ImageIcon(ResultPanel.class.getResource("star.png"));
+	/**
+	 * Icon for unreviewed protein
+	 */
+	private static final ImageIcon ICN_UNREVIEWED = new ImageIcon(ResultPanel.class.getResource("unstar.png"));
 
-	private boolean isReviewed = true;
-	private JLabel lblPtnname;
+	/**
+	 * Default font if nothing to show (italic)
+	 */
+	private static final Font NONE_FONT = new Font(null, Font.ITALIC, 11);
+	/**
+	 * Standard font for text
+	 */
+	private static final Font STD_FONT = new Font(null, Font.PLAIN, 11);
+
+	/**
+	 * Custom Gene Ontology tree appearance
+	 */
+	private static final TreeCellRenderer cellRenderer = new DefaultTreeCellRenderer() {
+		{
+			ImageIcon ICN_OPEN = new ImageIcon(ResultPanel.class.getResource("open.gif"));
+			ImageIcon ICN_CLOSED = new ImageIcon(ResultPanel.class.getResource("close.gif"));
+			ImageIcon ICN_LEAF = new ImageIcon(ResultPanel.class.getResource("leaf.png"));
+			setOpaque(true);
+			setOpenIcon(ICN_OPEN);
+			setClosedIcon(ICN_CLOSED);
+			setLeafIcon(ICN_LEAF);
+			setBackground(new Color(UIManager.getColor("Button.background").getRGB()));
+			setForeground(new Color(UIManager.getColor("Panel.foreground").getRGB()));
+			setTextSelectionColor(getTextNonSelectionColor());
+		}
+	};
+
+	/**
+	 * Main panel, containing all the others
+	 */
+	private JPanel mainPanel = new JPanel();
+	/**
+	 * Default view (if no protein selected)
+	 */
+	private JPanel voidPanel = new JPanel();
+	/**
+	 * Protein view
+	 */
+	private JPanel proteinPanel = new JPanel();
+
+	private JLabel ptnName;
+	private JLabel lblReviewed;
 	private JLabel proteinId;
 	private JLabel ecNum;
 	private JLabel organism;
 	private JLabel geneName;
+	private DefaultListModel<String> synonymsList;
 	private JTree treeOntology;
-	private JList<String> geneNameSynonyms;
+	private DefaultMutableTreeNode treeModelGO;
 
-	public ResultPanel() {
-		setPreferredSize(new Dimension(320, 400));
+	private JHyperlinkLabel lblExtLinkUniprot;
+	private JHyperlinkLabel lblExtLinkECnum;
+	private JHyperlinkLabel lblExtLinkOrganism;
+	private JHyperlinkLabel lblExtLinkGenename;
+
+	/**
+	 * Build a panel containing all the needed elements.
+	 * 
+	 * @param openBrowser
+	 */
+	public ResultPanel(OpenBrowser openBrowser) {
+		this.openBrowser = openBrowser;
+
+		setPreferredSize(new Dimension(260, 400));
 		setBorder(null);
 		setLayout(new BorderLayout(0, 0));
 
-		final JScrollPane scrollPane = new JScrollPane();
-		add(scrollPane, BorderLayout.CENTER);
+		final JScrollPane scrollPane_main = new JScrollPane();
+		scrollPane_main.setBorder(null);
+		add(scrollPane_main, BorderLayout.CENTER);
 
-		mainPanel = new JPanel();
+		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 		mainPanel.setBorder(null);
-		scrollPane.setViewportView(mainPanel);
-		mainPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right][grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
+		scrollPane_main.setViewportView(mainPanel);
 
-		// setDefaultView();
-		setTestProteinView();
+		/* Build default panel */
+		this.setDefaultView();
+		this.setVisible(true);
+
+		/* Build protein view panel */
+		this.setStaticProteinView();
+		proteinPanel.setVisible(false);
+
+		mainPanel.add(voidPanel);
+		mainPanel.add(proteinPanel);
 
 		initComponents();
 	}
 
+	/**
+	 * Build the default view. When no or 2+ nodes are clicked.
+	 */
 	private void setDefaultView() {
 		JLabel lblEmpty = new JLabel("Please select one node/protein.");
 		lblEmpty.setForeground(Color.DARK_GRAY);
-		mainPanel.add(lblEmpty, "cell 0 0 3 7,alignx center,aligny center");
+		voidPanel.setLayout(new MigLayout("hidemode 3", "[grow,center]", "[80px:n,center][]"));
+		voidPanel.add(lblEmpty, "cell 0 0");
+
+		JLabel lblLogo = new JLabel(PMB_LOGO);
+		voidPanel.add(lblLogo, "cell 0 1");
+
+		voidPanel.setVisible(true);
 	}
 
-	// TODO: private void setProteinView(Protein ptn) {
-	private void setTestProteinView() {
+	/**
+	 * Build the protein summary view. Display titles and default value (they
+	 * may not be needed).
+	 */
+	private void setStaticProteinView() {
+
+		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right][grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
 		/*
 		 * HEADER - GENERAL INFORMATION
 		 */
-		lblPtnname = new JLabel("Catalase");
-		lblPtnname.setBorder(new EmptyBorder(3, 8, 3, 3));
-		lblPtnname.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		mainPanel.add(lblPtnname, "cell 0 0 2 1,grow");
+		ptnName = new JLabel("Protein View");
+		ptnName.setBorder(new EmptyBorder(3, 8, 3, 0));
+		ptnName.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		proteinPanel.add(ptnName, "cell 0 0 2 1,grow");
 
 		final JLabel lblUniprotId = new JLabel("Uniprot ID:");
-		mainPanel.add(lblUniprotId, "cell 0 1,alignx left");
+		proteinPanel.add(lblUniprotId, "cell 0 1,alignx left");
 
 		final JLabel lblEcNumber = new JLabel("EC Number:");
-		mainPanel.add(lblEcNumber, "flowx,cell 0 2,alignx left");
+		proteinPanel.add(lblEcNumber, "flowx,cell 0 2,alignx left");
 
 		final JLabel lblNewLabel = new JLabel("Organism:");
-		mainPanel.add(lblNewLabel, "cell 0 3,alignx left");
+		proteinPanel.add(lblNewLabel, "cell 0 3,alignx left");
 
 		final JLabel lblGeneName = new JLabel("Gene name:");
-		mainPanel.add(lblGeneName, "flowx,cell 0 4,alignx left");
+		proteinPanel.add(lblGeneName, "flowx,cell 0 4,alignx left");
 
 		final JLabel lblSynonyms = new JLabel("Synonyms:");
-		mainPanel.add(lblSynonyms, "flowx,cell 0 5,alignx left,aligny top");
+		proteinPanel.add(lblSynonyms, "flowx,cell 0 5,alignx left,aligny top");
 
-		final JScrollPane scrollPane_1 = new JScrollPane();
-		mainPanel.add(scrollPane_1, "cell 1 5,grow");
+		final JScrollPane scrollPane_Synonyms = new JScrollPane();
+		proteinPanel.add(scrollPane_Synonyms, "cell 1 5,grow");
 
 		final JToggleButton toggleButton = new JToggleButton("+");
 		toggleButton.setMargin(new Insets(2, 5, 2, 5));
-		mainPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
+		proteinPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
 
 		JScrollPane scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setBorder(null);
-		mainPanel.add(scrollPane_Orthologs, "cell 0 6 3 1,grow");
+		proteinPanel.add(scrollPane_Orthologs, "cell 0 6 3 1,grow");
 
 		final JPanel panel_Orthologs = new JPanel();
 		scrollPane_Orthologs.setViewportView(panel_Orthologs);
@@ -125,82 +236,140 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 				int state = arg0.getStateChange();
 				if (state == ItemEvent.SELECTED) {
 					toggleButton.setText("-");
-					scrollPane_1.setVisible(true);
-
+					scrollPane_Synonyms.setVisible(true);
 				} else {
 					toggleButton.setText("+");
-					scrollPane_1.setVisible(false);
+					scrollPane_Synonyms.setVisible(false);
 				}
-				mainPanel.validate();
 			}
 		};
 		toggleButton.addItemListener(itemListener);
 
 		final JScrollPane scrollPane_GO = new JScrollPane();
-		scrollPane_GO.setBorder(null);
-		mainPanel.add(scrollPane_GO, "cell 0 7 3 1,grow");
+		scrollPane_GO.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+		scrollPane_GO.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		proteinPanel.add(scrollPane_GO, "cell 0 7 3 1,grow");
 
 		final JPanel panel_GO = new JPanel();
 		scrollPane_GO.setViewportView(panel_GO);
-		panel_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_GO.setBorder(null);
 		panel_GO.setLayout(new BorderLayout(0, 0));
 
 		/*
 		 * VARIABLE LABELS
 		 */
-		proteinId = new JLabel("P04040");
-		mainPanel.add(proteinId, "cell 1 1");
+		proteinId = NONE_LABEL();
+		proteinPanel.add(proteinId, "cell 1 1");
 
-		ecNum = new JLabel("1.11.1.6");
-		mainPanel.add(ecNum, "cell 1 2");
+		ecNum = NONE_LABEL();
+		proteinPanel.add(ecNum, "cell 1 2");
 
-		organism = new JLabel("Homo Sapiens (9606)");
-		mainPanel.add(organism, "cell 1 3");
+		organism = NONE_LABEL();
+		proteinPanel.add(organism, "cell 1 3");
 
-		geneName = new JLabel("CAT");
-		mainPanel.add(geneName, "cell 1 4");
+		geneName = NONE_LABEL();
+		proteinPanel.add(geneName, "cell 1 4");
 
-		geneNameSynonyms = new JList<String>();
-		geneNameSynonyms.setModel(new DefaultListModel<String>() {
-			{
-				addElement("ototo");
-				addElement("hatikado");
-			}
-		});
+		JList<String> geneNameSynonyms = new JList<String>();
+		geneNameSynonyms.setVisibleRowCount(3);
+		geneNameSynonyms.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-		scrollPane_1.setViewportView(geneNameSynonyms);
-		scrollPane_1.setVisible(false);
+		synonymsList = new DefaultListModel<String>();
+		synonymsList.addElement("");
+		geneNameSynonyms.setModel(synonymsList);
 
-		treeOntology = new JTree();
+		scrollPane_Synonyms.setViewportView(geneNameSynonyms);
+		scrollPane_Synonyms.setVisible(false);
+
+		treeModelGO = new DefaultMutableTreeNode("GeneOntology");
+		treeOntology = new JTree(treeModelGO);
 		treeOntology.setRootVisible(false);
 		treeOntology.setOpaque(false);
+		treeOntology.setCellRenderer(cellRenderer);
+		treeOntology.setToggleClickCount(1);
 		panel_GO.add(treeOntology);
-
 		/*
 		 * ICONS
 		 */
 		{
-			if (isReviewed)
-				mainPanel.add(lblReviewed, "cell 2 0,alignx right,aligny center");
-			else
-				mainPanel.add(lblReviewed, "cell 2 0,alignx right,aligny center");
+			lblReviewed = new JLabel();
 
-			JLabel lblExtLinkUniprot = new JLabel(urlIcon);
-			lblExtLinkUniprot.setToolTipText("Access external link");
-			mainPanel.add(lblExtLinkUniprot, "cell 2 1,alignx right,aligny center");
+			// www.uniprot.org/uniprot/ link
+			this.lblExtLinkUniprot = new JHyperlinkLabel(openBrowser);
+			this.lblExtLinkUniprot.setVisible(false);
+			this.lblExtLinkUniprot.setIcon(ICN_EXTERNAL_LINK);
+			this.lblExtLinkUniprot.setToolTipText("View on Uniprot Entry");
+			this.lblExtLinkUniprot.makeClickable();
 
-			JLabel lblExtLinkECnum = new JLabel(urlIcon);
-			lblExtLinkECnum.setToolTipText("Access external link");
-			mainPanel.add(lblExtLinkECnum, "cell 2 2,alignx right,aligny center");
+			// enzyme.expasy.org/EC/ link
+			this.lblExtLinkECnum = new JHyperlinkLabel(openBrowser);
+			this.lblExtLinkECnum.setVisible(false);
+			this.lblExtLinkECnum.setIcon(ICN_EXTERNAL_LINK);
+			this.lblExtLinkECnum.setToolTipText("View on ExPASy");
+			this.lblExtLinkECnum.makeClickable();
 
-			JLabel lblExtLinkOrganism = new JLabel(urlIcon);
-			lblExtLinkOrganism.setToolTipText("Access external link");
-			mainPanel.add(lblExtLinkOrganism, "cell 2 3,alignx right,aligny center");
+			// www.uniprot.org/taxonomy/ link
+			this.lblExtLinkOrganism = new JHyperlinkLabel(openBrowser);
+			this.lblExtLinkOrganism.setVisible(false);
+			this.lblExtLinkOrganism.setIcon(ICN_EXTERNAL_LINK);
+			this.lblExtLinkOrganism.setToolTipText("View on Uniprot Taxonomy");
+			this.lblExtLinkOrganism.makeClickable();
 
-			JLabel lblExtLinkGenename = new JLabel(urlIcon);
-			lblExtLinkGenename.setToolTipText("Access external link");
-			mainPanel.add(lblExtLinkGenename, "cell 2 4,alignx right,aligny center");
+			this.lblExtLinkGenename = new JHyperlinkLabel(openBrowser);
+			this.lblExtLinkGenename.setVisible(false);
+			this.lblExtLinkGenename.setIcon(ICN_EXTERNAL_LINK);
+			this.lblExtLinkGenename.setToolTipText("View on NCBI Gene");
+			this.lblExtLinkGenename.makeClickable();
+
+			proteinPanel.add(lblReviewed, "cell 2 0,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkUniprot, "cell 2 1,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkECnum, "cell 2 2,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkOrganism, "cell 2 3,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkGenename, "cell 2 4,alignx right,aligny center");
 		}
+
+	}
+
+	/**
+	 * Add CyRow data to the protein panel.
+	 * 
+	 * @param row
+	 */
+	public void setProteinView(CyRow row) {
+
+		this.setProteinId(row.get("uniprot_id", String.class));
+		this.setPtnName(row.get("protein_name", String.class));
+		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
+		this.setGeneName(row.get("gene_name", String.class), row.get("tax_id", String.class));
+
+		this.setEcNumber(row.get("ec_number", String.class));
+		//
+		this.setGeneNameSynonyms(row.getList("synonym_gene_names", String.class));
+		this.setOntology(row.getList("biological_processes", String.class), row.getList("cellular_components", String.class),
+				row.getList("molecular_functions", String.class));
+		this.setOrganism(row.get("tax_id", String.class));
+
+		this.showProteinView();
+	}
+
+	/**
+	 * Display the default view. When no node or 2+ nodes are selected.
+	 */
+	public void showDefaultView() {
+		proteinPanel.setVisible(false);
+		voidPanel.setVisible(true);
+		this.repaint();
+	}
+
+	/**
+	 * Display the protein summary view. When 1 single protein is selected.
+	 */
+	public void showProteinView() {
+		voidPanel.setVisible(false);
+		proteinPanel.setVisible(true);
+		this.repaint();
 	}
 
 	/**
@@ -217,18 +386,320 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	// Variables declaration - do not modify//GEN-BEGIN:variables
 	// End of variables declaration//GEN-END:variables
 
-	public static void main(String[] argv) {
-		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-		} catch (Exception e) {
-		}
-		JFrame j = new JFrame();
-		j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	/**
+	 * Get protein name as displayed in the label.
+	 * 
+	 * @return protein name
+	 */
+	public String getPtnName() {
+		return ptnName.getText();
+	}
 
-		ResultPanel r = new ResultPanel();
-		j.getContentPane().add(r);
-		j.pack();
-		j.setVisible(true);
+	/**
+	 * Set the protein name label
+	 * 
+	 * @param protein
+	 *            name
+	 */
+	public void setPtnName(String ptnName) {
+		if (!ptnName.isEmpty()) {
+			if (ptnName.length() > 20) {
+				this.ptnName.setText(ptnName.substring(0, 17) + "...");
+			} else {
+				this.ptnName.setText(ptnName);
+			}
+			this.ptnName.setToolTipText(ptnName);
+
+		} else {
+			this.ptnName.setFont(NONE_FONT);
+			this.ptnName.setText("none");
+		}
+	}
+
+	/**
+	 * Get protein name as displayed in the label.
+	 * 
+	 * @return gene name
+	 */
+	public String getGeneName() {
+		return geneName.getText();
+	}
+
+	/**
+	 * Set the protein name label
+	 * 
+	 * @param gene
+	 *            name
+	 * @param taxonomic
+	 *            id
+	 */
+	private void setGeneName(String geneName, String taxId) {
+		if (!geneName.isEmpty()) {
+			this.geneName.setFont(STD_FONT);
+			this.geneName.setText(geneName);
+			// http://www.ncbi.nlm.nih.gov/gene?term=(proS[Gene Name]) AND
+			// 9606[Taxonomy ID])
+			try {
+				this.lblExtLinkGenename.setUri(new URI("http://www.ncbi.nlm.nih.gov/gene?term=(" + geneName + "%5BGene%20Name%5D)%20AND%20" + taxId
+						+ "%5BTaxonomy%20ID%5D"));
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+			this.lblExtLinkGenename.setVisible(true);
+
+		} else {
+			this.lblExtLinkGenename.setVisible(false);
+			this.geneName.setFont(NONE_FONT);
+			this.geneName.setText("none");
+		}
+	}
+
+	/**
+	 * Get the protein reviewed status
+	 * 
+	 * @return
+	 */
+	public boolean getReviewState() {
+		return lblReviewed.getIcon().equals(ICN_REVIEWED);
+	}
+
+	/**
+	 * Set the protein review status
+	 * 
+	 * @param reviewed
+	 */
+	private void setReviewState(boolean reviewed) {
+		if (reviewed) {
+			lblReviewed.setIcon(ICN_REVIEWED);
+			lblReviewed.setToolTipText("Reviewed protein");
+		} else {
+			lblReviewed.setIcon(ICN_UNREVIEWED);
+			lblReviewed.setToolTipText("Unreviewed protein");
+		}
+
+	}
+
+	/**
+	 * Get protein name as displayed in the label.
+	 * 
+	 * @return
+	 */
+	public String getProteinId() {
+		return proteinId.getText();
+	}
+
+	/**
+	 * Set the Uniprot ID
+	 * 
+	 * @param uniprotId
+	 */
+	private void setProteinId(String uniprotId) {
+		if (!uniprotId.isEmpty()) {
+			this.proteinId.setFont(STD_FONT);
+			this.proteinId.setText(uniprotId);
+			try {
+				this.lblExtLinkUniprot.setUri(new URI("http://www.uniprot.org/uniprot/" + uniprotId));
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+			this.lblExtLinkUniprot.setVisible(true);
+		} else {
+			this.lblExtLinkUniprot.setVisible(false);
+			this.proteinId.setFont(NONE_FONT);
+			this.proteinId.setText("none");
+		}
+	}
+
+	/**
+	 * Get the Enzyme Classification number as displayed in the label.
+	 * 
+	 * @return
+	 */
+	public String getEcNumber() {
+		return ecNum.getText();
+	}
+
+	/**
+	 * Set the Enzyme Classification number
+	 * 
+	 * @param ecNumber
+	 */
+	private void setEcNumber(String ecNumber) {
+		if (!ecNumber.isEmpty()) {
+			this.ecNum.setFont(STD_FONT);
+			this.ecNum.setText(ecNumber);
+			try {
+				this.lblExtLinkECnum.setUri(new URI("http://enzyme.expasy.org/EC/" + ecNumber));
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+			this.lblExtLinkECnum.setVisible(true);
+
+		} else {
+			this.lblExtLinkECnum.setVisible(false);
+			this.ecNum.setFont(NONE_FONT);
+			this.ecNum.setText("none");
+		}
+	}
+
+	/**
+	 * Get the organism as displayed in the label.
+	 * 
+	 * @return
+	 */
+	public String getOrganism() {
+		return organism.getText();
+	}
+
+	/**
+	 * Set the organism taxonomic ID
+	 * 
+	 * @param taxId
+	 */
+	@Deprecated
+	private void setOrganism(String taxId) {
+		setOrganism(null, taxId);
+	}
+
+	/**
+	 * Set the organism name and taxonomic ID
+	 * 
+	 * @param taxId
+	 */
+	private void setOrganism(String name, String taxId) {
+		String s;
+		if (name == null || name.isEmpty()) {
+			s = "[" + taxId + "]";
+		} else {
+			s = name + " [" + taxId + "]";
+		}
+
+		if (!s.isEmpty()) {
+			this.organism.setFont(STD_FONT);
+			this.organism.setText(s);
+			try {
+				this.lblExtLinkOrganism.setUri(new URI("http://www.uniprot.org/taxonomy/" + taxId));
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+			this.lblExtLinkOrganism.setVisible(true);
+		} else {
+			this.lblExtLinkOrganism.setVisible(false);
+			this.organism.setFont(NONE_FONT);
+			this.organism.setText("none");
+		}
+
+	}
+
+	/**
+	 * Get the gene names synonyms
+	 * 
+	 * @return
+	 */
+	public List<String> getGeneNameSynonyms() {
+		return new ArrayList<String>(synonymsList.size()) {
+			{
+				for (int i = 0; i < synonymsList.size(); i++) {
+					add(synonymsList.get(i));
+				}
+			}
+		};
+	}
+
+	/**
+	 * Set the gene name synonyms
+	 * 
+	 * @param synonyms
+	 */
+	private void setGeneNameSynonyms(List<String> synonyms) {
+		synonymsList.clear();
+		if (!synonyms.isEmpty()) {
+			for (String s : synonyms) {
+				synonymsList.addElement(s);
+			}
+		} else {
+			synonymsList.addElement("");
+		}
+	}
+
+	/**
+	 * Set orthologs
+	 * 
+	 * @param orthologs
+	 */
+	private void setOrhologs(List<String> orthologs) {
+		// TODO: Add orthologs column
+		throw new NotImplementedException("Ortholog are not handle yet");
+	}
+
+	/**
+	 * Get orthologs
+	 * 
+	 * @return
+	 */
+	public List<Ortholog> getOrthologs() {
+		// TODO: Add orthologs column
+		throw new NotImplementedException("Ortholog are not handle yet");
+	}
+
+	/**
+	 * Set the Gene Ontology
+	 * 
+	 * @param biologicalProcess
+	 * @param cellularComponent
+	 * @param molecularFunction
+	 */
+	private void setOntology(final List<String> biologicalProcess, final List<String> cellularComponent, final List<String> molecularFunction) {
+		treeModelGO.removeAllChildren();
+
+		treeModelGO.add(new DefaultMutableTreeNode("Biological process (" + biologicalProcess.size() + ")") {
+			{
+				if (biologicalProcess != null && !biologicalProcess.isEmpty())
+					// TODO: parse JSON GO strings
+					for (String s : biologicalProcess) {
+						add(new DefaultMutableTreeNode(s));
+					}
+			}
+		});
+
+		treeModelGO.add(new DefaultMutableTreeNode("Cellular componant (" + cellularComponent.size() + ")") {
+			{
+				if (cellularComponent != null && !cellularComponent.isEmpty())
+					// TODO: parse JSON GO strings
+					for (String s : cellularComponent) {
+						add(new DefaultMutableTreeNode(s));
+					}
+			}
+		});
+
+		treeModelGO.add(new DefaultMutableTreeNode("Molecular function (" + molecularFunction.size() + ")") {
+			{
+				if (molecularFunction != null && !molecularFunction.isEmpty())
+					// TODO: parse JSON GO strings
+					for (String s : molecularFunction) {
+						add(new DefaultMutableTreeNode(s));
+					}
+			}
+		});
+		treeOntology.setModel(new DefaultTreeModel(treeModelGO));
+
+	}
+
+	public List<String> getOntology() {
+		throw new NotImplementedException("Ortholog are not handle yet");
+	}
+
+	/**
+	 * Build a default JLabel ("none" in italic)
+	 * 
+	 * @return JLabel
+	 */
+	private JLabel NONE_LABEL() {
+		return new JLabel("none") {
+			{
+				setFont(NONE_FONT);
+			}
+		};
 	}
 
 	@Override
@@ -250,4 +721,5 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public Icon getIcon() {
 		return null;
 	}
+
 }
