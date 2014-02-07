@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
 import javax.swing.Box.Filler;
 import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
@@ -35,7 +36,7 @@ public class UniProtService {
 
 		Document doc = null;
 		try {
-			Connection conn = Jsoup.connect(uniprotUrl+uniprotId+".xml");
+			Connection conn = Jsoup.connect(uniprotUrl + uniprotId + ".xml");
 			doc = conn.get();
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -45,63 +46,92 @@ public class UniProtService {
 		ArrayList<String> synonymGeneNames = new ArrayList<String>();
 		String proteinName = null;
 		boolean reviewed = false;
-		
+		String ec_number = "";
+
 		// TAX ID
 		for (Element e : doc.select("organism")) {
-			taxId = Integer.valueOf(e.select("dbReference").attr("id")); // There is no problem, this is in the same way each time
+			taxId = Integer.valueOf(e.select("dbReference").attr("id")); // There
+																			// is
+																			// no
+																			// problem,
+																			// this
+																			// is
+																			// in
+																			// the
+																			// same
+																			// way
+																			// each
+																			// time
 			break;
 		}
-		
+
 		// GENE NAME AND SYNONYMS
 		for (Element e : doc.select("gene")) {
 			for (Element f : e.select("name")) {
-				if (f.attr("type").equals("primary")) { // If the type is primary, this is the main name (sometimes there is no primary gene name :s)
+				if (f.attr("type").equals("primary")) { // If the type is
+														// primary, this is the
+														// main name (sometimes
+														// there is no primary
+														// gene name :s)
 					geneName = f.text();
-				}
-				else { // Else, we store the names as synonyms
+				} else { // Else, we store the names as synonyms
 					synonymGeneNames.add(f.text());
 				}
 			}
 		}
-		
+
 		// PROTEIN NAME
 		for (Element e : doc.select("protein")) {
-			if (!e.select("recommendedName").isEmpty()) { // We retrieve the recommended name
+			if (!e.select("recommendedName").isEmpty()) { // We retrieve the
+															// recommended name
 				proteinName = e.select("recommendedName").select("fullName").text();
-			}
-			else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exist, we take the submitted name (usually from TrEMBL but not always)
+			} else if (!e.select("submittedName").isEmpty()) { // If the
+																// recommended
+																// name does not
+																// exist, we
+																// take the
+																// submitted
+																// name (usually
+																// from TrEMBL
+																// but not
+																// always)
 				proteinName = e.select("submittedName").select("fullName").text();
 			}
 			break;
 		}
-		
+
 		// REVIEWED
 		for (Element e : doc.select("entry")) {
-			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot")?true:false; // If the protein comes from Swiss-Prot, it is reviewed
+			// If the protein comes from Swiss-Prot, it is reviewed
+			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot") ? true : false;
 			break;
 		}
-		
+
+		// EC NUMBER
+		for (Element e : doc.select("ecNumber")) {
+			ec_number = e.text();
+			break;
+		}
+
 		// PROTEIN CREATION
-		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, taxId, proteinName, reviewed);
+		UniProtProtein prot = new UniProtProtein(uniprotId, geneName, ec_number, taxId, proteinName, reviewed);
 		prot.setSynonymGeneNames(synonymGeneNames);
-		
+
 		// GENE ONTOLOGIES
 		for (Element e : doc.select("dbReference")) {
 			if (e.attr("type").equals("GO")) {
 				String id = e.attr("id");
 				GOCategory category = null;
 				String term = null;
-				for (Element f: e.select("property")) {
+				for (Element f : e.select("property")) {
 					if (f.attr("type").equals("term")) {
 						String value = f.attr("value");
 						String[] values = value.split(":");
 						if (values[0].equals("C")) {
 							category = GOCategory.CELLULAR_COMPONENT;
-						}
-						else if (values[0].equals("F")) {
+						} else if (values[0].equals("F")) {
 							category = GOCategory.MOLECULAR_FUNCTION;
-						}
-						else if (values[0].equals("P")) {
+						} else if (values[0].equals("P")) {
 							category = GOCategory.BIOLOGICAL_PROCESS;
 						}
 						term = values[1];
@@ -111,20 +141,18 @@ public class UniProtService {
 				GeneOntologyModel go = new GeneOntologyModel(id, term, category);
 				if (category == GOCategory.CELLULAR_COMPONENT) {
 					prot.addCellularComponent(go);
-				}
-				else if (category == GOCategory.BIOLOGICAL_PROCESS) {
+				} else if (category == GOCategory.BIOLOGICAL_PROCESS) {
 					prot.addBiologicalProcess(go);
-				}
-				else if (category == GOCategory.MOLECULAR_FUNCTION) {
+				} else if (category == GOCategory.MOLECULAR_FUNCTION) {
 					prot.addMolecularFunction(go);
 				}
 			}
 		}
-		
+
 		return prot;
-		
+
 	}
-	
+
 	public static UniProtProtein getUniprotProtein(String uniprotid) {
 		UniProtProtein prot = retrieveProteinData(uniprotid);
 		return prot;
