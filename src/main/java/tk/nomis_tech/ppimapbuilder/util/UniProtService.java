@@ -109,7 +109,6 @@ public class UniProtService {
 
 		// EC NUMBER
 		for (Element e : doc.select("ecNumber")) {
-			System.out.println("ECNUMBER:" + e.text());
 			ec_number = e.text();
 			break;
 		}
