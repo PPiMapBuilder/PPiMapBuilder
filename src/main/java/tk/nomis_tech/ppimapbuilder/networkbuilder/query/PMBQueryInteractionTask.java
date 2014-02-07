@@ -12,19 +12,19 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProtein;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProteinCollection;
+import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtProteinCollection;
 import tk.nomis_tech.ppimapbuilder.orthology.InParanoidClient;
 import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
-import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.util.InteractionsUtil;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicService;
-import tk.nomis_tech.ppimapbuilder.util.ThreadedPsicquicSimpleClient;
-import tk.nomis_tech.ppimapbuilder.util.UniProtEntryClient;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLParameterBuilder;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLExpressionBuilder.Operator;
+import tk.nomis_tech.ppimapbuilder.webservice.InteractionsUtil;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.webservice.ThreadedPsicquicSimpleClient;
+import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder.Operator;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 public class PMBQueryInteractionTask extends AbstractTask {

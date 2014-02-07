@@ -7,6 +7,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
+
 public class PsicquicRegistryTest {
 
 	@Test

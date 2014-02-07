@@ -8,8 +8,8 @@ import javax.swing.SwingUtilities;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
-import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
 
 /**
  * The interaction query menu

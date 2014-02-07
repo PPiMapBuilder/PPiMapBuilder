@@ -8,7 +8,8 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
 
 public class UniProtEntryClientTest {
 

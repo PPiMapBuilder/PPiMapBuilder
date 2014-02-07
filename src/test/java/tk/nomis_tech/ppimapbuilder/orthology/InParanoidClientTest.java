@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
 
 @SuppressWarnings("serial")
 public class InParanoidClientTest {
@@ -39,7 +39,7 @@ public class InParanoidClientTest {
 				"P15336", "P05067", "Q01968", "Q12933", "Q14315", "P48200"*/ });
 		prots = new ArrayList<UniProtProtein>(){{
 			for(String id: ids)
-				add(new UniProtProtein(id, null, 9606, null, true));
+				add(new UniProtProtein(id, null, null, 9606, null, true));
 		}};
 	}
 

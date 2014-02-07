@@ -3,6 +3,8 @@ package tk.nomis_tech.ppimapbuilder.util.miql;
 import org.junit.Assert;
 import org.junit.Test;
 
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
+
 public class MiQLParameterBuilderTest {
 
 	@Test

@@ -1,11 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
@@ -25,12 +22,11 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
-import psidev.psi.mi.tab.model.Author;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.data.UniProtProtein;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicResultTranslator;
-import tk.nomis_tech.ppimapbuilder.util.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicResultTranslator;
+import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -39,7 +35,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final CyNetworkFactory cnf;
 	private final CyNetworkNaming namingUtil;
 
-	//For the view
+	// For the view
 	private final CyNetworkViewFactory cnvf;
 	private final CyNetworkViewManager networkViewManager;
 
@@ -51,14 +47,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	private final Collection<BinaryInteraction> interactionResults;
 
-	public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf,
-		CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm, Collection<BinaryInteraction> interactionResults) {
+	public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
+			final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm,
+			Collection<BinaryInteraction> interactionResults) {
 		// For the network
 		this.netMgr = netMgr;
 		this.cnf = cnf;
 		this.namingUtil = namingUtil;
 
-		//For the view
+		// For the view
 		this.cnvf = cnvf;
 		this.networkViewManager = networkViewManager;
 
@@ -81,8 +78,11 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	public void createNetworkFromBinaryInteractions(Collection<BinaryInteraction> binaryInteractions) {
 		// Create an empty network
 		CyNetwork myNet = cnf.createNetwork();
-		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("My Network"));
-		
+		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
+		CyTable netAttr = myNet.getDefaultNetworkTable();
+		netAttr.createColumn("created by", String.class, true);
+		myNet.getRow(myNet).set("created by", "PPiMapBuilder");
+
 		// Edge attributes
 		CyTable edgeAttr = myNet.getDefaultEdgeTable();
 		edgeAttr.createListColumn("source", String.class, false);
@@ -91,11 +91,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		edgeAttr.createListColumn("interaction_id", String.class, false);
 		edgeAttr.createListColumn("pubid", String.class, false);
 		edgeAttr.createListColumn("confidence", String.class, false);
-		
+
 		// Node attributes
 		CyTable nodeAttr = myNet.getDefaultNodeTable();
 		nodeAttr.createColumn("uniprot_id", String.class, false);
 		nodeAttr.createColumn("gene_name", String.class, false);
+		nodeAttr.createColumn("ec_number", String.class, false);
 		nodeAttr.createListColumn("synonym_gene_names", String.class, false);
 		nodeAttr.createColumn("protein_name", String.class, false);
 		nodeAttr.createColumn("tax_id", String.class, false);
@@ -104,14 +105,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeAttr.createListColumn("biological_processes", String.class, false);
 		nodeAttr.createListColumn("molecular_functions", String.class, false);
 
-		// Add nodes        
+		// Add nodes
 		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
 
-		for (BinaryInteraction interaction : binaryInteractions) { // For each interaction
+		for (BinaryInteraction interaction : binaryInteractions) { // For each
+																	// interaction
 
-			//System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+			// System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
 			// TODO : treat cases without uniprotkb id
-			
+
 			// Retrieve the first node name
 			CyNode node1 = null;
 			String name1 = null;
@@ -136,7 +138,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			if (name2 == null) {
 				continue;
 			}
-			
+
 			// Retrieve or create the first node
 			if (nodeNameMap.containsKey(name1)) {
 				node1 = nodeNameMap.get(name1);
@@ -145,7 +147,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				CyRow attributes = myNet.getRow(node1);
 				attributes.set("name", name1);
 				nodeNameMap.put(name1, node1);
-				
+
 				// Add attributes to first node
 				try {
 					UniProtProtein prot = UniProtEntryClient.getInstance().retrieveProteinData(name1);
@@ -155,6 +157,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					attributesNode1.set("gene_name", prot.getGeneName());
 					attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
 					attributesNode1.set("protein_name", prot.getProteinName());
+					attributesNode1.set("ec_number", prot.getEcNumber());
 					attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
 					attributesNode1.set("cellular_components", prot.getCellularComponentsAsStringList());
 					attributesNode1.set("biological_processes", prot.getBiologicalProcessesAsStringList());
@@ -163,7 +166,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					e.printStackTrace();
 				}
 			}
-			
+
 			// Retrieve or create the second node
 			if (nodeNameMap.containsKey(name2)) {
 				node2 = nodeNameMap.get(name2);
@@ -172,7 +175,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				CyRow attributes = myNet.getRow(node2);
 				attributes.set("name", name2);
 				nodeNameMap.put(name2, node2);
-				
+
 				// Add attributes to second node
 				try {
 					UniProtProtein prot = UniProtEntryClient.getInstance().retrieveProteinData(name2);
@@ -182,6 +185,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					attributesNode2.set("gene_name", prot.getGeneName());
 					attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
 					attributesNode2.set("protein_name", prot.getProteinName());
+					attributesNode2.set("ec_number", prot.getEcNumber());
 					attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
 					attributesNode2.set("cellular_components", prot.getCellularComponentsAsStringList());
 					attributesNode2.set("biological_processes", prot.getBiologicalProcessesAsStringList());
@@ -190,7 +194,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					e.printStackTrace();
 				}
 			}			
-			
+
 			// Add edges & attributes
 			CyEdge myEdge = myNet.addEdge(node1, node2, true);
 			CyRow attributes = myNet.getRow(myEdge);
@@ -203,7 +207,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		}
 
-		//Creation on the view
+		// Creation on the view
 		CyNetworkView myView = applyView(myNet);
 
 		// Layout
@@ -212,7 +216,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		// Visual Style
 		applyVisualStyle(myView);
 
-		//System.out.println("Done !");
+		// System.out.println("Done !");
 	}
 
 	public CyNetworkView applyView(CyNetwork myNet) {

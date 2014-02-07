@@ -18,7 +18,7 @@ import org.cytoscape.work.TaskIterator;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
-import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 
 /**
  * PPiMapBuilder network query and build

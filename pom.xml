@@ -105,6 +105,7 @@
 			<name>EBI repository</name>
 			<url>http://www.ebi.ac.uk/~maven/m2repo</url>
 		</repository>
+
 		<!-- <repository> <id>ebi-repo-snapshots</id> <name>EBI snapshots repository</name> 
 			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots</url> </repository> -->
 	</repositories>
@@ -117,9 +118,8 @@
 			<version>4.4</version>
 			<scope>test</scope>
 		</dependency>
-		
-		<!-- OSGI -->
-		<dependency>
+
+		<dependency> <!-- OSGI -->
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>4.2.0</version>
@@ -149,13 +149,16 @@
 			<groupId>org.cytoscape</groupId>
 			<artifactId>layout-api</artifactId>
 			<version>${cytoscape.version}</version>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>vizmap-api</artifactId>
 			<version>${cytoscape.version}</version>
-			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>swing-util-api</artifactId>
+			<version>${cytoscape.version}</version>
 		</dependency>
 
 		<!-- MigLayout Swing -->
@@ -163,6 +166,7 @@
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
 			<version>4.2</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- PSICQUIC Client (external implementation) -->
@@ -185,6 +189,14 @@
 			<groupId>uk.ac.ebi.enfin.mi.cluster</groupId>
 			<artifactId>micluster</artifactId>
 			<version>1.7.3</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- JSON minimal -->
+		<dependency>
+			<groupId>com.eclipsesource.minimal-json</groupId>
+			<artifactId>minimal-json</artifactId>
+			<version>0.9.1</version>
 		</dependency>
 	</dependencies>
 </project>

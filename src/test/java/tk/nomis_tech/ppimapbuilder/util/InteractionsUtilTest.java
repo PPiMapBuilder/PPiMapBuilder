@@ -15,8 +15,12 @@ import org.junit.Test;
 import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.util.miql.MiQLParameterBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.InteractionsUtil;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.webservice.ThreadedPsicquicSimpleClient;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
 
 import com.google.common.collect.Lists;
 
@@ -46,7 +50,7 @@ public class InteractionsUtilTest {
 
 	@Test
 	public void getInteractorsBinary() {
-		List<String> interactors = InteractionsUtil.getInteractorsBinary(sampleBinaryInteractions);
+		List<String> interactors = InteractionsUtil.getInteractorsBinary(sampleBinaryInteractions, 9606);
 		// System.out.println(interactors);
 	}
 
