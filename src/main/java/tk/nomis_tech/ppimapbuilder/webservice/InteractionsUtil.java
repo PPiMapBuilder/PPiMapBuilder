@@ -8,14 +8,16 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
 import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder.Operator;
+import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
+import uk.ac.ebi.enfin.mi.cluster.Binary2Encore;
 import uk.ac.ebi.enfin.mi.cluster.Encore2Binary;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
@@ -125,15 +127,29 @@ public class InteractionsUtil {
 	}
 
 	/**
-	 * Converts a Collection&lt;EncoreInteraction&gt; into a List&lt;BinaryInteraction&lt;Interactor&gt;&gt;
+	 * Converts a Collection&lt;EncoreInteraction&gt; into a Collection&lt;BinaryInteraction&lt;Interactor&gt;&gt;
 	 */
-	public static List<BinaryInteraction> convertEncoreInteraction(Collection<EncoreInteraction> interactions) {
+	public static Collection<BinaryInteraction> convertEncoreInteraction(Collection<EncoreInteraction> interactions) {
 		List<BinaryInteraction> convertedInteractions = new ArrayList<BinaryInteraction>(interactions.size());
 		Iterator<EncoreInteraction> it = interactions.iterator();
 		Encore2Binary converter = new Encore2Binary();
 		while (it.hasNext()) {
 			EncoreInteraction encoreInteraction = (EncoreInteraction) it.next();
 			convertedInteractions.add(converter.getBinaryInteraction(encoreInteraction));
+		}
+		return convertedInteractions;
+	}
+	
+	/**
+	 * Converts a Collection&lt;BinaryInteraction&lt;Interactor&gt;&gt; into a Collection&lt;EncoreInteraction&gt;
+	 */
+	public static Collection<EncoreInteraction> convertBinaryInteraction(Collection<BinaryInteraction> interactions) {
+		List<EncoreInteraction> convertedInteractions = new ArrayList<EncoreInteraction>(interactions.size());
+		Iterator<BinaryInteraction> it = interactions.iterator();
+		Binary2Encore converter = new Binary2Encore();
+		while (it.hasNext()) {
+			BinaryInteraction binaryInteraction = (BinaryInteraction) it.next();
+			convertedInteractions.add(converter.getEncoreInteraction(binaryInteraction));
 		}
 		return convertedInteractions;
 	}
@@ -154,7 +170,7 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static List<String> getInteractorsEncore(Collection<EncoreInteraction> interactions) {
+	public static Set<String> getInteractorsEncore(Collection<EncoreInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
 
 		Iterator<EncoreInteraction> iterator = interactions.iterator();
@@ -173,7 +189,7 @@ public class InteractionsUtil {
 			}
 		}
 
-		return new ArrayList<String>(interactors);
+		return interactors;
 	}
 
 	/**
@@ -229,9 +245,10 @@ public class InteractionsUtil {
 					ok = false;
 					break;
 				}
-				//TODO change taxID parameter => maybe split in two methods
+				
+				/*//TODO change taxID parameter => maybe split in two methods
 				if(!interactor.getOrganism().getTaxid().equals(refTaxId+""))
-					ok = false;
+					ok = false;*/
 
 				List<CrossReference> sortedIdentifiers = new ArrayList<CrossReference>();
 				ids.remove(uniprot);

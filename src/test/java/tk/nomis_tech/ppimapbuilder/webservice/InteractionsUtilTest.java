@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.util;
+package tk.nomis_tech.ppimapbuilder.webservice;
 
 import java.io.IOException;
 import java.io.InputStream;

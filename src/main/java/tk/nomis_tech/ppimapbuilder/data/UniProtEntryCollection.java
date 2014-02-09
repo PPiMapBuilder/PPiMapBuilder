@@ -5,12 +5,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-public class UniProtProteinCollection extends HashSet<UniProtProtein>{
+public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 	
 	private static final long serialVersionUID = 1L;
 
-	public UniProtProtein find(String uniprotId) {
-		for(UniProtProtein prot: this) {
+	public UniProtEntry find(String uniprotId) {
+		for(UniProtEntry prot: this) {
 			if(prot.getUniprotId().equals(uniprotId))
 				return prot;
 		}
@@ -19,7 +19,7 @@ public class UniProtProteinCollection extends HashSet<UniProtProtein>{
 	
 	public List<String> getAllAsUniProtId() {
 		ArrayList<String> out = new ArrayList<String>();
-		for(UniProtProtein prot: this)
+		for(UniProtEntry prot: this)
 			out.add(prot.getUniprotId());
 		return out;
 	}
@@ -28,9 +28,8 @@ public class UniProtProteinCollection extends HashSet<UniProtProtein>{
 		return find(uniProtId) != null;
 	}
 	
-		
 	@Override
-	public boolean add(UniProtProtein e) {
+	public boolean add(UniProtEntry e) {
 		if(!contains(e.getUniprotId()))
 			return super.add(e);
 		else

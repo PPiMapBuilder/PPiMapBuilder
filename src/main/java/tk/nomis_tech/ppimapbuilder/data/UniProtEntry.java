@@ -1,9 +1,11 @@
 package tk.nomis_tech.ppimapbuilder.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
-public class UniProtProtein extends AbstractProtein {
+public class UniProtEntry extends AbstractProtein {
 
 	private String geneName;
 	private ArrayList<String> synonymGeneNames = new ArrayList<String>();
@@ -15,7 +17,7 @@ public class UniProtProtein extends AbstractProtein {
 	private ArrayList<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
 	private final HashMap<Integer, OrthologProtein> orthologs = new HashMap<Integer, OrthologProtein>();
 
-	public UniProtProtein(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
+	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
 		super(uniprotId, taxId);
 		this.proteinName = proteinName;
 		this.ecNumber = ecNumber;
@@ -28,7 +30,6 @@ public class UniProtProtein extends AbstractProtein {
 	}
 
 	public ArrayList<String> getCellularComponentsAsStringList() {
-
 		ArrayList<String> list = new ArrayList<String>();
 		for (GeneOntologyModel go : this.cellularComponents) {
 			list.add(go.toString());
@@ -38,6 +39,10 @@ public class UniProtProtein extends AbstractProtein {
 	
 	public OrthologProtein getOrthologByTaxid(Integer taxid) {
 		return orthologs.get(taxid);
+	}
+	
+	public List<OrthologProtein> getAllOrthologs() {
+		return new ArrayList<OrthologProtein>(orthologs.values());
 	}
 	
 	public OrthologProtein addOrtholog(OrthologProtein prot) {

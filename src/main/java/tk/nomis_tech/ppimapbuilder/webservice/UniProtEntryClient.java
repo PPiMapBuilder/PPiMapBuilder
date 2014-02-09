@@ -5,7 +5,6 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -20,11 +19,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import com.google.common.collect.Iterables;
-
 import tk.nomis_tech.ppimapbuilder.data.GOCategory;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
-import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 
 /**
  * Simple Java client for UniProt entry service
@@ -43,10 +40,10 @@ public class UniProtEntryClient {
 	}
 
 	/**
-	 * Retrieve UniProt entry of a protein
+	 * Retrieve UniProt entry of a protein 
 	 */
-	public UniProtProtein retrieveProteinData(String uniprotId) throws IOException {
-		UniProtProtein prot = null;
+	public UniProtEntry retrieveProteinData(String uniprotId) throws IOException {
+		UniProtEntry prot = null;
 		
 		Document doc = null;
 		final int MAX_TRY = 2;
@@ -56,6 +53,7 @@ public class UniProtEntryClient {
 			try {
 				doc = Jsoup.connect(new StringBuilder(uniprotUrl).append(uniprotId).append(".xml").toString()).get();
 			} catch (HttpStatusException e) {
+				if(e.getStatusCode() == 404) return null;//No protein entry found
 				lastError = new IOException(e);
 			} catch(SocketTimeoutException e) {
 				lastError = new IOException(e);
@@ -112,7 +110,7 @@ public class UniProtEntryClient {
 		}
 		
 		// PROTEIN CREATION
-		prot = new UniProtProtein(uniprotId, geneName, ec_number, taxId, proteinName, reviewed);
+		prot = new UniProtEntry(uniprotId, geneName, ec_number, taxId, proteinName, reviewed);
 		prot.setSynonymGeneNames(synonymGeneNames);
 		
 		// GENE ONTOLOGIES
@@ -157,18 +155,18 @@ public class UniProtEntryClient {
 	/**
 	 * Retrieves UniProt entry data of a list of protein using threaded execution pool
 	 */
-	public HashMap<String, UniProtProtein> retrieveProteinsData(Collection<String> uniProtIds) throws IOException {
+	public HashMap<String, UniProtEntry> retrieveProteinsData(Collection<String> uniProtIds) throws IOException {
 		final ArrayList<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
-		final List<Future<UniProtProtein>> requests = new ArrayList<Future<UniProtProtein>>();
+		final List<Future<UniProtEntry>> requests = new ArrayList<Future<UniProtEntry>>();
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
-		final CompletionService<UniProtProtein> completionService = new ExecutorCompletionService<UniProtProtein>(executor);
+		final CompletionService<UniProtEntry> completionService = new ExecutorCompletionService<UniProtEntry>(executor);
 		
 		// For each protein => search UniProt entry
 		for (final String uniProtId : uniProtIdsArray) {
-			requests.add(completionService.submit(new Callable<UniProtProtein>() {
+			requests.add(completionService.submit(new Callable<UniProtEntry>() {
 				@Override
-				public UniProtProtein call() throws Exception {
-					UniProtProtein result = null;
+				public UniProtEntry call() throws Exception {
+					UniProtEntry result = null;
 					
 					final int MAX_TRY = 2;
 					int i = 0;
@@ -186,11 +184,11 @@ public class UniProtEntryClient {
 		}
 
 		// Collect all uniprot entries results
-		final HashMap<String, UniProtProtein> results = new HashMap<String, UniProtProtein>();
+		final HashMap<String, UniProtEntry> results = new HashMap<String, UniProtEntry>();
 		for (int i = 0; i < requests.size(); i++) {
 			try {
-				Future<UniProtProtein> take = completionService.take();
-				UniProtProtein result = take.get();
+				Future<UniProtEntry> take = completionService.take();
+				UniProtEntry result = take.get();
 				if(result != null)
 					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
 			} catch (ExecutionException e) {

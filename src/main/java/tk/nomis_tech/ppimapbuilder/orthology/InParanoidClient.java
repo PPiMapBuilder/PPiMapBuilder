@@ -24,7 +24,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
-import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 
 /**
  * Simple Java client for InParanoid database
@@ -140,7 +140,7 @@ public class InParanoidClient {
 	/**
 	 * Search orthologs of proteins in desired organisms
 	 */
-	public HashMap<String, HashMap<Integer, String>> getOrthologsMultipleProtein(Collection<String> uniProtIds, final Collection<Integer> taxIds) throws IOException {
+	public HashMap<String, HashMap<Integer, String>> getOrthologsMultipleProtein(Collection<String> uniProtIds, final Collection<Integer> taxIds) throws IOException, UnknownHostException {
 		final List<Future<HashMap<Integer, String>>> requests = new ArrayList<Future<HashMap<Integer, String>>>();
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<HashMap<Integer, String>> completionService = new ExecutorCompletionService<HashMap<Integer, String>>(executor);
@@ -150,15 +150,7 @@ public class InParanoidClient {
 			requests.add(completionService.submit(new Callable<HashMap<Integer, String>>() {
 				@Override
 				public HashMap<Integer, String> call() throws Exception {
-					HashMap<Integer, String> result = null;
-					
-					try {
-						result = getOrthologsSingleProtein(uniProtId, taxIds);
-					} catch (UnknownHostException e) {
-						return null;
-					}
-
-					return result;
+					return getOrthologsSingleProtein(uniProtId, taxIds);
 				}
 			}));
 		}
@@ -174,8 +166,10 @@ public class InParanoidClient {
 					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
+				if(cause instanceof UnknownHostException)
+					throw (UnknownHostException) cause;
 				if(cause instanceof IOException)
-					throw (IOException)cause;
+					throw (IOException) cause;
 				else
 					cause.printStackTrace();
 			} catch (InterruptedException e) {
@@ -195,13 +189,13 @@ public class InParanoidClient {
 	 * @throws IOException
 	 *             if connection error occurs
 	 */
-	public HashMap<String, HashMap<Integer, String>> searchOrthologForUniprotProtein(final Collection<UniProtProtein> prots, Collection<Integer> taxIds) throws IOException {
+	public HashMap<String, HashMap<Integer, String>> searchOrthologForUniprotProtein(final Collection<UniProtEntry> prots, Collection<Integer> taxIds) throws IOException {
 		final List<Integer> taxIdsArray = new ArrayList<Integer>(taxIds);
 		
 		List<String> protIds = new ArrayList<String>(){{
-			Iterator<UniProtProtein> it = prots.iterator();
+			Iterator<UniProtEntry> it = prots.iterator();
 			while (it.hasNext()) {
-				add(((UniProtProtein) it.next()).getUniprotId());
+				add(((UniProtEntry) it.next()).getUniprotId());
 			}
 		}};
 		
@@ -209,9 +203,9 @@ public class InParanoidClient {
 
 		for (Map.Entry<String, HashMap<Integer, String>> orthologProts: orthologsProteins.entrySet()) {
 			for(Map.Entry<Integer, String> ortholog: orthologProts.getValue().entrySet()) {
-				Iterator<UniProtProtein> it = prots.iterator();
+				Iterator<UniProtEntry> it = prots.iterator();
 				while (it.hasNext()) {
-					UniProtProtein prot = (UniProtProtein) it.next();
+					UniProtEntry prot = (UniProtEntry) it.next();
 					if(prot.getUniprotId().equals(orthologProts.getKey())) {
 						prot.addOrtholog(new OrthologProtein(ortholog.getValue(), ortholog.getKey()));
 					}

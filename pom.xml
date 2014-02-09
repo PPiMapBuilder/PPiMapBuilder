@@ -3,6 +3,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	
 		<bundle.symbolicName>tk.nomis_tech.ppimapbuilder</bundle.symbolicName>
 		<bundle.namespace>tk.nomis_tech.ppimapbuilder</bundle.namespace>
 
@@ -11,7 +13,7 @@
 
 	<groupId>tk.nomis_tech</groupId>
 	<artifactId>PPiMapBuilder</artifactId>
-	<version>0.5-SNAPSHOT</version>
+	<version>0.6-SNAPSHOT</version>
 
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 

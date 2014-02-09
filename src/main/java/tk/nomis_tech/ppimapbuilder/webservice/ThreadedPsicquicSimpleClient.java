@@ -138,8 +138,8 @@ public class ThreadedPsicquicSimpleClient {
 			}));
 		}
 
-		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		// Collect all interaction results
+		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		for (int i = 0; i < interactionRequests.size(); i++) {
 			try {
 				results.addAll(completionService.take().get());

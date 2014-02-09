@@ -6,4 +6,13 @@ public class OrthologProtein extends AbstractProtein {
 		super(uniprotId, taxId);
 	}
 
+	@Override
+	public String toString() {
+		return new StringBuilder("{taxid:")
+			.append(getTaxId())
+			.append(", uniProtId:")
+			.append(getUniprotId())
+			.append("}").toString();
+	}
+
 }

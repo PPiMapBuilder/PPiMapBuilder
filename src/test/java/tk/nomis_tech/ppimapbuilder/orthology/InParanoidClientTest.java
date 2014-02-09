@@ -9,14 +9,14 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tk.nomis_tech.ppimapbuilder.data.UniProtProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 
 @SuppressWarnings("serial")
 public class InParanoidClientTest {
 
 	private static List<Integer> taxIds;
 	private static List<String> ids;
-	private static List<UniProtProtein> prots;
+	private static List<UniProtEntry> prots;
 	private static InParanoidClient client;
 
 	@BeforeClass
@@ -37,9 +37,10 @@ public class InParanoidClientTest {
 				"P40337", "Q0IIN1", "P61254", "P60900", "Q6XUX3", "Q70EK8", "Q92692", "P30480", "Q81QG7", "P25311", "Q8CZX0", "Q8D092",
 				"A6NMY6", "Q14164", "P04040", "O14964", "P51610", "Q9NRH1", /*"Q9H0R8", "Q06124", "P20340", "Q15051", "Q08188", "Q8ZIG9",
 				"P15336", "P05067", "Q01968", "Q12933", "Q14315", "P48200"*/ });
-		prots = new ArrayList<UniProtProtein>(){{
+		ids = Arrays.asList(new String[] {"Q2T9J0", "P05067", "Q9H0R8", "Q06124", "P61106", "Q14145", "P04040", "P20340", "Q70EK8"});
+		prots = new ArrayList<UniProtEntry>(){{
 			for(String id: ids)
-				add(new UniProtProtein(id, null, null, 9606, null, true));
+				add(new UniProtEntry(id, null, null, 9606, null, true));
 		}};
 	}
 
@@ -61,7 +62,7 @@ public class InParanoidClientTest {
 		System.out.print(orthologsProteins);
 	}
 
-	@Test
+	//@Test
 	public void searchOrthologForUniprotProtein() throws IOException {
 		client.searchOrthologForUniprotProtein(prots, taxIds);
 	}
