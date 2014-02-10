@@ -177,10 +177,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				else {
 					for(UniProtEntry prot: interactorPool) {
 						OrthologProtein ortho = prot.getOrthologByTaxid(taxId);
-						if(interaction.getInteractorA().equals(ortho.getUniprotId())) 
-							nodeA = nodeNameMap.get(prot.getUniprotId());
-						if(interaction.getInteractorB().equals(ortho.getUniprotId())) 
-							nodeB = nodeNameMap.get(prot.getUniprotId());
+						if(ortho != null) {
+							if(interaction.getInteractorA().equals(ortho.getUniprotId())) 
+								nodeA = nodeNameMap.get(prot.getUniprotId());
+							if(interaction.getInteractorB().equals(ortho.getUniprotId())) 
+								nodeB = nodeNameMap.get(prot.getUniprotId());
+						}
 						
 						if(nodeA != null && nodeB != null) break;
 					}

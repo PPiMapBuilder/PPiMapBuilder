@@ -12,6 +12,7 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.orthology.InParanoidClient;
@@ -28,7 +29,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 public class PMBQueryInteractionTask extends AbstractTask {
 
-	private double NB_STEP;
+	private final double NB_STEP;
 	private int currentStep;
 
 	// Data input
@@ -57,7 +58,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 		// Retrieve user input
 		final Organism refOrg = qw.getSelectedRefOrganism();
-		final List<String> proteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
+		final List<String> inputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
 		final List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
 		final List<Organism> otherOrgs = qw.getSelectedOrganisms();
 		otherOrgs.remove(refOrg);
@@ -79,7 +80,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			changeStep("Searching interaction for protein of interest", monitor);
 			{
 				List<String> queries = new ArrayList<String>();
-				for (final String proteinID : proteinIDs) {
+				for (final String proteinID : inputProteinIDs) {
 					if (!UniprotId.isValid(proteinID)) {
 						System.err.println(proteinID + " is not a valid Uniprot ID.");
 						continue;
@@ -92,59 +93,53 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					}
 					interactorPool.add(proteinEntry);
 					
-					MiQLExpressionBuilder query = new MiQLExpressionBuilder(){{
-						setRoot(true);
-						add(new MiQLParameterBuilder("taxidA", refOrg.getTaxId()));
-						addCondition(
-							Operator.AND,
-							new MiQLParameterBuilder("taxidB", refOrg.getTaxId())
-						);
-						addCondition(
-							Operator.AND,
-							new MiQLParameterBuilder("id", proteinID)
-						);
-					}};
-					queries.add(query.toString());
+					queries.add(generateMiQLQueryIDTaxID(proteinID, refOrg.getTaxId()));
 				}
+				//System.out.println(queries);
 				baseInteractions.addAll(psicquicClient.getByQueries(queries));
 			}
 			System.out.println("interactions: " + baseInteractions.size());
 
 			if (!baseInteractions.isEmpty()) {
 				// Filter non uniprot protein interaction
-				baseInteractions = (List<BinaryInteraction>) InteractionsUtil.filterNonUniprotAndNonRefOrg(baseInteractions,
-						refOrg.getTaxId());
+				baseInteractions = (List<BinaryInteraction>) InteractionsUtil.filterNonUniprotAndNonRefOrg(
+						baseInteractions,
+						refOrg.getTaxId()
+				);
 
 				// Add secondary interactions
 				changeStep("Searching secondary interactions...", monitor);
 				{
 					// Find interactors list (without protein of interest)
-					HashSet<String> interactors = new HashSet<String>(InteractionsUtil.getInteractorsBinary(baseInteractions,
-							refOrg.getTaxId()));
-					interactors.removeAll(proteinIDs);
+					HashSet<String> interactors = new HashSet<String>(InteractionsUtil.getInteractorsBinary(
+							baseInteractions,
+							refOrg.getTaxId()
+					));
+					interactors.removeAll(inputProteinIDs);
 
 					// Search interactions between interactors
-					baseInteractions
-							.addAll(InteractionsUtil.getInteractionBetweenProtein(interactors, refOrg.getTaxId(), selectedDatabases));
+					baseInteractions.addAll(InteractionsUtil.getInteractionsInProteinPool(
+							interactors, refOrg.getTaxId(), selectedDatabases
+					));
 				}
 
 				// Remove duplicate interactions
 				changeStep("Removing interaction duplicates...", monitor);
 				interactionsByOrg.get(refOrg.getTaxId()).addAll(InteractionsUtil.clusterInteraction(baseInteractions));
 			}
-
+			
 		}
-
+		
 		// Get protein UniProt entries
 		{
 			// Get reference interactors
 			Set<String> referenceInteractorsIDs = InteractionsUtil.getInteractorsEncore(interactionsByOrg.get(refOrg.getTaxId()));
-			referenceInteractorsIDs.removeAll(proteinIDs);
-
+			referenceInteractorsIDs.removeAll(inputProteinIDs);
+			
 			HashMap<String, UniProtEntry> uniProtProteins = UniProtEntryClient.getInstance().retrieveProteinsData(referenceInteractorsIDs);
 			interactorPool.addAll(uniProtProteins.values());
 		}
-
+		
 		/* ------------------------------------------------------------------------------------------
 		 * PART TWO: search interaction in other
 		 * ------------------------------------------------------------------------------------------ */
@@ -170,54 +165,89 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			// Get ortholog interactions
 			changeStep("Find orthologs's interactions...", monitor);
 			{
-				// TODO maybe search orthologs interactions using thread
+				// TODO maybe use thread on this for loop
 				// For each other organism
 				for (final Organism org : otherOrgs) {
-					HashSet<String> prots = new HashSet<String>();
+					//Get list of uniprotIDs of othologs in this organism
+					Set<String> orthologsInOrg = new HashSet<String>();
 					for (HashMap<Integer, String> ortho : orthologs.values()) {
 						String id = ortho.get(org.getTaxId());
-						if (id != null)
-							prots.add(id);
+						if (id != null) orthologsInOrg.add(id);
 					}
+					
+					//Get list of protein of interest's orthologs in this organism
+					Set<String> POIorthologs = new HashSet<String>();
+					for(String protID: inputProteinIDs) {
+						UniProtEntry prot = interactorPool.find(protID);
+						if(prot != null) {
+							final OrthologProtein ortho = prot.getOrthologByTaxid(org.getTaxId());
+							
+							if(ortho != null)
+								POIorthologs.add(ortho.getUniprotId());
+						}
+					}
+					
+					//Remove POIs in orthologs list for interaction research
+					orthologsInOrg.removeAll(POIorthologs);
 
+					//Find interactions of orthologs of protein of interest
+					List<String> additionnalQueries = new ArrayList<String>();
+					for(final String protID: POIorthologs) {
+						additionnalQueries.add(generateMiQLQueryIDTaxID(protID, org.getTaxId()));
+					}
+					List<BinaryInteraction> orthologsInteractions = psicquicClient.getByQueries(additionnalQueries);
+					
 					// Search all interactions for orthologs found in this organism
-					Collection<EncoreInteraction> interactionBetweenOrthologs = InteractionsUtil.clusterInteraction(InteractionsUtil
-							.getInteractionBetweenProtein(prots, org.getTaxId(), selectedDatabases));
+					orthologsInteractions.addAll(InteractionsUtil.getInteractionsInProteinPool(orthologsInOrg, org.getTaxId(), selectedDatabases));
+
+					//Cluster orthologs's interactions
+					Collection<EncoreInteraction> interactionBetweenOrthologs = InteractionsUtil.clusterInteraction(orthologsInteractions);
 
 					// Store interactions found for this organism
 					interactionsByOrg.put(org.getTaxId(), interactionBetweenOrthologs);
-					System.out.println("ORG:" + org.getTaxId() + " -> " + prots.size() + " proteins found");
+					System.out.println("ORG:" + org.getTaxId() + " -> " + orthologsInOrg.size() + " proteins found");
 					System.out.println("ORG:" + org.getTaxId() + " -> " + interactionBetweenOrthologs.size() + " interactions found");
 
 					//TODO Validate this part:
 					// Get new interactors => not seen in reference organism
 					{
 						Set<String> orthologInteractors = InteractionsUtil.getInteractorsEncore(interactionBetweenOrthologs);
-						orthologInteractors.removeAll(prots);
-
-						System.out.println("ORG:" + org.getTaxId() + " -> " + orthologInteractors.size() + " new protein found");
+						orthologInteractors.removeAll(orthologsInOrg);
+						orthologInteractors.removeAll(POIorthologs);
 
 						if (!orthologInteractors.isEmpty()) {
-							HashMap<String, HashMap<Integer, String>> orthologsMultipleProtein = inParanoidClient
-									.getOrthologsMultipleProtein(orthologInteractors, Arrays.asList(refOrg.getTaxId()));
+							System.out.println("ORG:" + org.getTaxId() + " -> " + orthologInteractors.size() + " new protein found");
+							
+							HashMap<String, HashMap<Integer, String>> orthologsMultipleProtein = 
+								inParanoidClient.getOrthologsMultipleProtein(orthologInteractors, Arrays.asList(refOrg.getTaxId()));
 
 							// Get UniProtProtein entry from reference organism
 							for (HashMap<Integer, String> vals : orthologsMultipleProtein.values()) {
 								String protInRefOrg = vals.get(org.getTaxId());
+								System.out.print(protInRefOrg+", ");
 
 								if (interactorPool.contains(protInRefOrg)) {
 									UniProtEntry uniProtInRefOrg = UniProtEntryClient.getInstance().retrieveProteinData(protInRefOrg);
 									interactorPool.add(uniProtInRefOrg);
-									inParanoidClient.searchOrthologForUniprotProtein(Arrays.asList(uniProtInRefOrg),
-											otherOrgsTaxIds);
+									inParanoidClient.searchOrthologForUniprotProtein(Arrays.asList(uniProtInRefOrg), otherOrgsTaxIds);
 								}
 							}
+							System.out.println();
 						}
 					}
 					System.out.println("--");
 				}
 			}
 		}
+	}
+	
+	private String generateMiQLQueryIDTaxID(final String id, final Integer taxId) {
+		return new MiQLExpressionBuilder(){{
+			setRoot(true);
+			add(new MiQLParameterBuilder("taxidA", taxId));
+			addCondition(Operator.AND, new MiQLParameterBuilder("taxidB", taxId));
+			addCondition(Operator.AND, new MiQLParameterBuilder("id", id));
+		}}.toString();
 	}
 
 	@Override

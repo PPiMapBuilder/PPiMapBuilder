@@ -124,7 +124,7 @@ public class InteractionsUtilTest {
 				"Q13952", "Q14344", "Q62132", "Q99677", "Q9UG90", "Q9BZH6", "Q9BQD3", "B4E025", "O60603", "Q01955", "Q92794", "Q5NHX7",
 				"Q92791", "Q5NHX6", "Q5NI96", "Q5NHX9", "Q92793", "Q5NHX8", "Q5NHX3", "Q5NI93", "Q01959", "Q5NHX5", "P10644", "Q8WTV0",
 				"Q6SA08", "C0LZJ3" }));
-		List<BinaryInteraction> res = InteractionsUtil.getInteractionBetweenProtein(prots, 9606, services);
+		List<BinaryInteraction> res = InteractionsUtil.getInteractionsInProteinPool(prots, 9606, services);
 		System.out.println("before cluster: "+res.size());
 		System.out.println("after cluster: "+ InteractionsUtil.clusterInteraction(res).size());
 	}

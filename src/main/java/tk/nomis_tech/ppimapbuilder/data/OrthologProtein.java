@@ -1,5 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data;
 
+import com.eclipsesource.json.JsonObject;
+
 public class OrthologProtein extends AbstractProtein {
 
 	public OrthologProtein(String uniprotId, Integer taxId) {
@@ -8,11 +10,10 @@ public class OrthologProtein extends AbstractProtein {
 
 	@Override
 	public String toString() {
-		return new StringBuilder("{taxid:")
-			.append(getTaxId())
-			.append(", uniProtId:")
-			.append(getUniprotId())
-			.append("}").toString();
+		JsonObject out = new JsonObject();
+		out.add("taxId", getTaxId());
+		out.add("uniProtId", getUniprotId());
+		return out.toString();
 	}
 
 }

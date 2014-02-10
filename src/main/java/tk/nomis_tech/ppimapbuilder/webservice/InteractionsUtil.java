@@ -32,7 +32,7 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve all interactions with the given interactors (optimized and threaded)
 	 */
-	public static List<BinaryInteraction> getInteractionBetweenProtein(HashSet<String> proteins, Integer sourceOrganism,
+	public static List<BinaryInteraction> getInteractionsInProteinPool(Set<String> proteins, Integer sourceOrganism,
 			final List<PsicquicService> services) throws Exception {
 		List<String> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
@@ -77,8 +77,8 @@ public class InteractionsUtil {
 						/ (double) idParamLength);
 				final int NB_TRUNCATION = (int) Math.ceil((double) sourceProteins.size() / (double) STEP_LENGTH);
 
-				System.out.println("N# proteins: " + sourceProteins.size());
-				System.out.println("N# queries: " + NB_TRUNCATION);
+				//System.out.println("N# proteins: " + sourceProteins.size());
+				//System.out.println("N# queries: " + NB_TRUNCATION);
 
 				// Generate truncated protein listing
 				// Ex: "prot1", "prot2", "prot3", "prot4" => ("prot1", "prot2"), ("prot3", "prot4")
@@ -159,8 +159,7 @@ public class InteractionsUtil {
 	 */
 	public static Collection<EncoreInteraction> clusterInteraction(List<BinaryInteraction> interactions) {
 		// Cluster interaction results to remove duplicates
-		InteractionCluster cluster = new InteractionCluster();
-		cluster.setBinaryInteractionIterator(interactions.iterator());
+		InteractionCluster cluster = new InteractionCluster(interactions);
 		cluster.setMappingIdDbNames("uniprotkb");
 		cluster.runService();
 

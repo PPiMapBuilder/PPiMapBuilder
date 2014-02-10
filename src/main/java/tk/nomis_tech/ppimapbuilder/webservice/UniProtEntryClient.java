@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,7 +29,7 @@ import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
  */
 public class UniProtEntryClient {
 	private static final String uniprotUrl = "http://www.uniprot.org/uniprot/";
-	private static final int NB_THREAD = 3;
+	private static final int NB_THREAD = 5;
 	private static UniProtEntryClient _instance;
 
 	private UniProtEntryClient() {}
@@ -46,12 +47,14 @@ public class UniProtEntryClient {
 		UniProtEntry prot = null;
 		
 		Document doc = null;
-		final int MAX_TRY = 2;
+		final int MAX_TRY = 4;
 		int pos = 0;
 		IOException lastError = null;
 		do{
 			try {
-				doc = Jsoup.connect(new StringBuilder(uniprotUrl).append(uniprotId).append(".xml").toString()).get();
+				Connection connect = Jsoup.connect(new StringBuilder(uniprotUrl).append(uniprotId).append(".xml").toString());
+				connect.timeout(6000);
+				doc = connect.get();
 			} catch (HttpStatusException e) {
 				if(e.getStatusCode() == 404) return null;//No protein entry found
 				lastError = new IOException(e);
@@ -172,7 +175,8 @@ public class UniProtEntryClient {
 					int i = 0;
 					do {
 						try {
-							result = retrieveProteinData(uniProtId);
+							if(!uniProtId.equals(null))
+								result = retrieveProteinData(uniProtId);
 						} finally {
 							i++;
 						}
