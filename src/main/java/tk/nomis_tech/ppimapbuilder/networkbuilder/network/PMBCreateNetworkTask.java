@@ -3,7 +3,6 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.cytoscape.model.CyEdge;
@@ -24,231 +23,218 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
-import psidev.psi.mi.tab.model.Author;
-import psidev.psi.mi.tab.model.BinaryInteraction;
-import psidev.psi.mi.tab.model.CrossReference;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.network.data.UniProtProtein;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicResultTranslator;
-import tk.nomis_tech.ppimapbuilder.util.UniProtService;
+import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.util.Organism;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicResultTranslator;
+import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
 	// For the network
-	private final CyNetworkManager netMgr;
-	private final CyNetworkFactory cnf;
+	private final CyNetworkManager networkManager;
+	private final CyNetworkFactory networkFactory;
 	private final CyNetworkNaming namingUtil;
 
 	// For the view
-	private final CyNetworkViewFactory cnvf;
-	private final CyNetworkViewManager networkViewManager;
+	private final CyNetworkViewFactory viewFactory;
+	private final CyNetworkViewManager viewManager;
 
 	// For the layout
 	private final CyLayoutAlgorithmManager layoutManager;
 
 	// For the visual style
-	private final VisualMappingManager vmm;
+	private final VisualMappingManager vizMapManager;
 
-	private final Collection<BinaryInteraction> interactionResults;
+	private final Organism refOrg;
+	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
+	private final UniProtEntryCollection interactorPool;
+	
+	//Network data
+	private final HashMap<String, CyNode> nodeNameMap;
 
 	public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
 			final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm,
-			Collection<BinaryInteraction> interactionResults) {
+			HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow queryWindow) {
 		// For the network
-		this.netMgr = netMgr;
-		this.cnf = cnf;
+		this.networkManager = netMgr;
+		this.networkFactory = cnf;
 		this.namingUtil = namingUtil;
 
 		// For the view
-		this.cnvf = cnvf;
-		this.networkViewManager = networkViewManager;
+		this.viewFactory = cnvf;
+		this.viewManager = networkViewManager;
 
 		// For the layout
 		this.layoutManager = layoutMan;
 
 		// For the visual style
-		this.vmm = vmm;
+		this.vizMapManager = vmm;
 
-		this.interactionResults = interactionResults;
+		this.interactionsByOrg = interactionsByOrg;
+		this.interactorPool = interactorPool;
+		this.refOrg = queryWindow.getSelectedRefOrganism();
+		
+		this.nodeNameMap = new HashMap<String, CyNode>();
 	}
 
 	@Override
-	public void run(TaskMonitor taskMonitor) {
-		if (!interactionResults.isEmpty()) {
-			createNetworkFromBinaryInteractions(interactionResults);
+	public void run(TaskMonitor monitor) {
+		monitor.setTitle("Network building");
+		monitor.setStatusMessage("Building Cytoscape network...");
+		monitor.setProgress(1.0);
+		
+		if (!interactionsByOrg.get(refOrg.getTaxId()).isEmpty() && !interactionsByOrg.isEmpty()) {
+			
+			// Create an empty network
+			CyNetwork network = networkFactory.createNetwork();
+			network.getRow(network).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
+			
+			CyTable networkTable = network.getDefaultNetworkTable();
+			networkTable.createColumn("created by", String.class, true);
+			network.getRow(network).set("created by", "PPiMapBuilder");
+			
+			//Create nodes using interactors pool
+			createNodes(network);
+			
+			//Create edges using reference interactions and ortholog interactions
+			createEdges(network);
+			
+			// Creation on the view
+			CyNetworkView view = applyView(network);
+
+			// Layout
+			applyLayout(view);
+
+			// Visual Style
+			applyVisualStyle(view);
 		}
 	}
-
-	public void createNetworkFromBinaryInteractions(Collection<BinaryInteraction> binaryInteractions) {
-		// Create an empty network
-		CyNetwork myNet = cnf.createNetwork();
-		myNet.getRow(myNet).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
-		CyTable netAttr = myNet.getDefaultNetworkTable();
-		netAttr.createColumn("created by", String.class, true);
-		myNet.getRow(myNet).set("created by", "PPiMapBuilder");
-
-		// Edge attributes
-		CyTable edgeAttr = myNet.getDefaultEdgeTable();
-		edgeAttr.createListColumn("source", String.class, false);
-		edgeAttr.createListColumn("detmethod", String.class, false);
-		edgeAttr.createListColumn("type", String.class, false);
-		edgeAttr.createListColumn("interaction_id", String.class, false);
-		edgeAttr.createListColumn("pubid", String.class, false);
-		edgeAttr.createListColumn("confidence", String.class, false);
-
+	
+	private void createNodes(CyNetwork network) {
 		// Node attributes
-		CyTable nodeAttr = myNet.getDefaultNodeTable();
-		nodeAttr.createColumn("uniprot_id", String.class, false);
-		nodeAttr.createColumn("gene_name", String.class, false);
-		nodeAttr.createColumn("ec_number", String.class, false);
-		nodeAttr.createListColumn("synonym_gene_names", String.class, false);
-		nodeAttr.createColumn("protein_name", String.class, false);
-		nodeAttr.createColumn("tax_id", String.class, false);
-		nodeAttr.createColumn("reviewed", String.class, false);
-		nodeAttr.createListColumn("cellular_components", String.class, false);
-		nodeAttr.createListColumn("biological_processes", String.class, false);
-		nodeAttr.createListColumn("molecular_functions", String.class, false);
-
-		// Add nodes
-		HashMap<String, CyNode> nodeNameMap = new HashMap<String, CyNode>();
-
-		for (BinaryInteraction interaction : binaryInteractions) { // For each
-																	// interaction
-
-			// System.out.println(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()+"\t"+interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
-			// TODO : treat cases without uniprotkb id
-
-			// Retrieve the first node name
-			CyNode node1 = null;
-			String name1 = null;
-			for (CrossReference cr : interaction.getInteractorA().getIdentifiers()) {
-				if (cr.getDatabase().equals("uniprotkb")) {
-					name1 = cr.getIdentifier();
-					break;
-				}
+		CyTable nodeTable = network.getDefaultNodeTable();
+		nodeTable.createColumn("uniprot_id", String.class, false);
+		nodeTable.createColumn("gene_name", String.class, false);
+		nodeTable.createColumn("ec_number", String.class, false);
+		nodeTable.createListColumn("synonym_gene_names", String.class, false);
+		nodeTable.createColumn("protein_name", String.class, false);
+		nodeTable.createColumn("tax_id", String.class, false);
+		nodeTable.createColumn("reviewed", String.class, false);
+		nodeTable.createListColumn("cellular_components", String.class, false);
+		nodeTable.createListColumn("biological_processes", String.class, false);
+		nodeTable.createListColumn("molecular_functions", String.class, false);
+		nodeTable.createListColumn("orthologs", String.class, false);
+				
+		for (UniProtEntry protein : interactorPool) {
+			if (!nodeNameMap.containsKey(protein.getUniprotId())) {
+				CyNode node = network.addNode();
+				nodeNameMap.put(protein.getUniprotId(), node);
+				
+				CyRow nodeAttr = network.getRow(node);
+				nodeAttr.set("name", protein.getUniprotId());
+				nodeAttr.set("uniprot_id", protein.getUniprotId());
+				nodeAttr.set("gene_name", protein.getGeneName());
+				nodeAttr.set("ec_number", protein.getEcNumber());
+				nodeAttr.set("synonym_gene_names", protein.getSynonymGeneNames());
+				nodeAttr.set("protein_name", protein.getProteinName());
+				nodeAttr.set("tax_id", String.valueOf(protein.getTaxId()));
+				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
+				nodeAttr.set("cellular_components", protein.getCellularComponentsAsStringList());
+				nodeAttr.set("biological_processes", protein.getBiologicalProcessesAsStringList());
+				nodeAttr.set("molecular_functions", protein.getMolecularFunctionsAsStringList());
+				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
 			}
-			if (name1 == null) {
-				continue;
-			}
-			// Retrieve the second node name
-			CyNode node2 = null;
-			String name2 = null;
-			for (CrossReference cr : interaction.getInteractorB().getIdentifiers()) {
-				if (cr.getDatabase().equals("uniprotkb")) {
-					name2 = cr.getIdentifier();
-					break;
-				}
-			}
-			if (name2 == null) {
-				continue;
-			}
-
-			// Retrieve or create the first node
-			if (nodeNameMap.containsKey(name1)) {
-				node1 = nodeNameMap.get(name1);
-			} else {
-				node1 = myNet.addNode();
-				CyRow attributes = myNet.getRow(node1);
-				attributes.set("name", name1);
-				nodeNameMap.put(name1, node1);
-
-				// Add attributes to first node
-				UniProtProtein prot = UniProtService.getUniprotProtein(name1);
-				CyRow attributesNode1 = myNet.getRow(node1);
-				attributesNode1.set("uniprot_id", prot.getUniprotId());
-				attributesNode1.set("tax_id", String.valueOf(prot.getTaxId()));
-				attributesNode1.set("gene_name", prot.getGeneName());
-				attributesNode1.set("ec_number", prot.getEcNumber());
-				attributesNode1.set("synonym_gene_names", prot.getSynonymGeneNames());
-				attributesNode1.set("protein_name", prot.getProteinName());
-				attributesNode1.set("reviewed", String.valueOf(prot.isReviewed()));
-				attributesNode1.set("cellular_components", prot.getCellularComponentsAsStringList());
-				attributesNode1.set("biological_processes", prot.getBiologicalProcessesAsStringList());
-				attributesNode1.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
-
-			}
-
-			// Retrieve or create the second node
-			if (nodeNameMap.containsKey(name2)) {
-				node2 = nodeNameMap.get(name2);
-			} else {
-				node2 = myNet.addNode();
-				CyRow attributes = myNet.getRow(node2);
-				attributes.set("name", name2);
-				nodeNameMap.put(name2, node2);
-
-				// Add attributes to second node
-				UniProtProtein prot = UniProtService.getUniprotProtein(name2);
-				CyRow attributesNode2 = myNet.getRow(node2);
-				attributesNode2.set("uniprot_id", prot.getUniprotId());
-				attributesNode2.set("tax_id", String.valueOf(prot.getTaxId()));
-				attributesNode2.set("gene_name", prot.getGeneName());
-				attributesNode2.set("ec_number", prot.getEcNumber());
-				attributesNode2.set("synonym_gene_names", prot.getSynonymGeneNames());
-				attributesNode2.set("protein_name", prot.getProteinName());
-				attributesNode2.set("reviewed", String.valueOf(prot.isReviewed()));
-				attributesNode2.set("cellular_components", prot.getCellularComponentsAsStringList());
-				attributesNode2.set("biological_processes", prot.getBiologicalProcessesAsStringList());
-				attributesNode2.set("molecular_functions", prot.getMolecularFunctionsAsStringList());
-			}
-
-			// Add edges & attributes
-			CyEdge myEdge = myNet.addEdge(node1, node2, true);
-			CyRow attributes = myNet.getRow(myEdge);
-			attributes.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-			attributes.set("detmethod", PsicquicResultTranslator.convert(interaction.getDetectionMethods()));
-			attributes.set("type", PsicquicResultTranslator.convert(interaction.getInteractionTypes()));
-			attributes.set("interaction_id", PsicquicResultTranslator.convert(interaction.getInteractionAcs()));
-			attributes.set("pubid", PsicquicResultTranslator.convert(interaction.getPublications()));
-			attributes.set("confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
-
 		}
-
-		// Creation on the view
-		CyNetworkView myView = applyView(myNet);
-
-		// Layout
-		applyLayout(myView);
-
-		// Visual Style
-		applyVisualStyle(myView);
-
-		// System.out.println("Done !");
 	}
 
-	public CyNetworkView applyView(CyNetwork myNet) {
-		if (myNet == null) {
+	private void createEdges(CyNetwork network) {
+		// Edge attributes
+		CyTable edgeTable = network.getDefaultEdgeTable();
+		edgeTable.createListColumn("source", String.class, false);
+		edgeTable.createListColumn("detmethod", String.class, false);
+		edgeTable.createListColumn("type", String.class, false);
+		edgeTable.createListColumn("interaction_id", String.class, false);
+		edgeTable.createListColumn("pubid", String.class, false);
+		edgeTable.createListColumn("confidence", String.class, false);
+		edgeTable.createColumn("tax_id", String.class, false);
+		edgeTable.createColumn("interolog", String.class, false);		
+		
+		for(Integer taxId: interactionsByOrg.keySet()) {
+			boolean inRefOrg = taxId == refOrg.getTaxId();
+			for(EncoreInteraction interaction: interactionsByOrg.get(taxId)) {
+				CyNode nodeA = null, nodeB = null;
+				if(inRefOrg) {
+					nodeA = nodeNameMap.get(interaction.getInteractorA("uniprotkb"));
+					nodeB = nodeNameMap.get(interaction.getInteractorB("uniprotkb"));					
+				}
+				else {
+					for(UniProtEntry prot: interactorPool) {
+						OrthologProtein ortho = prot.getOrthologByTaxid(taxId);
+						if(ortho != null) {
+							if(interaction.getInteractorA().equals(ortho.getUniprotId())) 
+								nodeA = nodeNameMap.get(prot.getUniprotId());
+							if(interaction.getInteractorB().equals(ortho.getUniprotId())) 
+								nodeB = nodeNameMap.get(prot.getUniprotId());
+						}
+						
+						if(nodeA != null && nodeB != null) break;
+					}
+				}
+				
+				if(nodeA != null && nodeB != null) {				
+					CyEdge myEdge = network.addEdge(nodeA, nodeB, true);
+					
+					CyRow edgeAttr = network.getRow(myEdge);
+					edgeAttr.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
+					edgeAttr.set("detmethod", PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
+					edgeAttr.set("type", PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));
+					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
+					edgeAttr.set("pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
+					edgeAttr.set("confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
+					edgeAttr.set("tax_id", taxId.toString());
+					edgeAttr.set("interolog", Boolean.toString(!inRefOrg));
+				}
+			}
+		}
+	}
+
+	private CyNetworkView applyView(CyNetwork network) {
+		if (network == null) {
 			return null;
 		}
-		this.netMgr.addNetwork(myNet);
+		this.networkManager.addNetwork(network);
 
-		final Collection<CyNetworkView> views = networkViewManager.getNetworkViews(myNet);
-		CyNetworkView myView = null;
+		final Collection<CyNetworkView> views = viewManager.getNetworkViews(network);
+		CyNetworkView view = null;
 		if (views.size() != 0) {
-			myView = views.iterator().next();
+			view = views.iterator().next();
 		}
 
-		if (myView == null) {
+		if (view == null) {
 			// create a new view for my network
-			myView = cnvf.createNetworkView(myNet);
-			networkViewManager.addNetworkView(myView);
+			view = viewFactory.createNetworkView(network);
+			viewManager.addNetworkView(view);
 		} else {
 			System.out.println("networkView already existed.");
 		}
 
-		return myView;
+		return view;
 	}
 
-	public void applyLayout(CyNetworkView myView) {
+	private void applyLayout(CyNetworkView view) {
 		CyLayoutAlgorithm layout = layoutManager.getLayout("force-directed");
 		Object context = layout.createLayoutContext();
 		String layoutAttribute = null;
-		insertTasksAfterCurrentTask(layout.createTaskIterator(myView, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
+		insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 	}
 
-	public void applyVisualStyle(CyNetworkView myView) {
-		VisualStyle vs = vmm.getDefaultVisualStyle();
-		vs.apply(myView);
-		myView.updateView();
+	private void applyVisualStyle(CyNetworkView view) {
+		VisualStyle vs = vizMapManager.getDefaultVisualStyle();
+		vs.apply(view);
+		view.updateView();
 	}
 
 }

@@ -9,7 +9,7 @@ import org.cytoscape.model.events.RowSetRecord;
 import org.cytoscape.model.events.RowsSetEvent;
 import org.cytoscape.model.events.RowsSetListener;
 
-import tk.nomis_tech.ppimapbuilder.ui.panel.ResultPanel;
+import tk.nomis_tech.ppimapbuilder.ui.resultpanel.ResultPanel;
 
 public class ResultPanelAction implements RowsSetListener {
 

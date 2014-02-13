@@ -28,9 +28,9 @@ import tk.nomis_tech.ppimapbuilder.action.ResultPanelAction;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
-import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.ui.SettingWindow;
-import tk.nomis_tech.ppimapbuilder.ui.panel.ResultPanel;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.ui.resultpanel.ResultPanel;
+import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 
 /**
@@ -50,7 +50,6 @@ public class PMBActivator extends AbstractCyActivator {
 
 	/**
 	 * This methods register all services of PPiMapBuilder
-	 * 
 	 * @param bc
 	 */
 	@Override
@@ -67,8 +66,9 @@ public class PMBActivator extends AbstractCyActivator {
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 		PMBSettingSaveTaskFactory saveSettingFactory;
-		TaskManager networkBuildTaskManager;
 		{
+			TaskManager networkBuildTaskManager = getService(bc, TaskManager.class);
+			
 			// Network services
 			CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
 			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
@@ -109,24 +109,24 @@ public class PMBActivator extends AbstractCyActivator {
 					mapTableToNetworkTablesTaskFactory);
 			queryWindow.setCreateNetworkfactory(createNetworkfactory);
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
-			networkBuildTaskManager = getService(bc, TaskManager.class);
 			queryWindow.setTaskManager(networkBuildTaskManager);
 
 			// Save settings task factory
 			saveSettingFactory = new PMBSettingSaveTaskFactory();
 			settingWindow.setSaveSettingFactory(saveSettingFactory);
 			registerService(bc, saveSettingFactory, TaskFactory.class, new Properties());
-			networkBuildTaskManager = getService(bc, TaskManager.class);
 			settingWindow.setTaskManager(networkBuildTaskManager);
 
 		}
 
+		// Query window menu
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);
 		Properties props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Query");
 		registerService(bc, queryWindowTaskFactory, TaskFactory.class, props);
 
+		// Setting window menu
 		PMBSettingMenuTaskFactory settingsWindowTaskFactory = new PMBSettingMenuTaskFactory(settingWindow);
 		props = new Properties();
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
@@ -134,6 +134,5 @@ public class PMBActivator extends AbstractCyActivator {
 		registerService(bc, settingsWindowTaskFactory, TaskFactory.class, props);
 
 		System.out.println("[PPiMapBuilder] Started.");
-
 	}
 }

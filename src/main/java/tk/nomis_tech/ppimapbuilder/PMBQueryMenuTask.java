@@ -8,8 +8,8 @@ import javax.swing.SwingUtilities;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
-import tk.nomis_tech.ppimapbuilder.ui.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.util.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
 
 /**
  * The interaction query menu
@@ -28,7 +28,7 @@ public class PMBQueryMenuTask extends AbstractTask {
 			@Override
 			public void run() {
 				try {
-					PsicquicRegistry reg = new PsicquicRegistry();
+					PsicquicRegistry reg = PsicquicRegistry.getInstance();
 					qw.updateLists(reg.getServices(), PMBActivator.listOrganism);
 
 					qw.setVisible(true);
