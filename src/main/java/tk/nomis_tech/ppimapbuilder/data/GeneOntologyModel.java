@@ -1,5 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data;
 
+import com.eclipsesource.json.JsonObject;
+
 public class GeneOntologyModel {
 
 	private String identifier;
@@ -39,7 +41,10 @@ public class GeneOntologyModel {
 
 	@Override
 	public String toString() {
-		return "{id:" + identifier + ",term:" + term+"}";
+		JsonObject out = new JsonObject();
+		out.add("id", identifier);
+		out.add("term", term);
+		return out.toString();
 	}
 
 }

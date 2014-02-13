@@ -7,13 +7,13 @@ import java.util.List;
 public class UniProtEntry extends AbstractProtein {
 
 	private String geneName;
-	private ArrayList<String> synonymGeneNames = new ArrayList<String>();
+	private List<String> synonymGeneNames = new ArrayList<String>();
 	private String proteinName;
 	private String ecNumber;
 	private boolean reviewed;
-	private ArrayList<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
-	private ArrayList<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
-	private ArrayList<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
+	private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
+	private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
+	private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
 	private final HashMap<Integer, OrthologProtein> orthologs = new HashMap<Integer, OrthologProtein>();
 
 	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
@@ -24,7 +24,7 @@ public class UniProtEntry extends AbstractProtein {
 		this.reviewed = reviewed;
 	}
 
-	public ArrayList<GeneOntologyModel> getCellularComponents() {
+	public List<GeneOntologyModel> getCellularComponents() {
 		return cellularComponents;
 	}
 
@@ -40,8 +40,15 @@ public class UniProtEntry extends AbstractProtein {
 		return orthologs.get(taxid);
 	}
 	
-	public List<OrthologProtein> getAllOrthologs() {
+	public List<OrthologProtein> getOrthologs() {
 		return new ArrayList<OrthologProtein>(orthologs.values());
+	}
+	
+	public List<String> getOrthologsAsStringList() {
+		List<String> orthologs = new ArrayList<String>();
+		for(OrthologProtein ortholog:  getOrthologs())
+			orthologs.add(ortholog.toString());
+		return orthologs;
 	}
 	
 	public OrthologProtein addOrtholog(OrthologProtein prot) {
@@ -56,7 +63,7 @@ public class UniProtEntry extends AbstractProtein {
 		this.cellularComponents.add(go);
 	}
 
-	public ArrayList<GeneOntologyModel> getBiologicalProcesses() {
+	public List<GeneOntologyModel> getBiologicalProcesses() {
 		return biologicalProcesses;
 	}
 
@@ -77,12 +84,11 @@ public class UniProtEntry extends AbstractProtein {
 		this.biologicalProcesses.add(go);
 	}
 
-	public ArrayList<GeneOntologyModel> getMolecularFunctions() {
+	public List<GeneOntologyModel> getMolecularFunctions() {
 		return molecularFunctions;
 	}
 
 	public ArrayList<String> getMolecularFunctionsAsStringList() {
-
 		ArrayList<String> list = new ArrayList<String>();
 		for (GeneOntologyModel go : this.molecularFunctions) {
 			list.add(go.toString());
@@ -107,7 +113,7 @@ public class UniProtEntry extends AbstractProtein {
 		return text.substring(0, text.length() - 1);
 	}
 
-	public ArrayList<String> getSynonymGeneNames() {
+	public List<String> getSynonymGeneNames() {
 		return synonymGeneNames;
 	}
 

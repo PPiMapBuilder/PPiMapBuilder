@@ -145,11 +145,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("cellular_components", protein.getCellularComponentsAsStringList());
 				nodeAttr.set("biological_processes", protein.getBiologicalProcessesAsStringList());
 				nodeAttr.set("molecular_functions", protein.getMolecularFunctionsAsStringList());
-				
-				List<String> orthologs = new ArrayList<String>();
-				for(OrthologProtein ortholog:  protein.getAllOrthologs())
-					orthologs.add(ortholog.toString());
-				nodeAttr.set("orthologs", orthologs);
+				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
 			}
 		}
 	}

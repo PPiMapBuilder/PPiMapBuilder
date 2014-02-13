@@ -35,6 +35,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
+import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -657,37 +658,46 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private void setOntology(final List<String> biologicalProcess, final List<String> cellularComponent,
 			final List<String> molecularFunction) {
 		treeModelGO.removeAllChildren();
+		try {
+			treeModelGO.add(new DefaultMutableTreeNode("Biological process (" + biologicalProcess.size() + ")") {
+				{
+					if (biologicalProcess != null && !biologicalProcess.isEmpty())
+						for (String s : biologicalProcess) {
+							JsonObject obj = JsonObject.readFrom(s);
+							String process = new StringBuilder(obj.get("term").asString())
+								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							add(new DefaultMutableTreeNode(process));
+						}
+				}
+			});
 
-		treeModelGO.add(new DefaultMutableTreeNode("Biological process (" + biologicalProcess.size() + ")") {
-			{
-				if (biologicalProcess != null && !biologicalProcess.isEmpty())
-					// TODO: parse JSON GO strings
-					for (String s : biologicalProcess) {
-						add(new DefaultMutableTreeNode(s));
-					}
-			}
-		});
+			treeModelGO.add(new DefaultMutableTreeNode("Cellular componant (" + cellularComponent.size() + ")") {
+				{
+					if (cellularComponent != null && !cellularComponent.isEmpty())
+						for (String s : cellularComponent) {
+							JsonObject obj = JsonObject.readFrom(s);
+							String component = new StringBuilder(obj.get("term").asString())
+								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							add(new DefaultMutableTreeNode(component));
+						}
+				}
+			});
 
-		treeModelGO.add(new DefaultMutableTreeNode("Cellular componant (" + cellularComponent.size() + ")") {
-			{
-				if (cellularComponent != null && !cellularComponent.isEmpty())
-					// TODO: parse JSON GO strings
-					for (String s : cellularComponent) {
-						add(new DefaultMutableTreeNode(s));
-					}
-			}
-		});
-
-		treeModelGO.add(new DefaultMutableTreeNode("Molecular function (" + molecularFunction.size() + ")") {
-			{
-				if (molecularFunction != null && !molecularFunction.isEmpty())
-					// TODO: parse JSON GO strings
-					for (String s : molecularFunction) {
-						add(new DefaultMutableTreeNode(s));
-					}
-			}
-		});
-		treeOntology.setModel(new DefaultTreeModel(treeModelGO));
+			treeModelGO.add(new DefaultMutableTreeNode("Molecular function (" + molecularFunction.size() + ")") {
+				{
+					if (molecularFunction != null && !molecularFunction.isEmpty())
+						for (String s : molecularFunction) {
+							JsonObject obj = JsonObject.readFrom(s);
+							String function = new StringBuilder(obj.get("term").asString())
+								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							add(new DefaultMutableTreeNode(function));
+						}
+				}
+			});
+			treeOntology.setModel(new DefaultTreeModel(treeModelGO));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
