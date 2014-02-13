@@ -45,6 +45,8 @@ import org.cytoscape.util.swing.OpenBrowser;
 import tk.nomis_tech.ppimapbuilder.data.Ortholog;
 import tk.nomis_tech.ppimapbuilder.ui.util.JHyperlinkLabel;
 
+import com.eclipsesource.json.JsonObject;
+
 /**
  * Creates new ResultPanel form
  */
@@ -97,8 +99,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			setOpenIcon(ICN_OPEN);
 			setClosedIcon(ICN_CLOSED);
 			setLeafIcon(ICN_LEAF);
-			setBackground(new Color(UIManager.getColor("Button.background").getRGB()));
-			setForeground(new Color(UIManager.getColor("Panel.foreground").getRGB()));
+			setBackground(new Color(UIManager.getColor("Button.background").getRed(), UIManager.getColor("Button.background").getGreen(), UIManager.getColor(
+					"Button.background").getBlue()));
+			setForeground(new Color(UIManager.getColor("Panel.foreground").getRed(), UIManager.getColor("Panel.foreground").getGreen(), UIManager.getColor(
+					"Panel.foreground").getBlue()));
 			setTextSelectionColor(getTextNonSelectionColor());
 		}
 	};
@@ -115,6 +119,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * Protein view
 	 */
 	private JPanel proteinPanel = new JPanel();
+	private JPanel panelOrthologs;
+	private JTree treeOrthologs;
 
 	private JLabel ptnName;
 	private JLabel lblReviewed;
@@ -221,11 +227,14 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		scrollPane_Orthologs.setBorder(null);
 		proteinPanel.add(scrollPane_Orthologs, "cell 0 6 3 1,grow");
 
-		final JPanel panel_Orthologs = new JPanel();
-		scrollPane_Orthologs.setViewportView(panel_Orthologs);
-		panel_Orthologs
+		panelOrthologs = new JPanel();
+		scrollPane_Orthologs.setViewportView(panelOrthologs);
+		panelOrthologs
 				.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_Orthologs.setLayout(new BoxLayout(panel_Orthologs, BoxLayout.Y_AXIS));
+		panelOrthologs.setLayout(new BoxLayout(panelOrthologs, BoxLayout.Y_AXIS));
+
+		treeOrthologs = new JTree();
+		panelOrthologs.add(treeOrthologs);
 
 		ItemListener itemListener = new ItemListener() {
 			@Override
@@ -347,6 +356,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setOntology(row.getList("biological_processes", String.class), row.getList("cellular_components", String.class),
 				row.getList("molecular_functions", String.class));
 		this.setOrganism(row.get("tax_id", String.class));
+		this.setOrhologs(row.getList("orthologs", String.class));
 
 		this.showProteinView();
 	}
@@ -626,7 +636,13 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private void setOrhologs(List<String> orthologs) {
 		// TODO: Add orthologs column
-		throw new NotImplementedException("Ortholog are not handle yet");
+		// throw new NotImplementedException("Ortholog are not handle yet");
+		this.panelOrthologs.removeAll();
+		for (String str : orthologs) {
+			JsonObject json = JsonObject.readFrom(str);
+			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("taxId").asInt() + "]"));
+		}
+
 	}
 
 	/**
