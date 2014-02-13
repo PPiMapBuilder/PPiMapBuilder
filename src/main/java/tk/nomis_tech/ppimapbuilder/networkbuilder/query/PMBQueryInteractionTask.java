@@ -127,7 +127,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				otherOrgsTaxIds.add(org.getTaxId());
 
 			// Get orthologs of interactors
-			changeStep("Find interactors orthologs...", monitor);
+			changeStep("Searching interactors orthologs...", monitor);
 			final HashMap<String, HashMap<Integer, String>> orthologs = new HashMap<String, HashMap<Integer, String>>();
 			{
 				System.out.println("--Search orthologs--");
@@ -140,7 +140,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 
 			// Get ortholog interactions
-			changeStep("Find orthologs's interactions...", monitor);
+			changeStep("Searching orthologs's interactions...", monitor);
 			{
 				// TODO maybe use thread on this for loop
 				class OrthologInteractionResult {
