@@ -20,12 +20,8 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
-import org.cytoscape.work.AbstractTaskFactory;
-import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskFactory;
-import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TaskMonitor;
 import org.osgi.framework.BundleContext;
 
 import tk.nomis_tech.ppimapbuilder.action.ResultPanelAction;
@@ -54,7 +50,6 @@ public class PMBActivator extends AbstractCyActivator {
 
 	/**
 	 * This methods register all services of PPiMapBuilder
-	 * 
 	 * @param bc
 	 */
 	@Override

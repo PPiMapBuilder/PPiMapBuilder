@@ -1,7 +1,6 @@
-package tk.nomis_tech.ppimapbuilder.orthology;
+package tk.nomis_tech.ppimapbuilder.data;
 
 /**
- *
  * @author Kevin Gravouil
  */
 public class UniprotId {
@@ -11,11 +10,12 @@ public class UniprotId {
 	 */
 	public class BadUniprotIdFormatException extends Exception {
 
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Exception throwed if String does not match Uniprot ID pattern.
 		 */
-		public BadUniprotIdFormatException() {
-		}
+		public BadUniprotIdFormatException() {}
 
 		/**
 		 * Exception throwed if String does not match Uniprot ID pattern.
@@ -44,7 +44,7 @@ public class UniprotId {
 	 *
 	 * @param uniprotId
 	 * @throws
-	 * tk.nomis_tech.ppimapbuilder.orthology.UniprotId.BadUniprotIdFormatException
+	 * tk.nomis_tech.ppimapbuilder.data.UniprotId.BadUniprotIdFormatException
 	 */
 	public UniprotId(String uniprotId) throws BadUniprotIdFormatException {
 		if (uniprotId.matches(pattern)) {

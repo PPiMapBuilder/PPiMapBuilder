@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.orthology;
+package tk.nomis_tech.ppimapbuilder.data;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -14,19 +14,20 @@ public class Ortholog {
 	 * Uniprot ID of orthologous protein for a given protein and a given taxID
 	 */
 	private HashMap<UniprotId, HashMap<Integer, UniprotId>> orthologs;
+	
 	/**
 	 * NCBI Tax ID to InParanoid ID
 	 */
 	private static HashMap<Integer, Integer> ID_MAP = new HashMap<Integer, Integer>() {
 		{
-			put(9031, 255); // Gallus gallus
-			put(9606, 264); // Homo sapiens
-			put(3702, 188); // Arabidopsis thaliana
-			put(6239, 229); // Caenorhabditis elegans
-			put(7227, 242); // Drosophila Melanogaster
+			put(9031, 255);  // Gallus gallus
+			put(9606, 264);  // Homo sapiens
+			put(3702, 188);  // Arabidopsis thaliana
+			put(6239, 229);  // Caenorhabditis elegans
+			put(7227, 242);  // Drosophila Melanogaster
 			put(10090, 128); // Mus musculus
-			put(4932, 208); // Saccharomyces cerevisiae
-			put(4896, 173); // Schizosaccharomyces pombe
+			put(4932, 208);  // Saccharomyces cerevisiae
+			put(4896, 173);  // Schizosaccharomyces pombe
 		}
 	};
 

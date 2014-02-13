@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
 
 @SuppressWarnings("serial")
 public class InParanoidClientTest {

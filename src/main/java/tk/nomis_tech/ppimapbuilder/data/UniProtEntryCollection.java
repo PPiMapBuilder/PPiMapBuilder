@@ -1,9 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
 public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 	
@@ -17,8 +15,8 @@ public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 		return null;
 	}
 	
-	public List<String> getAllAsUniProtId() {
-		ArrayList<String> out = new ArrayList<String>();
+	public Set<String> getAllAsUniProtId() {
+		Set<String> out = new HashSet<String>();
 		for(UniProtEntry prot: this)
 			out.add(prot.getUniprotId());
 		return out;

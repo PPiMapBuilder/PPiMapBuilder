@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.orthology;
+package tk.nomis_tech.ppimapbuilder.webservice;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -23,6 +23,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import tk.nomis_tech.ppimapbuilder.data.Ortholog;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 
@@ -80,15 +81,17 @@ public class InParanoidClient {
 		Document doc = null;
 		
 		// Load xml response file (with multiple try)
-		final int MAX_TRY = 4;
-		int pos = 0;
+		final int MAX_TRY = 5;
+		int pos = 1;
 		IOException lastError = null;
 		do{
 			try {
 				Connection connect = Jsoup.connect(baseUrl);
-				connect.timeout(12000);
+				connect.timeout(18000+(18000*pos)/3);
 				connect.data(params);
+				pos++;
 				doc = connect.get();
+				break;
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500) 
 					return out; //protein ortholog not found or inparanoid server down
@@ -97,9 +100,11 @@ public class InParanoidClient {
 				//Connection response timeout
 				lastError = new IOException(e);
 			}
-		} while(++pos <= MAX_TRY);
+		} while(doc == null);// && ++pos <= MAX_TRY);
+
+		System.out.print("p"+pos+"-");
 		
-		if(doc == null) throw lastError;
+		//if(doc == null) throw lastError;
 		//System.out.println("done with "+(pos-1)+" try");
 		
 		//For each cluster of ortholog
@@ -158,16 +163,20 @@ public class InParanoidClient {
 		// Collect all ortholog results
 		final List<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
 		final HashMap<String, HashMap<Integer, String>> results = new HashMap<String, HashMap<Integer, String>>();
+		
 		for (Future<HashMap<Integer, String>> req: requests) {
 			try {
 				Future<HashMap<Integer, String>> take = completionService.take();
 				HashMap<Integer, String> result = take.get();
 				if(result != null)
 					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
+
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
 				if(cause instanceof UnknownHostException)
 					throw (UnknownHostException) cause;
+				if(cause instanceof SocketTimeoutException)
+					continue;
 				if(cause instanceof IOException)
 					throw (IOException) cause;
 				else
@@ -177,6 +186,7 @@ public class InParanoidClient {
 			}
 		}
 
+		System.out.println("\n--");
 		return results;
 	}
 	

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import org.junit.BeforeClass;
@@ -50,7 +51,7 @@ public class InteractionsUtilTest {
 
 	@Test
 	public void getInteractorsBinary() {
-		List<String> interactors = InteractionsUtil.getInteractorsBinary(sampleBinaryInteractions, 9606);
+		Set<String> interactors = InteractionsUtil.getInteractorsBinary(sampleBinaryInteractions, 9606);
 		// System.out.println(interactors);
 	}
 
@@ -132,7 +133,7 @@ public class InteractionsUtilTest {
 	// @Test
 	public void networkExpansion() throws Exception {
 		List<BinaryInteraction> res;
-		List<String> prots;
+		Set<String> prots;
 		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 5);
 		MiQLParameterBuilder query = new MiQLParameterBuilder("identifier", "P04040");
 

@@ -13,7 +13,7 @@ import java.util.Set;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
-import tk.nomis_tech.ppimapbuilder.orthology.UniprotId;
+import tk.nomis_tech.ppimapbuilder.data.UniprotId;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder.Operator;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
@@ -194,7 +194,7 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static List<String> getInteractorsBinary(Collection<BinaryInteraction> interactions, int refTaxId) {
+	public static Set<String> getInteractorsBinary(Collection<BinaryInteraction> interactions, int refTaxId) {
 		HashSet<String> interactors = new HashSet<String>();
 
 		Iterator<BinaryInteraction> iterator = filterNonUniprotAndNonRefOrg(interactions, refTaxId).iterator();
@@ -205,7 +205,7 @@ public class InteractionsUtil {
 			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
 		}
 
-		return new ArrayList<String>(interactors);
+		return interactors;
 	}
 
 	/**
