@@ -25,7 +25,6 @@ import javax.swing.JToggleButton;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
@@ -35,7 +34,6 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
-import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -100,10 +98,14 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			setOpenIcon(ICN_OPEN);
 			setClosedIcon(ICN_CLOSED);
 			setLeafIcon(ICN_LEAF);
-			setBackground(new Color(UIManager.getColor("Button.background").getRed(), UIManager.getColor("Button.background").getGreen(),
-					UIManager.getColor("Button.background").getBlue()));
-			setForeground(new Color(UIManager.getColor("Panel.foreground").getRed(), UIManager.getColor("Panel.foreground").getGreen(),
-					UIManager.getColor("Panel.foreground").getBlue()));
+			// setBackground(new
+			// Color(UIManager.getColor("Button.background").getRed(),
+			// UIManager.getColor("Button.background").getGreen(),
+			// UIManager.getColor("Button.background").getBlue()));
+			// setForeground(new
+			// Color(UIManager.getColor("Panel.foreground").getRed(),
+			// UIManager.getColor("Panel.foreground").getGreen(),
+			// UIManager.getColor("Panel.foreground").getBlue()));
 			setTextSelectionColor(getTextNonSelectionColor());
 		}
 	};
@@ -187,12 +189,12 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	}
 
 	/**
-	 * Build the protein summary view. Display titles and default value (they may not be needed).
+	 * Build the protein summary view. Display titles and default value (they
+	 * may not be needed).
 	 */
 	private void setStaticProteinView() {
 
-		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]",
-				"[][][][][][::50px][10px:n][30px:80px,grow]"));
+		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
 		/*
 		 * HEADER - GENERAL INFORMATION
 		 */
@@ -227,8 +229,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		final JScrollPane scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setOpaque(false);
-		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs",
-				TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
 		proteinPanel.add(scrollPane_Orthologs, "cell 0 6 3 1,grow");
 
 		panelOrthologs = new JPanel();
@@ -257,12 +259,13 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		final JScrollPane scrollPane_GO = new JScrollPane();
 		scrollPane_GO.setOpaque(false);
 		/*
-		 * scrollPane_GO.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-		 * scrollPane_GO
-		 * .setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		 * scrollPane_GO.setVerticalScrollBarPolicy(ScrollPaneConstants.
+		 * VERTICAL_SCROLLBAR_NEVER); scrollPane_GO
+		 * .setHorizontalScrollBarPolicy
+		 * (ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		 */
-		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING,
-				TitledBorder.TOP, null, null));
+		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
 		proteinPanel.add(scrollPane_GO, "cell 0 7 3 1,grow");
 
 		final JPanel panel_GO = new JPanel();
@@ -440,8 +443,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			// http://www.ncbi.nlm.nih.gov/gene?term=(proS[Gene Name]) AND
 			// 9606[Taxonomy ID])
 			try {
-				this.lblExtLinkGenename.setUri(new URI("http://www.ncbi.nlm.nih.gov/gene?term=(" + geneName + "%5BGene%20Name%5D)%20AND%20"
-						+ taxId + "%5BTaxonomy%20ID%5D"));
+				this.lblExtLinkGenename.setUri(new URI("http://www.ncbi.nlm.nih.gov/gene?term=(" + geneName + "%5BGene%20Name%5D)%20AND%20" + taxId
+						+ "%5BTaxonomy%20ID%5D"));
 			} catch (URISyntaxException e) {
 				e.printStackTrace();
 			}
@@ -655,8 +658,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param cellularComponent
 	 * @param molecularFunction
 	 */
-	private void setOntology(final List<String> biologicalProcess, final List<String> cellularComponent,
-			final List<String> molecularFunction) {
+	private void setOntology(final List<String> biologicalProcess, final List<String> cellularComponent, final List<String> molecularFunction) {
 		treeModelGO.removeAllChildren();
 		try {
 			treeModelGO.add(new DefaultMutableTreeNode("Biological process (" + biologicalProcess.size() + ")") {
@@ -664,8 +666,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 					if (biologicalProcess != null && !biologicalProcess.isEmpty())
 						for (String s : biologicalProcess) {
 							JsonObject obj = JsonObject.readFrom(s);
-							String process = new StringBuilder(obj.get("term").asString())
-								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							String process = new StringBuilder(obj.get("term").asString()).append(" [").append(obj.get("id").asString()).append("]").toString();
 							add(new DefaultMutableTreeNode(process));
 						}
 				}
@@ -676,8 +677,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 					if (cellularComponent != null && !cellularComponent.isEmpty())
 						for (String s : cellularComponent) {
 							JsonObject obj = JsonObject.readFrom(s);
-							String component = new StringBuilder(obj.get("term").asString())
-								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							String component = new StringBuilder(obj.get("term").asString()).append(" [").append(obj.get("id").asString()).append("]").toString();
 							add(new DefaultMutableTreeNode(component));
 						}
 				}
@@ -688,8 +688,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 					if (molecularFunction != null && !molecularFunction.isEmpty())
 						for (String s : molecularFunction) {
 							JsonObject obj = JsonObject.readFrom(s);
-							String function = new StringBuilder(obj.get("term").asString())
-								.append(" [").append(obj.get("id").asString()).append("]").toString();
+							String function = new StringBuilder(obj.get("term").asString()).append(" [").append(obj.get("id").asString()).append("]").toString();
 							add(new DefaultMutableTreeNode(function));
 						}
 				}
