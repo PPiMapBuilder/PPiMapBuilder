@@ -12,7 +12,7 @@ public class HelpIcon extends JLabel{
 	public HelpIcon(String message) {
 		super();
 		try {
-			setIcon(new ImageIcon(HelpIcon.class.getResource("/img/help.png")));
+			setIcon(new ImageIcon(HelpIcon.class.getResource("help.png")));
 		} catch (Exception e) {
 			setText("[?]");
 		}
