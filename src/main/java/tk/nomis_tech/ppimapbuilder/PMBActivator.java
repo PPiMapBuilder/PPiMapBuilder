@@ -28,6 +28,7 @@ import tk.nomis_tech.ppimapbuilder.action.ResultPanelAction;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.ui.credits.CreditFrame;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.resultpanel.ResultPanel;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
@@ -55,10 +56,12 @@ public class PMBActivator extends AbstractCyActivator {
 	@Override
 	public void start(BundleContext bc) {
 		context = bc;
+		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
 
 		// QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
 		SettingWindow settingWindow = new SettingWindow();
+		CreditFrame creditWindow = new CreditFrame(openBrowser);
 
 		// Settings
 		PMBSettings.readSettings();
@@ -66,6 +69,7 @@ public class PMBActivator extends AbstractCyActivator {
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
 		PMBSettingSaveTaskFactory saveSettingFactory;
+		PMBCreditMenuTaskFactory creditMenuFactory;
 		{
 			TaskManager networkBuildTaskManager = getService(bc, TaskManager.class);
 			
@@ -77,7 +81,7 @@ public class PMBActivator extends AbstractCyActivator {
 			// Result panel (protein & interaction s)
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
 			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
-			OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
+			
 			ResultPanel pmbResultPanel = new ResultPanel(openBrowser);
 			registerService(bc, pmbResultPanel, CytoPanelComponent.class, new Properties());
 
@@ -116,6 +120,10 @@ public class PMBActivator extends AbstractCyActivator {
 			settingWindow.setSaveSettingFactory(saveSettingFactory);
 			registerService(bc, saveSettingFactory, TaskFactory.class, new Properties());
 			settingWindow.setTaskManager(networkBuildTaskManager);
+			
+			// Credit task factory
+			creditMenuFactory = new PMBCreditMenuTaskFactory(creditWindow);
+			registerService(bc, creditMenuFactory, TaskFactory.class, new Properties());
 
 		}
 
@@ -132,6 +140,13 @@ public class PMBActivator extends AbstractCyActivator {
 		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
 		props.setProperty("title", "Settings");
 		registerService(bc, settingsWindowTaskFactory, TaskFactory.class, props);
+		
+		// Credits window menu
+		PMBCreditMenuTaskFactory creditWindowTaskFactory = new PMBCreditMenuTaskFactory(creditWindow);
+		props = new Properties();
+		props.setProperty("preferredMenu", "Apps.PPiMapBuilder");
+		props.setProperty("title", "Credits");
+		registerService(bc, creditWindowTaskFactory, TaskFactory.class, props);
 
 		System.out.println("[PPiMapBuilder] Started.");
 	}
