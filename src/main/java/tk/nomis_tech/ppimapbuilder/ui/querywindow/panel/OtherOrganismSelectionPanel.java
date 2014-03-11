@@ -6,23 +6,56 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+
+import net.miginfocom.swing.MigLayout;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 
-public class OtherOrganismSelectionPanel extends JPanel {
+public class OtherOrganismSelectionPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<Organism, JCheckBox> organisms;
 	private final JPanel panSourceOtherOrganisms;
 
-	public OtherOrganismSelectionPanel() {
+	public OtherOrganismSelectionPanel(JPanel parent, Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
 
-		setLayout(new BorderLayout());
+		//parent.setLayout(new MigLayout());
+		
+		// Other organisms label
+		JLabel lblHomologOrganism = new JLabel("Other organisms:");
+		parent.add(lblHomologOrganism, "cell 0 2");
+
+		// Other organisms Help Icon
+		JLabel lblHelpOtherOrganism = new HelpIcon("Select here the other organism in which you want to search homologous interactions");
+		lblHelpOtherOrganism.setHorizontalAlignment(SwingConstants.RIGHT);
+		parent.add(lblHelpOtherOrganism, "cell 1 2");
+
+		// Other organisms scrollpane containing a panel that will contain checkbox at display
+		JScrollPane scrollPaneOtherOrganisms = new JScrollPane();
+		scrollPaneOtherOrganisms.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneOtherOrganisms.setBorder(fancyBorder);
+		parent.add(scrollPaneOtherOrganisms, "cell 0 3 2 1,grow");
+
+		// Other organisms panel that will contain checkbox at display
+		panSourceOtherOrganisms = new JPanel();
+		panSourceOtherOrganisms.setBorder(new EmptyBorder(0, 0, 0, 0));
+		panSourceOtherOrganisms.setBackground(Color.WHITE);
+		scrollPaneOtherOrganisms.setViewportView(panSourceOtherOrganisms);
+		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms,BoxLayout.Y_AXIS));
+		
+		organisms = new LinkedHashMap<Organism, JCheckBox>();
+		
+		/*setLayout(new BorderLayout());
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		organisms = new LinkedHashMap<Organism, JCheckBox>();
 		final JLabel lblSourceDatabases = new JLabel("Organisms for homology:");
@@ -37,7 +70,7 @@ public class OtherOrganismSelectionPanel extends JPanel {
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceOtherOrganisms);
 		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
-		add(scrollPaneSourceDatabases, BorderLayout.CENTER);
+		add(scrollPaneSourceDatabases, BorderLayout.CENTER);*/
 	}
 
 	/**
@@ -74,6 +107,10 @@ public class OtherOrganismSelectionPanel extends JPanel {
 			}
 		}
 		return organismList;
+	}
+	
+	public LinkedHashMap<Organism, JCheckBox> getOrganisms() {
+		return organisms;
 	}
 
 }

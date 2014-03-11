@@ -12,21 +12,51 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 
+import net.miginfocom.swing.MigLayout;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
 import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
 
-public class DatabaseSelectionPanel extends JPanel {
+public class DatabaseSelectionPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
-	public DatabaseSelectionPanel() {
-		setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
+	public DatabaseSelectionPanel(JPanel parent, Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
+
+		//parent.setLayout(new MigLayout());
+		
+		// Source databases label
+		javax.swing.JLabel lblSourceDatabases = new javax.swing.JLabel("Source databases:");
+		parent.add(lblSourceDatabases, "cell 0 4");
+
+		// Source databases Help Icon
+		JLabel lblHelpSourceDatabase = new HelpIcon("Select here the databases from which the interactions will be retrieved");
+		lblHelpSourceDatabase.setHorizontalAlignment(SwingConstants.RIGHT);
+		parent.add(lblHelpSourceDatabase, "cell 1 4");
+
+		// Source databases scrollpane containing a panel that will contain checkbox at display
+		JScrollPane scrollPaneSourceDatabases = new JScrollPane();
+		scrollPaneSourceDatabases.setBorder(fancyBorder);
+		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		parent.add(scrollPaneSourceDatabases, "cell 0 5 2 1,grow");
+
+		// Source databases panel that will contain checkbox at display
+		panSourceDatabases = new JPanel();
+		panSourceDatabases.setBackground(Color.white);
+		panSourceDatabases.setBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneSourceDatabases.setViewportView(panSourceDatabases);
+		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
+		
 		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
+		/*setLayout(new BorderLayout());
+		setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		final JLabel lblSourceDatabases = new JLabel("Source databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
@@ -40,7 +70,7 @@ public class DatabaseSelectionPanel extends JPanel {
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceDatabases);
 		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
-		add(scrollPaneSourceDatabases, BorderLayout.CENTER);
+		add(scrollPaneSourceDatabases, BorderLayout.CENTER);*/
 	}
 
 	/**
