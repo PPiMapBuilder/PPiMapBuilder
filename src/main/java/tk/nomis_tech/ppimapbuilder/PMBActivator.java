@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
@@ -77,6 +78,7 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkNaming cyNetworkNamingServiceRef = getService(bc, CyNetworkNaming.class);
 			CyNetworkFactory cyNetworkFactoryServiceRef = getService(bc, CyNetworkFactory.class);
 			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
+			CyApplicationManager cyApplicationManager = getService(bc, CyApplicationManager.class);
 
 			// Result panel (protein & interaction s)
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
@@ -90,7 +92,7 @@ public class PMBActivator extends AbstractCyActivator {
 				cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setSelectedIndex(index);
 
 			// Result panel action
-			ResultPanelAction rpa = new ResultPanelAction(pmbResultPanel);
+			ResultPanelAction rpa = new ResultPanelAction(pmbResultPanel, cyApplicationManager);
 			registerService(bc, rpa, RowsSetListener.class, new Properties());
 
 			// View services
