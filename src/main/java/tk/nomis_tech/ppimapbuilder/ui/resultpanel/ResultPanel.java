@@ -360,14 +360,14 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
 		this.setGeneName(row.get("gene_name", String.class), row.get("tax_id", String.class));
 
-		this.setEcNumber(row.get("ec_number", String.class));
+		this.setEcNumber(row.get("ec_number", String.class) != null ? row.get("ec_number", String.class) : "");
 		//
 		this.setGeneNameSynonyms(row.getList("synonym_gene_names", String.class));
 		this.setOntology(row.getList("biological_processes", String.class), row.getList("cellular_components", String.class),
 				row.getList("molecular_functions", String.class));
 		this.setOrganism(row.get("tax_id", String.class));
 		this.setOrhologs(row.getList("orthologs", String.class));
-
+		
 		this.showProteinView();
 	}
 
