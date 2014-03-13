@@ -3,6 +3,7 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.cytoscape.model.CyEdge;
@@ -18,8 +19,12 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
@@ -47,6 +52,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	// For the visual style
 	private final VisualMappingManager vizMapManager;
+
 
 	private final Organism refOrg;
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
@@ -232,8 +238,17 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private void applyVisualStyle(CyNetworkView view) {
-		VisualStyle vs = vizMapManager.getDefaultVisualStyle();
-		vs.apply(view);
+		Iterator it = vizMapManager.getAllVisualStyles().iterator();
+		while (it.hasNext()){
+			VisualStyle curVS = (VisualStyle)it.next();
+			if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style"))
+			{
+				curVS.apply(view);
+				vizMapManager.setCurrentVisualStyle(curVS);
+				break;
+			}
+		}
+		
 		view.updateView();
 	}
 
