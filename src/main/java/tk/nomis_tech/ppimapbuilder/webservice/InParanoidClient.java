@@ -34,8 +34,7 @@ public class InParanoidClient {
 
 	private static InParanoidClient _instance;
 	
-	//private final String baseUrl = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi";
-	private final String baseUrl = "http://inparanoid51.sbc.su.se/cgi-bin/gene_search.cgi";
+	private final String baseUrl = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi";
 	
 	final private int NB_THREAD;
 	final private double scoreLimit;
