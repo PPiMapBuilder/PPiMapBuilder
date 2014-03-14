@@ -141,6 +141,13 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JHyperlinkLabel lblExtLinkGenename;
 
 	/**
+	 * Interaction view
+	 */
+	private JPanel interactionPanel = new JPanel();
+	private JLabel intAName;
+	private JLabel intBName;
+	
+	/**
 	 * Build a panel containing all the needed elements.
 	 * 
 	 * @param openBrowser
@@ -169,8 +176,13 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setStaticProteinView();
 		proteinPanel.setVisible(false);
 
+		/* Build interaction view panel */
+		this.setStaticInteractionView();
+		interactionPanel.setVisible(false);		
+		
 		mainPanel.add(voidPanel);
 		mainPanel.add(proteinPanel);
+		mainPanel.add(interactionPanel);
 	}
 
 	/**
@@ -370,13 +382,59 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		
 		this.showProteinView();
 	}
+	
+	private void setStaticInteractionView() {
 
+		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
+		/*
+		 * HEADER - GENERAL INFORMATION
+		 */
+		intAName = new JLabel("Interaction View");
+		intAName.setBorder(new EmptyBorder(3, 8, 3, 0));
+		intAName.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		interactionPanel.add(intAName, "cell 0 0 2 1,grow");
+		
+		intBName = new JLabel();
+		intBName.setBorder(new EmptyBorder(3, 8, 3, 0));
+		intBName.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		interactionPanel.add(intBName, "cell 0 1 2 1,grow");
+	}
+
+	public void setInteractionView(CyRow row) {
+
+		//this.setIntAName(row.get("protein_name", String.class));
+		System.out.println("#1");
+		this.setIntAName(row.get("Protein_name_A", String.class));
+		this.setIntBName(row.get("Protein_name_B", String.class));
+		System.out.println("#2");
+		this.showInteractionView();
+		System.out.println("#3");
+
+	}
+	
+	public void showInteractionView() {
+		System.out.println("#4");
+
+		voidPanel.setVisible(false);
+		System.out.println("#5");
+
+		proteinPanel.setVisible(false);
+
+		System.out.println("#6");
+		interactionPanel.setVisible(true);
+		System.out.println("#7");
+
+		this.repaint();
+	}
+	
 	/**
 	 * Display the default view. When no node or 2+ nodes are selected.
 	 */
 	public void showDefaultView() {
 		proteinPanel.setVisible(false);
+		interactionPanel.setVisible(false);
 		voidPanel.setVisible(true);
+
 		this.repaint();
 	}
 
@@ -385,7 +443,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	public void showProteinView() {
 		voidPanel.setVisible(false);
+		interactionPanel.setVisible(false);
 		proteinPanel.setVisible(true);
+
 		this.repaint();
 	}
 
@@ -736,5 +796,67 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public Icon getIcon() {
 		return null;
 	}
+
+	/**
+	 * Get interactor name as displayed in the label.
+	 * 
+	 * @return protein name
+	 */
+	public String getIntAName() {
+		return intAName.getText();
+	}
+
+	/**
+	 * Set the protein name label
+	 * 
+	 * @param protein
+	 *            name
+	 */
+	public void setIntAName(String intAName) {
+		if (!intAName.isEmpty()) {
+			if (intAName.length() > 20) {
+				this.intAName.setText(intAName.substring(0, 17) + "...");
+			} else {
+				this.intAName.setText(intAName);
+			}
+			this.intAName.setToolTipText(intAName);
+
+		} else {
+			this.intAName.setFont(NONE_FONT);
+			this.intAName.setText("none");
+		}
+	}
+	
+	/**
+	 * Get interactor name as displayed in the label.
+	 * 
+	 * @return protein name
+	 */
+	public String getIntBName() {
+		return intBName.getText();
+	}
+
+	/**
+	 * Set the protein name label
+	 * 
+	 * @param protein
+	 *            name
+	 */
+	public void setIntBName(String intBName) {
+		if (!intBName.isEmpty()) {
+			if (intBName.length() > 20) {
+				this.intBName.setText(intBName.substring(0, 17) + "...");
+			} else {
+				this.intBName.setText(intBName);
+			}
+			this.intBName.setToolTipText(intBName);
+
+		} else {
+			this.intBName.setFont(NONE_FONT);
+			this.intBName.setText("none");
+		}
+	}
+	
+	
 
 }

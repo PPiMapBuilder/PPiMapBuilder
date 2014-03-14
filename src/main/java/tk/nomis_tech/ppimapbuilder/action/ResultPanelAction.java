@@ -30,7 +30,7 @@ public class ResultPanelAction implements RowsSetListener {
 		// Node selection
 		
 		if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultNodeTable()) {
-
+			System.out.println("Node selected");
 			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
 
 			int nbSelected = 0;
@@ -54,12 +54,37 @@ public class ResultPanelAction implements RowsSetListener {
 				pmbResultPanel.setProteinView(myRow);
 			} else {
 				pmbResultPanel.showDefaultView();
-			}
-			
+			}	
 		}
 		
-		
-		
+		else if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultEdgeTable()) {
+			System.out.println("Edge selected");
+			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
+
+			int nbSelected = 0;
+			CyRow myRow = null;
+
+			for (Iterator<RowSetRecord> iterator = rowsSet.iterator(); iterator.hasNext();) {
+				RowSetRecord rowSetRecord = (RowSetRecord) iterator.next();
+
+				if (rowSetRecord.getRow().get("selected", Boolean.class)) {
+					nbSelected++;
+					if (nbSelected > 1) {
+						myRow = null;
+						pmbResultPanel.showDefaultView();
+						break;
+					}
+					myRow = rowSetRecord.getRow();
+				}
+			}
+
+			if (nbSelected == 1) {
+				System.out.println("toto");
+				pmbResultPanel.setInteractionView(myRow);
+			} else {
+				pmbResultPanel.showDefaultView();
+			}	
+		}
 
 	}
 }

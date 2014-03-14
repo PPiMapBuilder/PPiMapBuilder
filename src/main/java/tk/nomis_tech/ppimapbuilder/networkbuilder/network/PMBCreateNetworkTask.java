@@ -159,6 +159,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private void createEdges(CyNetwork network) {
 		// Edge attributes
 		CyTable edgeTable = network.getDefaultEdgeTable();
+		edgeTable.createColumn("Interactor_A", String.class, false);
+		edgeTable.createColumn("Interactor_B", String.class, false);
+		edgeTable.createColumn("Gene_name_A", String.class, false);
+		edgeTable.createColumn("Gene_name_B", String.class, false);
+		edgeTable.createColumn("Protein_name_A", String.class, false);
+		edgeTable.createColumn("Protein_name_B", String.class, false);
 		edgeTable.createListColumn("source", String.class, false);
 		edgeTable.createListColumn("detmethod", String.class, false);
 		edgeTable.createListColumn("type", String.class, false);
@@ -171,19 +177,26 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		for(Integer taxId: interactionsByOrg.keySet()) {
 			boolean inRefOrg = taxId == refOrg.getTaxId();
 			for(EncoreInteraction interaction: interactionsByOrg.get(taxId)) {
+				String nodeAName = "", nodeBName = "";
 				CyNode nodeA = null, nodeB = null;
 				if(inRefOrg) {
-					nodeA = nodeNameMap.get(interaction.getInteractorA("uniprotkb"));
-					nodeB = nodeNameMap.get(interaction.getInteractorB("uniprotkb"));					
+					nodeAName = interaction.getInteractorA("uniprotkb");
+					nodeBName = interaction.getInteractorB("uniprotkb");
+					nodeA = nodeNameMap.get(nodeAName);
+					nodeB = nodeNameMap.get(nodeBName);					
 				}
 				else {
 					for(UniProtEntry prot: interactorPool) {
 						OrthologProtein ortho = prot.getOrthologByTaxid(taxId);
 						if(ortho != null) {
-							if(interaction.getInteractorA().equals(ortho.getUniprotId())) 
-								nodeA = nodeNameMap.get(prot.getUniprotId());
-							if(interaction.getInteractorB().equals(ortho.getUniprotId())) 
-								nodeB = nodeNameMap.get(prot.getUniprotId());
+							if(interaction.getInteractorA().equals(ortho.getUniprotId())) {
+								nodeAName = prot.getUniprotId();
+								nodeA = nodeNameMap.get(nodeAName);
+							}
+							if(interaction.getInteractorB().equals(ortho.getUniprotId())) {
+								nodeBName = prot.getUniprotId();
+								nodeB = nodeNameMap.get(nodeBName);
+							}
 						}
 						
 						if(nodeA != null && nodeB != null) break;
@@ -193,7 +206,29 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				if(nodeA != null && nodeB != null) {				
 					CyEdge myEdge = network.addEdge(nodeA, nodeB, true);
 					
+					CyTable nodeTable = network.getDefaultNodeTable();
+					
+					String geneNameA = "", geneNameB = "";
+					String protNameA = "", protNameB = "";
+					for (CyRow r : nodeTable.getAllRows()) {
+						if (r.get("uniprot_id", String.class).equalsIgnoreCase(nodeAName)) {
+							geneNameA = r.get("gene_name", String.class);
+							protNameA = r.get("protein_name", String.class);
+						}
+						if (r.get("uniprot_id", String.class).equalsIgnoreCase(nodeBName)) {
+							geneNameB = r.get("gene_name", String.class);
+							protNameB = r.get("protein_name", String.class);
+						}
+					}
+					
+					
 					CyRow edgeAttr = network.getRow(myEdge);
+					edgeAttr.set("Interactor_A", nodeAName);
+					edgeAttr.set("Interactor_B", nodeBName);
+					edgeAttr.set("Gene_name_A", geneNameA);
+					edgeAttr.set("Gene_name_B", geneNameB);
+					edgeAttr.set("Protein_name_A", protNameA);
+					edgeAttr.set("Protein_name_B", protNameB);
 					edgeAttr.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
 					edgeAttr.set("detmethod", PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
 					edgeAttr.set("type", PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));

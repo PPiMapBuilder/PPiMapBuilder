@@ -70,6 +70,7 @@ public class PMBActivator extends AbstractCyActivator {
 	@Override
 	public void start(BundleContext bc) {
 		context = bc;
+		
 		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
 
 		// QueryWindow
