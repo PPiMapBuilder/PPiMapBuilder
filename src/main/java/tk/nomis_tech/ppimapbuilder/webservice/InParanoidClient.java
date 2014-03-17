@@ -17,6 +17,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.swing.JOptionPane;
+
+import org.cytoscape.work.AbstractTask;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -26,6 +29,7 @@ import org.jsoup.nodes.Element;
 import tk.nomis_tech.ppimapbuilder.data.Ortholog;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 
 /**
  * Simple Java client for InParanoid database
@@ -38,7 +42,7 @@ public class InParanoidClient {
 	
 	final private int NB_THREAD;
 	final private double scoreLimit;
-	
+
 	/**
 	 * Constructs a InParanoid client with specified specified score limit and a default number of thread: 3
 	 */
@@ -48,6 +52,7 @@ public class InParanoidClient {
 	
 	/**
 	 * Constructs a InParanoid client with specified number of thread and specified score
+	 * @param pmbQueryInteractionTask 
 	 */
 	public InParanoidClient(int nB_THREAD, double scoreLimit) {
 		NB_THREAD = nB_THREAD;
@@ -60,7 +65,7 @@ public class InParanoidClient {
 	 */
 	public HashMap<Integer, String> getOrthologsSingleProtein(String uniProtId, Collection<Integer> taxIds) throws IOException {
 		HashMap<Integer, String> out = new HashMap<Integer, String>();
-
+		
 		// Create request parameters
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("id", uniProtId);
@@ -96,10 +101,16 @@ public class InParanoidClient {
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500) 
 					return out; //protein ortholog not found or inparanoid server down
-				lastError = new IOException(e);
+				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
+					throw new IOException(e);
+				}
+				
+				//lastError = new IOException(e);
+				throw new IOException(e);
 			} catch(SocketTimeoutException e) {
 				//Connection response timeout
-				lastError = new IOException(e);
+				//lastError = new IOException(e);
+				throw new IOException(e);
 			}
 		} while(doc == null);// && ++pos <= MAX_TRY);
 
@@ -151,6 +162,7 @@ public class InParanoidClient {
 		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<HashMap<Integer, String>> completionService = new ExecutorCompletionService<HashMap<Integer, String>>(executor);
 
+		
 		// For each protein => search orthologs in organisms
 		for (final String uniProtId: uniProtIds) {
 			requests.add(completionService.submit(new Callable<HashMap<Integer, String>>() {
@@ -160,6 +172,8 @@ public class InParanoidClient {
 				}
 			}));
 		}
+		
+		
 
 		// Collect all ortholog results
 		final List<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
@@ -186,6 +200,7 @@ public class InParanoidClient {
 				e.printStackTrace();
 			}
 		}
+		
 
 		System.out.println("\n--");
 		return results;
@@ -203,12 +218,14 @@ public class InParanoidClient {
 	public HashMap<String, HashMap<Integer, String>> searchOrthologForUniprotProtein(final Collection<UniProtEntry> prots, Collection<Integer> taxIds) throws IOException {
 		final List<Integer> taxIdsArray = new ArrayList<Integer>(taxIds);
 		
+		
 		List<String> protIds = new ArrayList<String>(){{
 			Iterator<UniProtEntry> it = prots.iterator();
 			while (it.hasNext()) {
 				add(((UniProtEntry) it.next()).getUniprotId());
 			}
 		}};
+		
 		
 		HashMap<String, HashMap<Integer, String>> orthologsProteins = getOrthologsMultipleProtein(protIds, taxIdsArray);
 
@@ -224,6 +241,8 @@ public class InParanoidClient {
 			}
 		}
 		
+		
 		return orthologsProteins;
 	}
+	
 }

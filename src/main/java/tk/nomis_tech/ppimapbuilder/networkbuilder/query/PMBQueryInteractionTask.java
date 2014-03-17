@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,14 +15,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import tk.nomis_tech.ppimapbuilder.PMBCreditMenuTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.data.UniprotId;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
@@ -44,8 +50,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	// Data output
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
+	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 
-	public PMBQueryInteractionTask(HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow qw) {
+	public PMBQueryInteractionTask(PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory, HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow qw) {
+		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.qw = qw;
@@ -136,7 +144,16 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 				try {
 					orthologs.putAll(inParanoidClient.searchOrthologForUniprotProtein(interactorPool, otherOrgsTaxIds));
-				} finally {}
+				} catch (IOException e){
+					
+					new Thread() {
+				        public void run() {
+				        	JOptionPane.showMessageDialog(null, "InParanoid is currently unavailable");
+				        }
+				      }.start();
+					e.printStackTrace();
+					return; // This line prevent the app to generate a network without inparanoid
+				}finally{}
 			}
 
 			// Get ortholog interactions
@@ -300,6 +317,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private void changeStep(String message, TaskMonitor monitor) {
 		monitor.setStatusMessage(message);
 		monitor.setProgress(++currentStep / NB_STEP);
+	}
+	
+	public PMBInteractionNetworkBuildTaskFactory getPmbInteractionNetworkBuildTaskFactory() {
+		return pmbInteractionNetworkBuildTaskFactory;
 	}
 
 }
