@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,14 +15,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import tk.nomis_tech.ppimapbuilder.PMBCreditMenuTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.data.UniprotId;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
@@ -40,12 +46,15 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 	// Data input
 	private final QueryWindow qw;
+	private List<String> inputProteinIDs;
 
 	// Data output
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
+	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 
-	public PMBQueryInteractionTask(HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow qw) {
+	public PMBQueryInteractionTask(PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory, HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow qw) {
+		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.qw = qw;
@@ -64,7 +73,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 		// Retrieve user input
 		final Organism refOrg = qw.getSelectedRefOrganism();
-		final List<String> inputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
+		List<String> tempInputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
 		final List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
 		final List<Organism> otherOrgs = qw.getSelectedOrganisms();
 		otherOrgs.remove(refOrg);
@@ -73,11 +82,32 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		final InParanoidClient inParanoidClient = new InParanoidClient(5, 0.85);
 
 		System.out.println();
+		
+		/* ------------------------------------------------------------------------------------------
+		 * PART ZERO: retrieve uniprot id according to reference organism
+		 * ------------------------------------------------------------------------------------------ */
+		monitor.setTitle("PSICQUIC interaction query in reference organism");
+		changeStep("Searching uniprot id for reference organism", monitor);
+		inputProteinIDs = new ArrayList<String>();
+		for (String unip : tempInputProteinIDs) {
+			try {
+				inputProteinIDs.add(inParanoidClient.getOrthologForRefOrga(unip, refOrg.getTaxId()));
+			} catch (IOException e){
+				inputProteinIDs.add(unip);
+				/*new Thread() {
+			        public void run() {
+			        	JOptionPane.showMessageDialog(null, "InParanoid is currently unavailable");
+			        }
+			      }.start();
+				e.printStackTrace();
+				//return; // This line prevent the app to generate a network without inparanoid
+				this.cancel();*/
+			}finally{}
+		}
 
 		/* ------------------------------------------------------------------------------------------
 		 * PART ONE: search interaction in reference organism
 		 * ------------------------------------------------------------------------------------------ */
-		monitor.setTitle("PSICQUIC interaction query in reference organism");
 		List<BinaryInteraction> baseRefInteractions = new ArrayList<BinaryInteraction>();
 		{
 			interactionsByOrg.put(refOrg.getTaxId(), new ArrayList<EncoreInteraction>());
@@ -136,7 +166,16 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 				try {
 					orthologs.putAll(inParanoidClient.searchOrthologForUniprotProtein(interactorPool, otherOrgsTaxIds));
-				} finally {}
+				} catch (IOException e){
+					
+					new Thread() {
+				        public void run() {
+				        	JOptionPane.showMessageDialog(null, "InParanoid is currently unavailable");
+				        }
+				      }.start();
+					e.printStackTrace();
+					return; // This line prevent the app to generate a network without inparanoid
+				}finally{}
 			}
 
 			// Get ortholog interactions
@@ -300,6 +339,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private void changeStep(String message, TaskMonitor monitor) {
 		monitor.setStatusMessage(message);
 		monitor.setProgress(++currentStep / NB_STEP);
+	}
+	
+	public PMBInteractionNetworkBuildTaskFactory getPmbInteractionNetworkBuildTaskFactory() {
+		return pmbInteractionNetworkBuildTaskFactory;
 	}
 
 }
