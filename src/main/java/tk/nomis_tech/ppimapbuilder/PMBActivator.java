@@ -141,8 +141,8 @@ public class PMBActivator extends AbstractCyActivator {
 			
 			
 			//NODE
-			vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
-			vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(255, 255, 255)); // Node color
+			//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
+			//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(255, 255, 255)); // Node color
 			vs.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ROUND_RECTANGLE);
 			vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 1.5);	
 			vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_PAINT, Color.BLACK);
@@ -151,11 +151,15 @@ public class PMBActivator extends AbstractCyActivator {
 			vs.setDefaultValue(BasicVisualLexicon.NODE_SELECTED_PAINT, new Color(160, 255, 144));
 			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction("gene_name", String.class, BasicVisualLexicon.NODE_LABEL);
 			vs.addVisualMappingFunction(pMapping);
+			DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
+			dMapping.putMapValue("true", new Color(255, 255, 51));
+			dMapping.putMapValue("false", new Color(255, 255, 255));
+			vs.addVisualMappingFunction(dMapping);
 			
 			//EDGE
 			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(204, 204, 204));
 			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_SELECTED_PAINT, new Color(255, 0, 0));
-			DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("interolog", String.class, BasicVisualLexicon.EDGE_LINE_TYPE);
+			dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("interolog", String.class, BasicVisualLexicon.EDGE_LINE_TYPE);
 			dMapping.putMapValue("true",LineTypeVisualProperty.EQUAL_DASH);
 			dMapping.putMapValue("false", LineTypeVisualProperty.SOLID);
 			vs.addVisualMappingFunction(dMapping);

@@ -3,6 +3,7 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -58,6 +59,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	// For the visual style
 	private final VisualMappingManager vizMapManager;
+	
+
+	private final QueryWindow qw;
 
 
 	private final Organism refOrg;
@@ -93,6 +97,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.refOrg = queryWindow.getSelectedRefOrganism();
 		
 		this.nodeNameMap = new HashMap<String, CyNode>();
+		
+		this.qw = queryWindow;
 	}
 
 	@Override
@@ -130,6 +136,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 	
 	private void createNodes(CyNetwork network) {
+		ArrayList<String> selectedUniprotIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
+		
 		// Node attributes
 		CyTable nodeTable = network.getDefaultNodeTable();
 		nodeTable.createColumn("uniprot_id", String.class, false);
@@ -146,6 +154,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("cellular_components", String.class, false);
 		nodeTable.createListColumn("biological_processes", String.class, false);
 		nodeTable.createListColumn("molecular_functions", String.class, false);
+		nodeTable.createColumn("queried", String.class, false);
 				
 		for (UniProtEntry protein : interactorPool) {
 			if (!nodeNameMap.containsKey(protein.getUniprotId())) {
@@ -165,6 +174,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
 				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsStringList());
 				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
+				nodeAttr.set("queried", String.valueOf(selectedUniprotIDs.contains(protein.getUniprotId())));
 				
 				{
 					List<String> cellularComponent = protein.getCellularComponentsAsStringList();
@@ -193,7 +203,6 @@ public class PMBCreateNetworkTask extends AbstractTask {
 							molecularFunctionReadable.add(obj.get("term").asString());
 						}
 					nodeAttr.set("molecular_functions", molecularFunctionReadable);
-					
 					
 				}
 				
