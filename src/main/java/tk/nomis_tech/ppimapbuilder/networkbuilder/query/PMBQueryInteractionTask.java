@@ -46,6 +46,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 	// Data input
 	private final QueryWindow qw;
+	private List<String> inputProteinIDs;
 
 	// Data output
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
@@ -72,7 +73,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 		// Retrieve user input
 		final Organism refOrg = qw.getSelectedRefOrganism();
-		final List<String> inputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
+		List<String> tempInputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
 		final List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
 		final List<Organism> otherOrgs = qw.getSelectedOrganisms();
 		otherOrgs.remove(refOrg);
@@ -81,11 +82,32 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		final InParanoidClient inParanoidClient = new InParanoidClient(5, 0.85);
 
 		System.out.println();
+		
+		/* ------------------------------------------------------------------------------------------
+		 * PART ZERO: retrieve uniprot id according to reference organism
+		 * ------------------------------------------------------------------------------------------ */
+		monitor.setTitle("PSICQUIC interaction query in reference organism");
+		changeStep("Searching uniprot id for reference organism", monitor);
+		inputProteinIDs = new ArrayList<String>();
+		for (String unip : tempInputProteinIDs) {
+			try {
+				inputProteinIDs.add(inParanoidClient.getOrthologForRefOrga(unip, refOrg.getTaxId()));
+			} catch (IOException e){
+				inputProteinIDs.add(unip);
+				/*new Thread() {
+			        public void run() {
+			        	JOptionPane.showMessageDialog(null, "InParanoid is currently unavailable");
+			        }
+			      }.start();
+				e.printStackTrace();
+				//return; // This line prevent the app to generate a network without inparanoid
+				this.cancel();*/
+			}finally{}
+		}
 
 		/* ------------------------------------------------------------------------------------------
 		 * PART ONE: search interaction in reference organism
 		 * ------------------------------------------------------------------------------------------ */
-		monitor.setTitle("PSICQUIC interaction query in reference organism");
 		List<BinaryInteraction> baseRefInteractions = new ArrayList<BinaryInteraction>();
 		{
 			interactionsByOrg.put(refOrg.getTaxId(), new ArrayList<EncoreInteraction>());

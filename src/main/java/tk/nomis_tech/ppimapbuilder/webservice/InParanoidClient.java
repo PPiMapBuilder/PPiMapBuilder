@@ -245,4 +245,90 @@ public class InParanoidClient {
 		return orthologsProteins;
 	}
 	
+	
+	
+	/**
+	 * Search protein ortholog for the reference organism
+	 * @throws IOException if a connection error occurred 
+	 */
+	public String getOrthologForRefOrga(String uniProtId, Integer taxId) throws IOException {
+		String out = new String();
+		
+		// Create request parameters
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("id", uniProtId);
+		params.put("idtype", "proteinid");
+		params.put("all_or_selection", "all");
+		params.put("rettype", "xml");
+		
+		Document doc = null;
+		
+		// Load xml response file (with multiple try)
+		final int MAX_TRY = 5;
+		int pos = 1;
+		IOException lastError = null;
+		do{
+			try {
+				Connection connect = Jsoup.connect(baseUrl);
+				connect.timeout(18000+(18000*pos)/3);
+				connect.data(params);
+				pos++;
+				doc = connect.get();
+				break;
+			} catch (HttpStatusException e) {
+				if (e.getStatusCode() == 500) 
+					return out; //protein ortholog not found or inparanoid server down
+				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
+					throw new IOException(e);
+				}
+				
+				//lastError = new IOException(e);
+				throw new IOException(e);
+			} catch(SocketTimeoutException e) {
+				//Connection response timeout
+				//lastError = new IOException(e);
+				throw new IOException(e);
+			}
+		} while(doc == null);// && ++pos <= MAX_TRY);
+
+		System.out.print("p"+pos+"-");
+		
+		//if(doc == null) throw lastError;
+		//System.out.println("done with "+(pos-1)+" try");
+		
+		//For each cluster of ortholog
+		for (Element speciesPair : doc.select("speciespair")) {
+			try {
+				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
+				Integer currentTaxId = Ortholog.translateInparanoidID(currentInpOrgID);
+
+				// If ortholog cluster correspond an organism asked in input
+				if (currentTaxId != null && taxId.equals(currentTaxId)) {
+					String orthologFound = null;
+
+					// Find the the protein ortholog (with the best score)
+					Double betterScore = Double.NaN;
+					for (Element protein : speciesPair.select("protein")) {
+						try {
+							if (Integer.valueOf(protein.attr("spec_id")) == currentInpOrgID) {
+								double score = Double.valueOf(protein.attr("score"));
+
+								if (betterScore.isNaN() || score > betterScore) {
+									orthologFound = protein.attr("prot_id");
+									betterScore = score;
+								}
+							}
+						} finally {
+						}
+					}
+
+					if(betterScore > scoreLimit)
+						out = orthologFound;
+				}
+			}
+			finally {}
+		}
+		return out;
+	}
+	
 }
