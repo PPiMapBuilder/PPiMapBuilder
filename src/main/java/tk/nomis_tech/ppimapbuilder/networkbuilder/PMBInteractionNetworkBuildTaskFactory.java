@@ -1,7 +1,10 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+
+import javax.swing.JOptionPane;
 
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -42,6 +45,9 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	// Data collection for network generation
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
+	
+	// Error output
+	private String error_message;
 
 	public PMBInteractionNetworkBuildTaskFactory(final CyNetworkNaming cyNetworkNaming, final CyNetworkFactory cnf,
 			final CyNetworkManager networkManager, final CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager,
@@ -60,14 +66,25 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 		this.interactionsByOrg = new HashMap<Integer, Collection<EncoreInteraction>>();
 		this.interactorPool = new UniProtEntryCollection();
+		
+		this.error_message = null;
 	}
 
 	@Override
 	public TaskIterator createTaskIterator() {
 		return new TaskIterator(
-			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, queryWindow),
-			new PMBCreateNetworkTask(netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, queryWindow)
+			new PMBQueryInteractionTask(this, interactionsByOrg, interactorPool, queryWindow),
+			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, queryWindow)
 		);
+		
 	}
 
+	public void setError_message(String error_message) {
+		this.error_message = error_message;
+	}
+	
+	public String getError_message() {
+		return error_message;
+	}
+	
 }

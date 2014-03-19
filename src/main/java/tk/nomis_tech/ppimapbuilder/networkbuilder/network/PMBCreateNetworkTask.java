@@ -3,8 +3,12 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.swing.JOptionPane;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
@@ -28,9 +32,12 @@ import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
+import com.eclipsesource.json.JsonObject;
+
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.webservice.PsicquicResultTranslator;
@@ -52,18 +59,24 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	// For the visual style
 	private final VisualMappingManager vizMapManager;
+	
+
+	private final QueryWindow qw;
 
 
 	private final Organism refOrg;
 	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
+	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 	
 	//Network data
 	private final HashMap<String, CyNode> nodeNameMap;
 
-	public PMBCreateNetworkTask(final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
+	public PMBCreateNetworkTask(PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory, final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
 			final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm,
 			HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow queryWindow) {
+		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
+		
 		// For the network
 		this.networkManager = netMgr;
 		this.networkFactory = cnf;
@@ -84,10 +97,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.refOrg = queryWindow.getSelectedRefOrganism();
 		
 		this.nodeNameMap = new HashMap<String, CyNode>();
+		
+		this.qw = queryWindow;
 	}
 
 	@Override
 	public void run(TaskMonitor monitor) {
+		
 		monitor.setTitle("Network building");
 		monitor.setStatusMessage("Building Cytoscape network...");
 		monitor.setProgress(1.0);
@@ -120,6 +136,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 	
 	private void createNodes(CyNetwork network) {
+		ArrayList<String> selectedUniprotIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
+		
 		// Node attributes
 		CyTable nodeTable = network.getDefaultNodeTable();
 		nodeTable.createColumn("uniprot_id", String.class, false);
@@ -129,10 +147,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createColumn("protein_name", String.class, false);
 		nodeTable.createColumn("tax_id", String.class, false);
 		nodeTable.createColumn("reviewed", String.class, false);
+		nodeTable.createListColumn("cellular_components_hidden", String.class, false);
+		nodeTable.createListColumn("biological_processes_hidden", String.class, false);
+		nodeTable.createListColumn("molecular_functions_hidden", String.class, false);
+		nodeTable.createListColumn("orthologs", String.class, false);
 		nodeTable.createListColumn("cellular_components", String.class, false);
 		nodeTable.createListColumn("biological_processes", String.class, false);
 		nodeTable.createListColumn("molecular_functions", String.class, false);
-		nodeTable.createListColumn("orthologs", String.class, false);
+		nodeTable.createColumn("queried", String.class, false);
 				
 		for (UniProtEntry protein : interactorPool) {
 			if (!nodeNameMap.containsKey(protein.getUniprotId())) {
@@ -148,10 +170,44 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("protein_name", protein.getProteinName());
 				nodeAttr.set("tax_id", String.valueOf(protein.getTaxId()));
 				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
-				nodeAttr.set("cellular_components", protein.getCellularComponentsAsStringList());
-				nodeAttr.set("biological_processes", protein.getBiologicalProcessesAsStringList());
-				nodeAttr.set("molecular_functions", protein.getMolecularFunctionsAsStringList());
+				nodeAttr.set("cellular_components_hidden", protein.getCellularComponentsAsStringList());
+				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
+				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsStringList());
 				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
+				nodeAttr.set("queried", String.valueOf(selectedUniprotIDs.contains(protein.getUniprotId())));
+				
+				{
+					List<String> cellularComponent = protein.getCellularComponentsAsStringList();
+					List<String> cellularComponentReadable = new ArrayList<String>();
+					if (cellularComponent != null && !cellularComponent.isEmpty())
+						for (String s : cellularComponent) {
+							JsonObject obj = JsonObject.readFrom(s);
+							cellularComponentReadable.add(obj.get("term").asString());
+						}
+					nodeAttr.set("cellular_components", cellularComponentReadable);
+					
+					List<String> biologicalProcess = protein.getBiologicalProcessesAsStringList();
+					List<String> biologicalProcessReadable = new ArrayList<String>();
+					if (biologicalProcess != null && !biologicalProcess.isEmpty())
+						for (String s : biologicalProcess) {
+							JsonObject obj = JsonObject.readFrom(s);
+							biologicalProcessReadable.add(obj.get("term").asString());
+						}
+					nodeAttr.set("biological_processes", biologicalProcessReadable);
+					
+					List<String> molecularFunction = protein.getMolecularFunctionsAsStringList();
+					List<String> molecularFunctionReadable = new ArrayList<String>();
+					if (molecularFunction != null && !molecularFunction.isEmpty())
+						for (String s : molecularFunction) {
+							JsonObject obj = JsonObject.readFrom(s);
+							molecularFunctionReadable.add(obj.get("term").asString());
+						}
+					nodeAttr.set("molecular_functions", molecularFunctionReadable);
+					
+				}
+				
+				
+				
 			}
 		}
 	}
@@ -172,7 +228,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		edgeTable.createListColumn("pubid", String.class, false);
 		edgeTable.createListColumn("confidence", String.class, false);
 		edgeTable.createColumn("tax_id", String.class, false);
-		edgeTable.createColumn("interolog", String.class, false);		
+		edgeTable.createColumn("interolog", String.class, false);
 		
 		for(Integer taxId: interactionsByOrg.keySet()) {
 			boolean inRefOrg = taxId == refOrg.getTaxId();
@@ -285,6 +341,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		}
 		
 		view.updateView();
+	}
+	
+	public PMBInteractionNetworkBuildTaskFactory getPmbInteractionNetworkBuildTaskFactory() {
+		return pmbInteractionNetworkBuildTaskFactory;
 	}
 
 }
