@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -146,6 +147,14 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JPanel interactionPanel = new JPanel();
 	private JLabel intAName;
 	private JLabel intBName;
+	private JLabel taxId;
+	private JPanel panelPubId;
+	private JTree treePubId;
+	private JPanel panelSource;
+	private JTree treeSource;
+	private JPanel panelConfidence;
+	private JTree treeConfidence;
+	
 	
 	/**
 	 * Build a panel containing all the needed elements.
@@ -398,31 +407,81 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		intBName.setBorder(new EmptyBorder(3, 8, 3, 0));
 		intBName.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		interactionPanel.add(intBName, "cell 0 1 2 1,grow");
+		
+		final JLabel lblTaxId = new JLabel("Tax ID:");
+		interactionPanel.add(lblTaxId, "cell 0 2,alignx left");
+		
+		final JScrollPane scrollPane_Publication = new JScrollPane();
+		scrollPane_Publication.setOpaque(false);
+		scrollPane_Publication.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Publication", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		interactionPanel.add(scrollPane_Publication, "cell 0 3 3 1,grow");
+		
+		panelPubId = new JPanel();
+		scrollPane_Publication.setViewportView(panelPubId);
+		panelPubId.setBorder(null);
+		panelPubId.setLayout(new BoxLayout(panelPubId, BoxLayout.Y_AXIS));
+
+		//treePubId = new JTree();
+		//panelPubId.add(treePubId);
+		
+		final JScrollPane scrollPane_Source = new JScrollPane();
+		scrollPane_Source.setOpaque(false);
+		scrollPane_Source.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Source", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		interactionPanel.add(scrollPane_Source, "cell 0 4 3 1,grow");
+		
+		panelSource = new JPanel();
+		scrollPane_Source.setViewportView(panelSource);
+		panelSource.setBorder(null);
+		panelSource.setLayout(new BoxLayout(panelSource, BoxLayout.Y_AXIS));
+
+		treeSource = new JTree();
+		panelSource.add(treeSource);
+		
+		final JScrollPane scrollPane_Confidence = new JScrollPane();
+		scrollPane_Confidence.setOpaque(false);
+		scrollPane_Confidence.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Confidence", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		interactionPanel.add(scrollPane_Confidence, "cell 0 5 3 1,grow");
+		
+		panelConfidence = new JPanel();
+		scrollPane_Confidence.setViewportView(panelConfidence);
+		panelConfidence.setBorder(null);
+		panelConfidence.setLayout(new BoxLayout(panelConfidence, BoxLayout.Y_AXIS));
+
+		treeConfidence = new JTree();
+		panelConfidence.add(treeConfidence);
+		
+		
+		/*
+		 * VARIABLE LABELS
+		 */
+		taxId = NONE_LABEL();
+		interactionPanel.add(taxId, "cell 1 2");
+
+
 	}
 
 	public void setInteractionView(CyRow row) {
-
 		//this.setIntAName(row.get("protein_name", String.class));
-		System.out.println("#1");
 		this.setIntAName(row.get("Protein_name_A", String.class));
 		this.setIntBName(row.get("Protein_name_B", String.class));
-		System.out.println("#2");
+		this.setTaxId(row.get("tax_id", String.class));
+		this.setPubId(row.getList("pubid", String.class));
+		this.setSource(row.getList("source", String.class));
+		this.setConfidence(row.getList("confidence", String.class));
+
 		this.showInteractionView();
-		System.out.println("#3");
 
 	}
 	
 	public void showInteractionView() {
-		System.out.println("#4");
-
 		voidPanel.setVisible(false);
-		System.out.println("#5");
 
 		proteinPanel.setVisible(false);
 
-		System.out.println("#6");
 		interactionPanel.setVisible(true);
-		System.out.println("#7");
 
 		this.repaint();
 	}
@@ -479,6 +538,90 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 	}
 
+	/**
+	 * Set the Tax ID
+	 * 
+	 * @param taxId
+	 */
+	private void setTaxId(String taxId) {
+		if (!taxId.isEmpty()) {
+			this.taxId.setFont(STD_FONT);
+			this.taxId.setText(taxId);
+			this.lblExtLinkUniprot.setVisible(true);
+		} else {
+			this.lblExtLinkUniprot.setVisible(false);
+			this.taxId.setFont(NONE_FONT);
+			this.taxId.setText("none");
+		}
+	}
+	
+	/**
+	 * Set pubId
+	 * 
+	 * @param pubid
+	 */
+	private void setPubId(List<String> pubId) {
+		this.panelPubId.removeAll();
+		
+		System.out.println(pubId);
+
+		for (String str : pubId) {
+
+			JPanel publication = new JPanel();
+			publication.setLayout(new BoxLayout(publication, BoxLayout.LINE_AXIS));
+			
+			publication.add(new JLabel(" •   " + str));
+			publication.add(Box.createRigidArea(new Dimension(5,0)));
+			JHyperlinkLabel lblExtLinkPubMed;
+			lblExtLinkPubMed = new JHyperlinkLabel(openBrowser);
+			lblExtLinkPubMed.setVisible(false);
+			lblExtLinkPubMed.setIcon(ICN_EXTERNAL_LINK);
+			lblExtLinkPubMed.makeClickable();
+			publication.add(lblExtLinkPubMed);
+			
+			String[] parts = str.split(":");
+			if (parts[0].equals("pubmed")){
+				System.out.println("pubmed");
+				
+				try {
+					lblExtLinkPubMed.setVisible(true);
+
+					lblExtLinkPubMed.setToolTipText("View on PubMed Publication");
+					lblExtLinkPubMed.setUri(new URI("http://www.ncbi.nlm.nih.gov/pubmed/?term=" + parts[1]));
+					
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+			this.panelPubId.add(publication);
+			publication.setAlignmentX(LEFT_ALIGNMENT);
+		}
+	}
+	
+	/**
+	 * Set source
+	 * 
+	 * @param source
+	 */
+	private void setSource(List<String> source) {
+		this.panelSource.removeAll();
+		for (String str : source) {
+			this.panelSource.add(new JLabel(" •   " + str));
+		}
+	}
+	
+	/**
+	 * Set source
+	 * 
+	 * @param source
+	 */
+	private void setConfidence(List<String> confidence) {
+		this.panelConfidence.removeAll();
+		for (String str : confidence) {
+			this.panelConfidence.add(new JLabel(" •   " + str));
+		}
+	}
+	
 	/**
 	 * Get protein name as displayed in the label.
 	 * 

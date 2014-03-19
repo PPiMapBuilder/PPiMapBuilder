@@ -96,6 +96,8 @@ public class InParanoidClient {
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500) 
 					return out; //protein ortholog not found or inparanoid server down
+				if (e.getStatusCode() == 503 || e.getStatusCode() == 504)
+					return out;
 				lastError = new IOException(e);
 			} catch(SocketTimeoutException e) {
 				//Connection response timeout

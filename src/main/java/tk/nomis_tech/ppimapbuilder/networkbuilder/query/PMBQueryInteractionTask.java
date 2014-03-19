@@ -134,9 +134,9 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				System.out.println("n# protein: " + interactorPool.size());
 				System.out.println("n# org: " + otherOrgsTaxIds.size());
 
-				try {
-					orthologs.putAll(inParanoidClient.searchOrthologForUniprotProtein(interactorPool, otherOrgsTaxIds));
-				} finally {}
+//				try {
+//					orthologs.putAll(inParanoidClient.searchOrthologForUniprotProtein(interactorPool, otherOrgsTaxIds));
+//				} finally {}
 			}
 
 			// Get ortholog interactions

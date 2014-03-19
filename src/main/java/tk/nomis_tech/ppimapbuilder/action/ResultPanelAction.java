@@ -79,7 +79,6 @@ public class ResultPanelAction implements RowsSetListener {
 			}
 
 			if (nbSelected == 1) {
-				System.out.println("toto");
 				pmbResultPanel.setInteractionView(myRow);
 			} else {
 				pmbResultPanel.showDefaultView();
