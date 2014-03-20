@@ -87,7 +87,7 @@ public class InParanoidClient {
 		Document doc = null;
 		
 		// Load xml response file (with multiple try)
-		final int MAX_TRY = 5;
+		final int MAX_TRY = 2;
 		int pos = 1;
 		IOException lastError = null;
 		do{
@@ -106,13 +106,13 @@ public class InParanoidClient {
 				}
 				
 				//lastError = new IOException(e);
-				throw new IOException(e);
+				//throw new IOException(e);
 			} catch(SocketTimeoutException e) {
 				//Connection response timeout
 				//lastError = new IOException(e);
 				throw new IOException(e);
 			}
-		} while(doc == null);// && ++pos <= MAX_TRY);
+		} while(doc == null && ++pos <= MAX_TRY);
 
 		System.out.print("p"+pos+"-");
 		
