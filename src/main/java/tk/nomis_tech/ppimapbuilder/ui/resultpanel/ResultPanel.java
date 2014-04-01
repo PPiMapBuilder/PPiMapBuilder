@@ -42,6 +42,7 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
 
+import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.ui.util.JHyperlinkLabel;
 
 import com.eclipsesource.json.JsonObject;
@@ -848,7 +849,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * 
 	 * @return
 	 */
-	public List<Ortholog> getOrthologs() {
+	public List<OrthologProtein> getOrthologs() {
 		// TODO: Add orthologs column
 		throw new NotImplementedException("Ortholog are not handle yet");
 	}
