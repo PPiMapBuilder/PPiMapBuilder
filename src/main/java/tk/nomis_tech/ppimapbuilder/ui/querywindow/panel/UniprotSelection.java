@@ -79,7 +79,7 @@ public class UniprotSelection extends JPanel {
 	public UniprotSelection(Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
 		// Uniprot identifiers left panel
 		super();
-		this.setBorder(new CompoundBorder(new MatteBorder(0, 5, 0, 0, (Color) darkForeground), panelBorder));
+		this.setBorder(new CompoundBorder(new MatteBorder(0, 5, 0, 0, darkForeground), panelBorder));
 		this.setLayout(new MigLayout("inset 10", "[129px,grow][14px:14px:14px,right]", "[20px][366px,grow][35px]"));
 
 		// Label "Uniprot identifiers"

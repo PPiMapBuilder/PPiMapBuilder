@@ -39,11 +39,11 @@ public class JHyperlinkLabel extends JLabel {
 					} else {
 						String os = System.getProperty("os.name").toLowerCase();
 
-						if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0)
+						if (os.contains("nix") || os.contains("nux") || os.indexOf("aix") > 0)
 							Runtime.getRuntime().exec("x-www-browser " + uri);
-						else if (os.indexOf("win") >= 0)
+						else if (os.contains("win"))
 							Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + uri);
-						if (os.indexOf("mac") >= 0)
+						if (os.contains("mac"))
 							Runtime.getRuntime().exec("open " + uri);
 					}
 				} catch (final Exception e) {

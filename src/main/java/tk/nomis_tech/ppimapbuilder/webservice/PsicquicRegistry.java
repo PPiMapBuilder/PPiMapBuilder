@@ -1,14 +1,15 @@
 package tk.nomis_tech.ppimapbuilder.webservice;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 /**
  * Retrieve the PSICQUIC registry in a very simple way. TODO: Use Registry and XML file
@@ -128,8 +129,7 @@ public class PsicquicRegistry {
 		for (Element e : doc.select("service")) {
 
 			List<String> tags = new ArrayList<String>();
-			for (Iterator<Element> it = e.select("tag").iterator(); it.hasNext();) {
-				Element elt = it.next();
+			for (Element elt : e.select("tag")) {
 				tags.add(elt.text());
 			}
 

@@ -1,21 +1,12 @@
 package tk.nomis_tech.ppimapbuilder.ui.querywindow.panel;
 
-import java.awt.BorderLayout;
-import java.util.List;
-
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
-
-import net.miginfocom.swing.MigLayout;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.listener.ReferenceOrganismListener;
 import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
+import tk.nomis_tech.ppimapbuilder.data.Organism;
+
+import javax.swing.*;
+import java.util.List;
 
 public class ReferenceOrganismSelectionPanel {
 
@@ -65,7 +56,7 @@ public class ReferenceOrganismSelectionPanel {
 		
 		refOrgCbModel.removeAllElements();
 		for (Organism org : orgs) {
-			refOrgCbModel.addElement(org.getName());
+			refOrgCbModel.addElement(org.getCommonName());
 		}
 	}
 	

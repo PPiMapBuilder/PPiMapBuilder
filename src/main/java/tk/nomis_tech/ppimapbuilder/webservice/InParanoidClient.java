@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -17,19 +16,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import javax.swing.JOptionPane;
-
-import org.cytoscape.work.AbstractTask;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import tk.nomis_tech.ppimapbuilder.data.Ortholog;
+import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 
 /**
  * Simple Java client for InParanoid database
@@ -123,7 +118,7 @@ public class InParanoidClient {
 		for (Element speciesPair : doc.select("speciespair")) {
 			try {
 				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
-				Integer currentTaxId = Ortholog.translateInparanoidID(currentInpOrgID);
+				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
 
 				// If ortholog cluster correspond an organism asked in input
 				if (currentTaxId != null && taxIds.contains(currentTaxId)) {
@@ -220,9 +215,8 @@ public class InParanoidClient {
 		
 		
 		List<String> protIds = new ArrayList<String>(){{
-			Iterator<UniProtEntry> it = prots.iterator();
-			while (it.hasNext()) {
-				add(((UniProtEntry) it.next()).getUniprotId());
+			for (UniProtEntry prot : prots) {
+				add((prot).getUniprotId());
 			}
 		}};
 		
@@ -231,10 +225,8 @@ public class InParanoidClient {
 
 		for (Map.Entry<String, HashMap<Integer, String>> orthologProts: orthologsProteins.entrySet()) {
 			for(Map.Entry<Integer, String> ortholog: orthologProts.getValue().entrySet()) {
-				Iterator<UniProtEntry> it = prots.iterator();
-				while (it.hasNext()) {
-					UniProtEntry prot = (UniProtEntry) it.next();
-					if(prot.getUniprotId().equals(orthologProts.getKey())) {
+				for (UniProtEntry prot : prots) {
+					if (prot.getUniprotId().equals(orthologProts.getKey())) {
 						prot.addOrtholog(new OrthologProtein(ortholog.getValue(), ortholog.getKey()));
 					}
 				}
@@ -252,7 +244,7 @@ public class InParanoidClient {
 	 * @throws IOException if a connection error occurred 
 	 */
 	public String getOrthologForRefOrga(String uniProtId, Integer taxId) throws IOException {
-		String out = new String();
+		String out = "";
 		
 		// Create request parameters
 		Map<String, String> params = new HashMap<String, String>();
@@ -300,7 +292,7 @@ public class InParanoidClient {
 		for (Element speciesPair : doc.select("speciespair")) {
 			try {
 				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
-				Integer currentTaxId = Ortholog.translateInparanoidID(currentInpOrgID);
+				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
 
 				// If ortholog cluster correspond an organism asked in input
 				if (currentTaxId != null && taxId.equals(currentTaxId)) {

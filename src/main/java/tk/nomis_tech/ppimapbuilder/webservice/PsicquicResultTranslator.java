@@ -1,18 +1,10 @@
 package tk.nomis_tech.ppimapbuilder.webservice;
 
+import psidev.psi.mi.tab.model.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import psidev.psi.mi.tab.model.Alias;
-import psidev.psi.mi.tab.model.Annotation;
-import psidev.psi.mi.tab.model.Author;
-import psidev.psi.mi.tab.model.Checksum;
-import psidev.psi.mi.tab.model.Confidence;
-import psidev.psi.mi.tab.model.CrossReference;
-import psidev.psi.mi.tab.model.Feature;
-import psidev.psi.mi.tab.model.Parameter;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
 
 public abstract class PsicquicResultTranslator {
 
@@ -45,7 +37,7 @@ public abstract class PsicquicResultTranslator {
 					retList.add(((Feature) elt).getFeatureType() + ":" + ((Feature) elt).getText());
 
 				} else if (elt instanceof Organism) {
-					retList.add(((Organism) elt).getName());
+					retList.add(((Organism) elt).getTaxid());
 
 				} else if (elt instanceof Parameter) {
 					retList.add(((Parameter) elt).getType() + ":" + ((Parameter) elt).getValue() + "." + ((Parameter) elt).getUnit() + ":");

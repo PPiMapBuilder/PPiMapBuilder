@@ -1,15 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.webservice;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
@@ -22,7 +13,9 @@ import uk.ac.ebi.enfin.mi.cluster.Encore2Binary;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
-import com.google.common.collect.Lists;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.*;
 
 /**
  * Group of method useful for manipulation of interaction list
@@ -172,10 +165,7 @@ public class InteractionsUtil {
 	public static Set<String> getInteractorsEncore(Collection<EncoreInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
 
-		Iterator<EncoreInteraction> iterator = interactions.iterator();
-		while (iterator.hasNext()) {
-			EncoreInteraction interaction = iterator.next();
-
+		for (EncoreInteraction interaction : interactions) {
 			if (interaction.getInteractorAccsA().containsKey("uniprotkb")) {
 				String id = interaction.getInteractorAccsA().get("uniprotkb");
 				if (UniprotId.isValid(id))
@@ -197,10 +187,7 @@ public class InteractionsUtil {
 	public static Set<String> getInteractorsBinary(Collection<BinaryInteraction> interactions, int refTaxId) {
 		HashSet<String> interactors = new HashSet<String>();
 
-		Iterator<BinaryInteraction> iterator = filterNonUniprotAndNonRefOrg(interactions, refTaxId).iterator();
-		while (iterator.hasNext()) {
-			BinaryInteraction interaction = iterator.next();
-
+		for (BinaryInteraction interaction : filterNonUniprotAndNonRefOrg(interactions, refTaxId)) {
 			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier());
 			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
 		}
@@ -215,13 +202,10 @@ public class InteractionsUtil {
 	public static Collection<BinaryInteraction> filterNonUniprotAndNonRefOrg(Collection<BinaryInteraction> interactions, int refTaxId) {
 		List<BinaryInteraction> out = new ArrayList<BinaryInteraction>();
 
-		Iterator<BinaryInteraction> it = interactions.iterator();
-		while (it.hasNext()) {
-			BinaryInteraction binaryInteraction = it.next();
-
+		for (BinaryInteraction binaryInteraction : interactions) {
 			boolean ok = true;
-			for (Interactor interactor : Arrays.asList(new Interactor[] { binaryInteraction.getInteractorA(),
-					binaryInteraction.getInteractorB() })) {
+			for (Interactor interactor : Arrays.asList(new Interactor[]{binaryInteraction.getInteractorA(),
+					binaryInteraction.getInteractorB()})) {
 
 				List<CrossReference> ids = interactor.getIdentifiers();
 				// ids.addAll(interactor.getAlternativeIdentifiers());

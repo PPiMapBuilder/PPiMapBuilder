@@ -1,7 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.ui.resultpanel;
 
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * A panel that implements the Scrollable interface. This class allows you to
@@ -27,13 +27,13 @@ public class ScrollablePanel extends JPanel implements Scrollable, SwingConstant
 
 		NONE,
 		FIT,
-		STRETCH;
+		STRETCH
 	}
 
 	public enum IncrementType {
 
 		PERCENT,
-		PIXELS;
+		PIXELS
 	}
 
 	private ScrollableSizeHint scrollableHeight = ScrollableSizeHint.NONE;
@@ -264,7 +264,7 @@ public class ScrollablePanel extends JPanel implements Scrollable, SwingConstant
 
 		//  STRETCH sizing, use the greater of the panel or viewport width
 		if (getParent() instanceof JViewport) {
-			return (((JViewport) getParent()).getWidth() > getPreferredSize().width);
+			return (getParent().getWidth() > getPreferredSize().width);
 		}
 
 		return false;
@@ -281,7 +281,7 @@ public class ScrollablePanel extends JPanel implements Scrollable, SwingConstant
 
 		//  STRETCH sizing, use the greater of the panel or viewport height
 		if (getParent() instanceof JViewport) {
-			return (((JViewport) getParent()).getHeight() > getPreferredSize().height);
+			return (getParent().getHeight() > getPreferredSize().height);
 		}
 
 		return false;

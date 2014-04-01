@@ -1,43 +1,20 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.PMBCreditMenuTaskFactory;
-import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
-import tk.nomis_tech.ppimapbuilder.data.UniprotId;
+import tk.nomis_tech.ppimapbuilder.data.*;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
-import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
-import tk.nomis_tech.ppimapbuilder.webservice.InteractionsUtil;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
-import tk.nomis_tech.ppimapbuilder.webservice.ThreadedPsicquicSimpleClient;
-import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.webservice.*;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
 import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
+
+import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class PMBQueryInteractionTask extends AbstractTask {
 

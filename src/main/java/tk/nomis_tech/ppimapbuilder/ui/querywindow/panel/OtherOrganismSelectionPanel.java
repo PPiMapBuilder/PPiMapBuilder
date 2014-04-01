@@ -1,25 +1,16 @@
 package tk.nomis_tech.ppimapbuilder.ui.querywindow.panel;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
+import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
+import tk.nomis_tech.ppimapbuilder.data.Organism;
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
-
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-
-import net.miginfocom.swing.MigLayout;
-import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
 
 public class OtherOrganismSelectionPanel {
 
@@ -83,7 +74,7 @@ public class OtherOrganismSelectionPanel {
 		organisms.clear();
 		panSourceOtherOrganisms.removeAll();
 		for (Organism og : ogs) {
-			JCheckBox j = new JCheckBox(og.getName(), true);
+			JCheckBox j = new JCheckBox(og.getCommonName(), true);
 			j.setBackground(Color.white);
 			organisms.put(og, j);
 

@@ -22,6 +22,7 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
  * An advanced PSICQUIC simple client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
+@SuppressWarnings("RedundantCast")
 public class ThreadedPsicquicSimpleClient {
 
 	private final List<PsicquicService> services;
@@ -140,7 +141,7 @@ public class ThreadedPsicquicSimpleClient {
 
 		// Collect all interaction results
 		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		for (int i = 0; i < interactionRequests.size(); i++) {
+		for (Future<List<BinaryInteraction>> interactionRequest : interactionRequests) {
 			try {
 				results.addAll(completionService.take().get());
 			} catch (ExecutionException e) {

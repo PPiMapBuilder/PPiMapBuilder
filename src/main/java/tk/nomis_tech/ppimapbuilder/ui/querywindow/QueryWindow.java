@@ -1,35 +1,28 @@
 package tk.nomis_tech.ppimapbuilder.ui.querywindow;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import net.miginfocom.swing.MigLayout;
 import org.cytoscape.work.TaskManager;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.DatabaseSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.OtherOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.ReferenceOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.UniprotSelection;
+import tk.nomis_tech.ppimapbuilder.data.Organism;
 import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import javax.swing.JSplitPane;
-import javax.swing.UIManager;
-import net.miginfocom.swing.MigLayout;
-import javax.swing.border.EmptyBorder;
-import java.awt.Color;
-import javax.swing.border.MatteBorder;
-import javax.swing.border.LineBorder;
+
+import javax.swing.*;
 import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * PPiMapBuilder interaction query window
  */
@@ -96,14 +89,14 @@ public class QueryWindow extends JFrame {
 		// Simple border around panel and text area
 		fancyBorder = new CompoundBorder(
 			// Outside border 1px bottom light color
-			new MatteBorder(0, 0, 1, 0, (Color) new Color(255, 255, 255)),
+			new MatteBorder(0, 0, 1, 0, new Color(255, 255, 255)),
 			// Border all around panel 1px dark grey 
 			new LineBorder(new Color(154, 154, 154), 1)
 		);
 		// Border for left and right panel
 		panelBorder = new CompoundBorder(
 			// Dark margin around panel
-			new MatteBorder(5, 0, 0, 0, (Color) darkForeground), 	
+			new MatteBorder(5, 0, 0, 0, darkForeground),
 			new CompoundBorder(
 				fancyBorder,
 				new EmptyBorder(5, 5, 5, 5)
@@ -175,7 +168,7 @@ public class QueryWindow extends JFrame {
 		// Main form panel
 		JPanel panMainForm = new JPanel();
 		panMainForm.setMinimumSize(new Dimension(290, 10));
-		panMainForm.setBorder(new CompoundBorder(new MatteBorder(0, 0, 0, 5, (Color) darkForeground), panelBorder));
+		panMainForm.setBorder(new CompoundBorder(new MatteBorder(0, 0, 0, 5, darkForeground), panelBorder));
 		panMainForm.setLayout(new MigLayout("inset 10", "[49.00,grow][14px:14px:14px,right]", "[][][][grow][][45%]"));
 
 		org = new ReferenceOrganismSelectionPanel(this, panMainForm);

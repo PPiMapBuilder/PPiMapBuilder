@@ -1,15 +1,13 @@
 package tk.nomis_tech.ppimapbuilder;
 
-import java.io.IOException;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-
+import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
+
+import javax.swing.*;
+import java.io.IOException;
 
 /**
  * The interaction query menu
@@ -29,7 +27,7 @@ public class PMBQueryMenuTask extends AbstractTask {
 			public void run() {
 				try {
 					PsicquicRegistry reg = PsicquicRegistry.getInstance();
-					qw.updateLists(reg.getServices(), PMBActivator.listOrganism);
+					qw.updateLists(reg.getServices(), OrganismRepository.getInstance().getListOrganism());
 
 					qw.setVisible(true);
 				} catch (IOException e) {

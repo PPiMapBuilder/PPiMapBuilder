@@ -1,47 +1,27 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder.network;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.swing.JOptionPane;
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNetworkFactory;
-import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyTable;
+import com.eclipsesource.json.JsonObject;
+import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.view.presentation.property.BasicVisualLexicon;
-import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
-import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
-import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-
-import com.eclipsesource.json.JsonObject;
-
+import tk.nomis_tech.ppimapbuilder.data.Organism;
 import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.util.Organism;
 import tk.nomis_tech.ppimapbuilder.webservice.PsicquicResultTranslator;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
+
+import java.util.*;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -329,11 +309,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private void applyVisualStyle(CyNetworkView view) {
-		Iterator it = vizMapManager.getAllVisualStyles().iterator();
-		while (it.hasNext()){
-			VisualStyle curVS = (VisualStyle)it.next();
-			if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style"))
-			{
+		for (VisualStyle curVS : vizMapManager.getAllVisualStyles()) {
+			if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style")) {
 				curVS.apply(view);
 				vizMapManager.setCurrentVisualStyle(curVS);
 				break;
