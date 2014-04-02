@@ -9,9 +9,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
-import tk.nomis_tech.ppimapbuilder.webservice.ThreadedPsicquicSimpleClient;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.ThreadedPsicquicSimpleClient;
 
 import com.google.common.collect.Lists;
 

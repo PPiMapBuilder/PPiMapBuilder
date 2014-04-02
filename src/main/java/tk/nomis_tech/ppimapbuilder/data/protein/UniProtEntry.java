@@ -1,4 +1,6 @@
-package tk.nomis_tech.ppimapbuilder.data;
+package tk.nomis_tech.ppimapbuilder.data.protein;
+
+import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;

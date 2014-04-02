@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data;
+package tk.nomis_tech.ppimapbuilder.data.protein;
 
 import com.eclipsesource.json.JsonObject;
 

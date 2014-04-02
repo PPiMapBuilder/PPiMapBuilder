@@ -6,9 +6,9 @@ public class GeneOntologyModel {
 
 	private String identifier;
 	private String term;
-	private GOCategory category;
+	private GeneOntologyCategory category;
 
-	public GeneOntologyModel(String identifier, String term, GOCategory category) {
+	public GeneOntologyModel(String identifier, String term, GeneOntologyCategory category) {
 		super();
 		this.identifier = identifier;
 		this.term = term;
@@ -31,11 +31,11 @@ public class GeneOntologyModel {
 		this.term = term;
 	}
 
-	public GOCategory getCategory() {
+	public GeneOntologyCategory getCategory() {
 		return category;
 	}
 
-	public void setCategory(GOCategory category) {
+	public void setCategory(GeneOntologyCategory category) {
 		this.category = category;
 	}
 

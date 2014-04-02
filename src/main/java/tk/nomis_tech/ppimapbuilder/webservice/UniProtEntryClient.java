@@ -20,9 +20,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import tk.nomis_tech.ppimapbuilder.data.GOCategory;
+import tk.nomis_tech.ppimapbuilder.data.GeneOntologyCategory;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 /**
  * Simple Java client for UniProt entry service
@@ -120,33 +120,33 @@ public class UniProtEntryClient {
 		for (Element e : doc.select("dbReference")) {
 			if (e.attr("type").equals("GO")) {
 				String id = e.attr("id");
-				GOCategory category = null;
+				GeneOntologyCategory category = null;
 				String term = null;
 				for (Element f: e.select("property")) {
 					if (f.attr("type").equals("term")) {
 						String value = f.attr("value");
 						String[] values = value.split(":");
 						if (values[0].equals("C")) {
-							category = GOCategory.CELLULAR_COMPONENT;
+							category = GeneOntologyCategory.CELLULAR_COMPONENT;
 						}
 						else if (values[0].equals("F")) {
-							category = GOCategory.MOLECULAR_FUNCTION;
+							category = GeneOntologyCategory.MOLECULAR_FUNCTION;
 						}
 						else if (values[0].equals("P")) {
-							category = GOCategory.BIOLOGICAL_PROCESS;
+							category = GeneOntologyCategory.BIOLOGICAL_PROCESS;
 						}
 						term = values[1];
 						break;
 					}
 				}
 				GeneOntologyModel go = new GeneOntologyModel(id, term, category);
-				if (category == GOCategory.CELLULAR_COMPONENT) {
+				if (category == GeneOntologyCategory.CELLULAR_COMPONENT) {
 					prot.addCellularComponent(go);
 				}
-				else if (category == GOCategory.BIOLOGICAL_PROCESS) {
+				else if (category == GeneOntologyCategory.BIOLOGICAL_PROCESS) {
 					prot.addBiologicalProcess(go);
 				}
-				else if (category == GOCategory.MOLECULAR_FUNCTION) {
+				else if (category == GeneOntologyCategory.MOLECULAR_FUNCTION) {
 					prot.addMolecularFunction(go);
 				}
 			}

@@ -1,13 +1,10 @@
-package tk.nomis_tech.ppimapbuilder.webservice.miql;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
 
 public class MiQLExpressionBuilderTest {
 

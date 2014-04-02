@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.webservice;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic;
 
 import java.util.Iterator;
 import java.util.List;

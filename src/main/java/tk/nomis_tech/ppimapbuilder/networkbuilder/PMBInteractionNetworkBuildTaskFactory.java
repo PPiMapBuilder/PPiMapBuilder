@@ -1,10 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-
-import javax.swing.JOptionPane;
 
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -14,12 +11,11 @@ import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;

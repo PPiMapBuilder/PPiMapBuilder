@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,12 +15,11 @@ import org.junit.Test;
 import psidev.psi.mi.tab.PsimiTabException;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.webservice.InteractionsUtil;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicRegistry;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
-import tk.nomis_tech.ppimapbuilder.webservice.ThreadedPsicquicSimpleClient;
-import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.ThreadedPsicquicSimpleClient;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql.MiQLExpressionBuilder;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql.MiQLParameterBuilder;
 
 import com.google.common.collect.Lists;
 

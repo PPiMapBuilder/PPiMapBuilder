@@ -28,7 +28,7 @@ import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
-import tk.nomis_tech.ppimapbuilder.action.ResultPanelAction;
+import tk.nomis_tech.ppimapbuilder.ui.resultpanel.listener.ResultPanelAction;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;

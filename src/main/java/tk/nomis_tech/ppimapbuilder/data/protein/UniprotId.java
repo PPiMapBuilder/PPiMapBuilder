@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data;
+package tk.nomis_tech.ppimapbuilder.data.protein;
 
 /**
  * @author Kevin Gravouil
@@ -44,7 +44,7 @@ public class UniprotId {
 	 *
 	 * @param uniprotId
 	 * @throws
-	 * tk.nomis_tech.ppimapbuilder.data.UniprotId.BadUniprotIdFormatException
+	 * UniprotId.BadUniprotIdFormatException
 	 */
 	public UniprotId(String uniprotId) throws BadUniprotIdFormatException {
 		if (uniprotId.matches(pattern)) {

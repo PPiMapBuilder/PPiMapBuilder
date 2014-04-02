@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.webservice.miql;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql;
 
 /**
  * Representation of a MiQL parameter<br/>

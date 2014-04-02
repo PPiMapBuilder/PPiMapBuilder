@@ -23,8 +23,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
-import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.data.protein.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 /**
  * Simple Java client for InParanoid database

@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.action;
+package tk.nomis_tech.ppimapbuilder.ui.resultpanel.listener;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyNetwork;

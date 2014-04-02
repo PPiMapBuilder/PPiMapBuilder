@@ -19,7 +19,7 @@ import org.cytoscape.work.TaskManager;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
-import tk.nomis_tech.ppimapbuilder.webservice.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
 
 /**
  * PPiMapBuilder interaction query window

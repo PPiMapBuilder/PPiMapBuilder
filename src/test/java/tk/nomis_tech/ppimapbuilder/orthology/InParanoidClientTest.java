@@ -2,7 +2,7 @@ package tk.nomis_tech.ppimapbuilder.orthology;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
 
 import java.io.IOException;

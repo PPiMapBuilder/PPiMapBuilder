@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.webservice.miql;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql;
 
 import java.util.List;
 

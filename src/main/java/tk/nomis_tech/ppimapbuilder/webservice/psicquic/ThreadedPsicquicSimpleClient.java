@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.webservice;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic;
 
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.PsimiTabReader;

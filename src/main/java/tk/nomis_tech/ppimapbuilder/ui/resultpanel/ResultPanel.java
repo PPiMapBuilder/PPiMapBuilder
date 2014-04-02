@@ -42,7 +42,7 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
 
-import tk.nomis_tech.ppimapbuilder.data.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.protein.OrthologProtein;
 import tk.nomis_tech.ppimapbuilder.ui.util.JHyperlinkLabel;
 
 import com.eclipsesource.json.JsonObject;

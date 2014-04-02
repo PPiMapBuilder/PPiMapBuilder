@@ -1,9 +1,7 @@
-package tk.nomis_tech.ppimapbuilder.webservice.miql;
+package tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import tk.nomis_tech.ppimapbuilder.webservice.miql.MiQLParameterBuilder;
 
 public class MiQLParameterBuilderTest {
 

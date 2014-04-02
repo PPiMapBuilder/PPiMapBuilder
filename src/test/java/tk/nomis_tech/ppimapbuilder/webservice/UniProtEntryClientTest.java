@@ -10,8 +10,7 @@ import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tk.nomis_tech.ppimapbuilder.data.UniProtEntry;
-import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 public class UniProtEntryClientTest {
 
