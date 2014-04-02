@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class UniProtEntry extends AbstractProtein {
+public class UniProtEntry extends Protein {
 
 	private String geneName;
 	private List<String> synonymGeneNames = new ArrayList<String>();
@@ -54,7 +54,7 @@ public class UniProtEntry extends AbstractProtein {
 	}
 	
 	public OrthologProtein addOrtholog(OrthologProtein prot) {
-		return orthologs.put(prot.getTaxId(), prot);
+		return orthologs.put(prot.getOrganism().getTaxId(), prot);
 	}
 
 	public void setCellularComponents(ArrayList<GeneOntologyModel> cellularComponents) {
@@ -159,7 +159,7 @@ public class UniProtEntry extends AbstractProtein {
 		StringBuilder out = new StringBuilder();
 		out.append("{");
 		out.append("id:").append(uniprotId).append(", ");
-		out.append("taxId:").append(taxId).append(", ");
+		out.append("taxId:").append(getOrganism().getTaxId()).append(", ");
 		out.append("proteinName:").append(proteinName).append(", ");
 		out.append("geneName:").append(geneName).append(", ");
 		out.append("reviewed:").append(reviewed);

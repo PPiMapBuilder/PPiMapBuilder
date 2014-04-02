@@ -47,7 +47,6 @@ public class InParanoidClient {
 	
 	/**
 	 * Constructs a InParanoid client with specified number of thread and specified score
-	 * @param pmbQueryInteractionTask 
 	 */
 	public InParanoidClient(int nB_THREAD, double scoreLimit) {
 		NB_THREAD = nB_THREAD;
@@ -95,7 +94,7 @@ public class InParanoidClient {
 				break;
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500) 
-					return out; //protein ortholog not found or inparanoid server down
+					return out; //protein store not found or inparanoid server down
 				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
 					throw new IOException(e);
 				}
@@ -114,17 +113,17 @@ public class InParanoidClient {
 		//if(doc == null) throw lastError;
 		//System.out.println("done with "+(pos-1)+" try");
 		
-		//For each cluster of ortholog
+		//For each cluster of store
 		for (Element speciesPair : doc.select("speciespair")) {
 			try {
 				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
 				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
 
-				// If ortholog cluster correspond an organism asked in input
+				// If store cluster correspond an organism asked in input
 				if (currentTaxId != null && taxIds.contains(currentTaxId)) {
 					String orthologFound = null;
 
-					// Find the the protein ortholog (with the best score)
+					// Find the the protein store (with the best score)
 					Double betterScore = Double.NaN;
 					for (Element protein : speciesPair.select("protein")) {
 						try {
@@ -170,7 +169,7 @@ public class InParanoidClient {
 		
 		
 
-		// Collect all ortholog results
+		// Collect all store results
 		final List<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
 		final HashMap<String, HashMap<Integer, String>> results = new HashMap<String, HashMap<Integer, String>>();
 		
@@ -202,11 +201,11 @@ public class InParanoidClient {
 	}
 	
 	/**
-	 * Search ortholog for an UniProtProtein
+	 * Search store for an UniProtProtein
 	 * @param prot
-	 *            the protein from which the ortholog will be retrieved
+	 *            the protein from which the store will be retrieved
 	 * @param taxid
-	 *            the taxonomy identifier of the organism in which the ortholog will be searched
+	 *            the taxonomy identifier of the organism in which the store will be searched
 	 * @throws IOException
 	 *             if connection error occurs
 	 */
@@ -240,7 +239,7 @@ public class InParanoidClient {
 	
 	
 	/**
-	 * Search protein ortholog for the reference organism
+	 * Search protein store for the reference organism
 	 * @throws IOException if a connection error occurred 
 	 */
 	public String getOrthologForRefOrga(String uniProtId, Integer taxId) throws IOException {
@@ -269,7 +268,7 @@ public class InParanoidClient {
 				break;
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500) 
-					return out; //protein ortholog not found or inparanoid server down
+					return out; //protein store not found or inparanoid server down
 				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
 					throw new IOException(e);
 				}
@@ -288,17 +287,17 @@ public class InParanoidClient {
 		//if(doc == null) throw lastError;
 		//System.out.println("done with "+(pos-1)+" try");
 		
-		//For each cluster of ortholog
+		//For each cluster of store
 		for (Element speciesPair : doc.select("speciespair")) {
 			try {
 				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
 				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
 
-				// If ortholog cluster correspond an organism asked in input
+				// If store cluster correspond an organism asked in input
 				if (currentTaxId != null && taxId.equals(currentTaxId)) {
 					String orthologFound = null;
 
-					// Find the the protein ortholog (with the best score)
+					// Find the the protein store (with the best score)
 					Double betterScore = Double.NaN;
 					for (Element protein : speciesPair.select("protein")) {
 						try {

@@ -1,6 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel;
 
-import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
 
 import javax.swing.*;
@@ -50,7 +50,7 @@ public class DatabaseSettingPanel extends JPanel {
 		for (PsicquicService db : dbs) {
 			JCheckBox j = new JCheckBox(db.getName(), true);
 			j.setEnabled(true);
-			j.setSelected(PMBSettings.getDatabaseList().contains(db.getName()));
+			j.setSelected(PMBStore.getSettings().getDatabaseList().contains(db.getName()));
 			databases.put(db, j);
 
 			panSourceDatabases.add(j);

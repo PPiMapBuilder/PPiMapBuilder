@@ -161,7 +161,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				}finally{}
 			}
 
-			// Get ortholog interactions
+			// Get store interactions
 			changeStep("Searching orthologs's interactions...", monitor);
 			{
 				// TODO maybe use thread on this for loop

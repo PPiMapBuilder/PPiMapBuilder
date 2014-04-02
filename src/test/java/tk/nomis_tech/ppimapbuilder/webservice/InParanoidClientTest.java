@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.orthology;
+package tk.nomis_tech.ppimapbuilder.webservice;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class InParanoidClientTest {
 
 	@Test
 	public void getOrthologsMultipleProtein() throws Exception {
-		System.out.println("Get ortholog of "+ids.size()+" proteins with threads: ");
+		System.out.println("Get store of "+ids.size()+" proteins with threads: ");
 		HashMap<String, HashMap<Integer, String>> orthologsProteins = client.getOrthologsMultipleProtein(ids, taxIds);
 		System.out.print(orthologsProteins);
 	}

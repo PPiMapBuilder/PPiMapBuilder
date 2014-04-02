@@ -101,7 +101,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			//Create nodes using interactors pool
 			createNodes(network);
 			
-			//Create edges using reference interactions and ortholog interactions
+			//Create edges using reference interactions and store interactions
 			createEdges(network);
 			
 			// Creation on the view
@@ -148,7 +148,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("ec_number", protein.getEcNumber());
 				nodeAttr.set("synonym_gene_names", protein.getSynonymGeneNames());
 				nodeAttr.set("protein_name", protein.getProteinName());
-				nodeAttr.set("tax_id", String.valueOf(protein.getTaxId()));
+				nodeAttr.set("tax_id", String.valueOf(protein.getOrganism().getTaxId()));
 				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
 				nodeAttr.set("cellular_components_hidden", protein.getCellularComponentsAsStringList());
 				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
