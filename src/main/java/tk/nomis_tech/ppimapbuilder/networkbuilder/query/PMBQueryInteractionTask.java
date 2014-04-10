@@ -3,14 +3,16 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.data.*;
-import tk.nomis_tech.ppimapbuilder.data.protein.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.Organism;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniprotId;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.webservice.*;
+import tk.nomis_tech.ppimapbuilder.webservice.InParanoidClient;
+import tk.nomis_tech.ppimapbuilder.webservice.InteractionsUtil;
+import tk.nomis_tech.ppimapbuilder.webservice.UniProtEntryClient;
 import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.webservice.psicquic.ThreadedPsicquicSimpleClient;
 import tk.nomis_tech.ppimapbuilder.webservice.psicquic.miql.MiQLExpressionBuilder;
@@ -204,10 +206,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 							for(String protID: inputProteinIDs) {
 								UniProtEntry prot = interactorPool.find(protID);
 								if(prot != null) {
-									final OrthologProtein ortho = prot.getOrthologByTaxid(org.getTaxId());
+									final Protein ortho = prot.getOrthologByTaxid(org.getTaxId());
 									
 									if(ortho != null)
-										POIorthologs.add(ortho.getUniprotId());
+										POIorthologs.add(ortho.getUniProtId());
 								}
 							}
 							

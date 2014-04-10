@@ -13,7 +13,7 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import tk.nomis_tech.ppimapbuilder.data.Organism;
-import tk.nomis_tech.ppimapbuilder.data.protein.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
@@ -137,13 +137,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createColumn("queried", String.class, false);
 				
 		for (UniProtEntry protein : interactorPool) {
-			if (!nodeNameMap.containsKey(protein.getUniprotId())) {
+			if (!nodeNameMap.containsKey(protein.getUniProtId())) {
 				CyNode node = network.addNode();
-				nodeNameMap.put(protein.getUniprotId(), node);
+				nodeNameMap.put(protein.getUniProtId(), node);
 				
 				CyRow nodeAttr = network.getRow(node);
-				nodeAttr.set("name", protein.getUniprotId());
-				nodeAttr.set("uniprot_id", protein.getUniprotId());
+				nodeAttr.set("name", protein.getUniProtId());
+				nodeAttr.set("uniprot_id", protein.getUniProtId());
 				nodeAttr.set("gene_name", protein.getGeneName());
 				nodeAttr.set("ec_number", protein.getEcNumber());
 				nodeAttr.set("synonym_gene_names", protein.getSynonymGeneNames());
@@ -154,7 +154,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
 				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsStringList());
 				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
-				nodeAttr.set("queried", String.valueOf(selectedUniprotIDs.contains(protein.getUniprotId())));
+				nodeAttr.set("queried", String.valueOf(selectedUniprotIDs.contains(protein.getUniProtId())));
 				
 				{
 					List<String> cellularComponent = protein.getCellularComponentsAsStringList();
@@ -223,14 +223,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				}
 				else {
 					for(UniProtEntry prot: interactorPool) {
-						OrthologProtein ortho = prot.getOrthologByTaxid(taxId);
+						Protein ortho = prot.getOrthologByTaxid(taxId);
 						if(ortho != null) {
-							if(interaction.getInteractorA().equals(ortho.getUniprotId())) {
-								nodeAName = prot.getUniprotId();
+							if(interaction.getInteractorA().equals(ortho.getUniProtId())) {
+								nodeAName = prot.getUniProtId();
 								nodeA = nodeNameMap.get(nodeAName);
 							}
-							if(interaction.getInteractorB().equals(ortho.getUniprotId())) {
-								nodeBName = prot.getUniprotId();
+							if(interaction.getInteractorB().equals(ortho.getUniProtId())) {
+								nodeBName = prot.getUniProtId();
 								nodeB = nodeNameMap.get(nodeBName);
 							}
 						}

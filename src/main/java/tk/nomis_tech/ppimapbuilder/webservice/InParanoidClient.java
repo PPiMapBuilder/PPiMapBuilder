@@ -1,30 +1,19 @@
 package tk.nomis_tech.ppimapbuilder.webservice;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-
 import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
-import tk.nomis_tech.ppimapbuilder.data.protein.OrthologProtein;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Simple Java client for InParanoid database
@@ -215,7 +204,7 @@ public class InParanoidClient {
 		
 		List<String> protIds = new ArrayList<String>(){{
 			for (UniProtEntry prot : prots) {
-				add((prot).getUniprotId());
+				add((prot).getUniProtId());
 			}
 		}};
 		
@@ -225,8 +214,8 @@ public class InParanoidClient {
 		for (Map.Entry<String, HashMap<Integer, String>> orthologProts: orthologsProteins.entrySet()) {
 			for(Map.Entry<Integer, String> ortholog: orthologProts.getValue().entrySet()) {
 				for (UniProtEntry prot : prots) {
-					if (prot.getUniprotId().equals(orthologProts.getKey())) {
-						prot.addOrtholog(new OrthologProtein(ortholog.getValue(), ortholog.getKey()));
+					if (prot.getUniProtId().equals(orthologProts.getKey())) {
+						prot.addOrtholog(new Protein(ortholog.getValue(), ortholog.getKey()));
 					}
 				}
 			}

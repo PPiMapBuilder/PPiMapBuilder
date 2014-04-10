@@ -76,7 +76,7 @@ public class DatabaseSelectionPanel {
 		
 		// Checked and active
 		for (PsicquicService db : dbs) {
-			if (PMBStore.getSettings().getDatabaseList().contains(db.getName()) && db.isActive()) {
+			if (PMBStore.getInstance().getSettings().getDatabaseList().contains(db.getName()) && db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(true);
 				j.setSelected(true);
@@ -87,7 +87,7 @@ public class DatabaseSelectionPanel {
 		}
 		// Checked and inactive
 		for (PsicquicService db : dbs) {
-			if (PMBStore.getSettings().getDatabaseList().contains(db.getName()) && !db.isActive()) {
+			if (PMBStore.getInstance().getSettings().getDatabaseList().contains(db.getName()) && !db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(false);
 				j.setSelected(false);
@@ -98,7 +98,7 @@ public class DatabaseSelectionPanel {
 		}
 		// Unchecked but active
 		for (PsicquicService db : dbs) {
-			if (!PMBStore.getSettings().getDatabaseList().contains(db.getName()) && db.isActive()) {
+			if (!PMBStore.getInstance().getSettings().getDatabaseList().contains(db.getName()) && db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(true);
 				j.setSelected(false);

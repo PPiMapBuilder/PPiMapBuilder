@@ -50,7 +50,7 @@ public class DatabaseSettingPanel extends JPanel {
 		for (PsicquicService db : dbs) {
 			JCheckBox j = new JCheckBox(db.getName(), true);
 			j.setEnabled(true);
-			j.setSelected(PMBStore.getSettings().getDatabaseList().contains(db.getName()));
+			j.setSelected(PMBStore.getInstance().getSettings().getDatabaseList().contains(db.getName()));
 			databases.put(db, j);
 
 			panSourceDatabases.add(j);

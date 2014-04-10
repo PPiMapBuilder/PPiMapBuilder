@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data.store;
+package tk.nomis_tech.ppimapbuilder.data.store.settings;
 
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;

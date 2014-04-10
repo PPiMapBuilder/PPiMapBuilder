@@ -29,7 +29,7 @@ import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import tk.nomis_tech.ppimapbuilder.data.store.PMBSettingSaveTaskFactory;
+import tk.nomis_tech.ppimapbuilder.data.store.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 import tk.nomis_tech.ppimapbuilder.ui.credits.CreditFrame;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
@@ -68,7 +68,7 @@ public class PMBActivator extends AbstractCyActivator {
 		CreditFrame creditWindow = new CreditFrame(openBrowser);
 
 		// Will load PMBSettings
-		PMBStore.getSettings();
+		PMBStore.getInstance().getSettings();
 
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;

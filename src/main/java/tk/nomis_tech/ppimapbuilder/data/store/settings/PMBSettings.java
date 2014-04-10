@@ -1,4 +1,6 @@
-package tk.nomis_tech.ppimapbuilder.data.store;
+package tk.nomis_tech.ppimapbuilder.data.store.settings;
+
+import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,7 +13,7 @@ public final class PMBSettings {
 	// PPiMapBuilder setting file
 	private final File pmbSettingFile;
 
-	protected PMBSettings() {
+	public PMBSettings() {
 		// Default database list
 		databaseList = new ArrayList<String>(Arrays.asList(
 				"BioGrid",

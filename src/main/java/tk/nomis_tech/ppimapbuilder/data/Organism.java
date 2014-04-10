@@ -1,6 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.data;
 
-public class Organism {
+import java.io.Serializable;
+
+public class Organism implements Comparable<Organism>, Serializable {
 
 	private final String genus;
 	private final String species;
@@ -10,11 +12,11 @@ public class Organism {
 
 	private Integer inparanoidOrgID;
 
-	public Organism(String genus, String species, int taxId) {
+	protected Organism(String genus, String species, int taxId) {
 		this(genus, species, taxId, null);
 	}
 
-	public Organism(String genus, String species, int taxId, Integer inparanoidOrgID) {
+	protected Organism(String genus, String species, int taxId, Integer inparanoidOrgID) {
 		//Format genus name to have a capitalized word
 		this.genus = genus.trim().substring(0, 1).toUpperCase() + genus.trim().substring(1).toLowerCase();
 
@@ -57,4 +59,8 @@ public class Organism {
 		return this.getCommonName();
 	}
 
+	@Override
+	public int compareTo(Organism o) {
+		return this.getAbbrName().compareTo(o.getAbbrName());
+	}
 }

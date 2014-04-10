@@ -16,7 +16,7 @@ public class UniProtEntry extends Protein {
 	private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
 	private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
 	private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
-	private final HashMap<Integer, OrthologProtein> orthologs = new HashMap<Integer, OrthologProtein>();
+	private final HashMap<Integer, Protein> orthologs = new HashMap<Integer, Protein>();
 
 	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
 		super(uniprotId, taxId);
@@ -38,22 +38,22 @@ public class UniProtEntry extends Protein {
 		return list;
 	}
 	
-	public OrthologProtein getOrthologByTaxid(Integer taxid) {
+	public Protein getOrthologByTaxid(Integer taxid) {
 		return orthologs.get(taxid);
 	}
 	
-	public List<OrthologProtein> getOrthologs() {
-		return new ArrayList<OrthologProtein>(orthologs.values());
+	public List<Protein> getOrthologs() {
+		return new ArrayList<Protein>(orthologs.values());
 	}
 	
 	public List<String> getOrthologsAsStringList() {
 		List<String> orthologs = new ArrayList<String>();
-		for(OrthologProtein ortholog:  getOrthologs())
+		for(Protein ortholog:  getOrthologs())
 			orthologs.add(ortholog.toString());
 		return orthologs;
 	}
 	
-	public OrthologProtein addOrtholog(OrthologProtein prot) {
+	public Protein addOrtholog(Protein prot) {
 		return orthologs.put(prot.getOrganism().getTaxId(), prot);
 	}
 
@@ -158,7 +158,7 @@ public class UniProtEntry extends Protein {
 	public String toString() {
 		StringBuilder out = new StringBuilder();
 		out.append("{");
-		out.append("id:").append(uniprotId).append(", ");
+		out.append("id:").append(uniProtId).append(", ");
 		out.append("taxId:").append(getOrganism().getTaxId()).append(", ");
 		out.append("proteinName:").append(proteinName).append(", ");
 		out.append("geneName:").append(geneName).append(", ");

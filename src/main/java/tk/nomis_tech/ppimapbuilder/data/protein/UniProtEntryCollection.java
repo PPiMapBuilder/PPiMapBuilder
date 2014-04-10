@@ -9,7 +9,7 @@ public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 
 	public UniProtEntry find(String uniprotId) {
 		for(UniProtEntry prot: this) {
-			if(prot.getUniprotId().equals(uniprotId))
+			if(prot.getUniProtId().equals(uniprotId))
 				return prot;
 		}
 		return null;
@@ -18,7 +18,7 @@ public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 	public Set<String> getAllAsUniProtId() {
 		Set<String> out = new HashSet<String>();
 		for(UniProtEntry prot: this)
-			out.add(prot.getUniprotId());
+			out.add(prot.getUniProtId());
 		return out;
 	}
 	
@@ -28,7 +28,7 @@ public class UniProtEntryCollection extends HashSet<UniProtEntry>{
 	
 	@Override
 	public boolean add(UniProtEntry e) {
-		if(!contains(e.getUniprotId()))
+		if(!contains(e.getUniProtId()))
 			return super.add(e);
 		else
 			return false;

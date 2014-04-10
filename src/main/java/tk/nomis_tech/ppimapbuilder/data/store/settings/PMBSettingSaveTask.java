@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data.store;
+package tk.nomis_tech.ppimapbuilder.data.store.settings;
 
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
@@ -11,7 +11,7 @@ public class PMBSettingSaveTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor taskMonitor) {
-		PMBStore.getSettings().writeSettings();
+		PMBStore.getInstance().getSettings().writeSettings();
 	}
 
 }
