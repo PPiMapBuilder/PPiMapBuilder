@@ -12,7 +12,7 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;

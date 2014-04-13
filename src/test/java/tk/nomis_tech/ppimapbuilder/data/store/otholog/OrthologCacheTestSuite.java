@@ -6,8 +6,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses(value = {
-		ProteinIndexTest.class,
+		OrthologProteinIndexTest.class,
 		OrganismPairOrthologCacheTest.class,
-		//OrthologCacheManagerTest.class,
+		OrthologCacheManagerTest.class,
 })
 public class OrthologCacheTestSuite {}

@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data;
+package tk.nomis_tech.ppimapbuilder.data.store;
 
 import java.util.Arrays;
 import java.util.List;

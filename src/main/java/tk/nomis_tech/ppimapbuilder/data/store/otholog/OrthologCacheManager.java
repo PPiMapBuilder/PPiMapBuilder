@@ -1,7 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data.store.otholog;
 
-import tk.nomis_tech.ppimapbuilder.data.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
 import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 
 import java.io.*;
@@ -14,10 +14,9 @@ import java.util.*;
  */
 public class OrthologCacheManager {
 
-	private final File orthologCacheFolder;
-	private final File orthologCacheIndexFile;
-
-	private final HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> orthologCacheIndex;
+	private File orthologCacheIndexFile;
+	private HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> orthologCacheIndex;
+	private File orthologCacheFolder;
 
 	public OrthologCacheManager() throws IOException {
 		orthologCacheFolder = new File(PMBStore.getPpiMapBuilderConfigurationFolder(), "ortholog-cache");
@@ -27,19 +26,22 @@ public class OrthologCacheManager {
 
 		orthologCacheIndexFile = new File(orthologCacheFolder, "ortholog-cache.idx");
 
-		orthologCacheIndex = loadOrCreateIndex();
+		if (orthologCacheIndexFile.exists())
+			orthologCacheIndex = load();
+		else {
+			orthologCacheIndex = new HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>>();
+			save();
+		}
 	}
 
 	/**
 	 * Loads or creates the PMB orthology cache index form file "ortholog-cache.idx"
+	 *
 	 * @return
 	 * @throws IOException
 	 */
-	private HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> loadOrCreateIndex() throws IOException {
+	private HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> load() throws IOException {
 		HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> index = null;
-		if (!orthologCacheIndexFile.exists()) {
-			return new HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>>();
-		}
 
 		FileInputStream fileIn = null;
 		ObjectInputStream in = null;
@@ -52,45 +54,33 @@ public class OrthologCacheManager {
 		} catch (IOException e) {
 			throw e;
 		} catch (ClassNotFoundException e) {
-			//TODO: Do we handle bad file
 		} finally {
 			if (in != null) in.close();
 			if (fileIn != null) fileIn.close();
 		}
 
-		if (orthologCacheIndex == null) {
-			index = new HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>>();
-			saveIndex(index);
-		}
 		return index;
-	}
-
-	private void saveIndex() throws IOException {
-		saveIndex(this.orthologCacheIndex);
 	}
 
 	/**
 	 * Saves the ortholog cache index in file "ortholog-cache.idx"
-	 * @param index
+	 *
 	 * @throws IOException
 	 */
-	private void saveIndex(HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>> index) throws IOException {
+	private synchronized void save() throws IOException {
 		if (!orthologCacheIndexFile.exists())
 			orthologCacheIndexFile.createNewFile();
 
-		FileOutputStream fileOut = null;
 		ObjectOutputStream out = null;
 
 		try {
-			fileOut = new FileOutputStream(orthologCacheIndexFile);
-			out = new ObjectOutputStream(fileOut);
+			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile));
 
-			out.writeObject(index);
+			out.writeObject(orthologCacheIndex);
 		} catch (IOException e) {
 			throw e;
 		} finally {
 			if (out != null) out.close();
-			if (fileOut != null) fileOut.close();
 		}
 	}
 
@@ -102,25 +92,16 @@ public class OrthologCacheManager {
 	 * @return the orthologous protein
 	 */
 	public Protein getOrtholog(Protein proteinA, Organism organismB) throws IOException {
-		//Sort input to have always first organism ahead alphabetically
-		List<Protein> prots = Arrays.asList(proteinA, new Protein("", organismB));
-		Collections.sort(prots, new Comparator<Protein>() {
-			@Override
-			public int compare(Protein o1, Protein o2) {
-				return o1.getOrganism().compareTo(o2.getOrganism());
-			}
-		});
-
 		try {
-			OrganismPairOrthologCache cache = this.orthologCacheIndex.get(prots.get(0).getOrganism()).get(prots.get(1).getOrganism());
-			return cache.getOrtholog(prots.get(0), prots.get(1).getOrganism());
+			OrganismPairOrthologCache cache = this.orthologCacheIndex.get(proteinA.getOrganism()).get(organismB);
+			return cache.getOrtholog(proteinA, organismB);
 		} catch (NullPointerException e) {
 			return null;
 		}
 	}
 
 	/**
-	 * Adds an ortholog association between two protein into the PMB ortholog cache.
+	 * Adds an ortholog group into the PMB ortholog cache.
 	 * The order in which the two protein are given doesn't matter (their order will be switched according to the
 	 * alphabetical order of their organisms).
 	 *
@@ -128,7 +109,7 @@ public class OrthologCacheManager {
 	 * @param proteinB
 	 * @throws IOException
 	 */
-	public void addOrtholog(Protein proteinA, Protein proteinB) throws IOException {
+	public void addOrthologGroup(Protein proteinA, Protein proteinB) throws IOException {
 		//Sort input to have always first organism ahead alphabetically
 		List<Protein> prots = Arrays.asList(proteinA, proteinB);
 		Collections.sort(prots, new Comparator<Protein>() {
@@ -146,21 +127,40 @@ public class OrthologCacheManager {
 			this.orthologCacheIndex.put(prots.get(0).getOrganism(), d);
 		}
 
-		//Second organims lead to the organism pair othology cache?
+		//Second organism leads to the organism pair orthology cache?
 		OrganismPairOrthologCache cache = d.get(prots.get(1).getOrganism());
 		if (cache == null) {
 			//Doesn't exist, create a cache
 			cache = new OrganismPairOrthologCache(prots.get(0).getOrganism(), prots.get(1).getOrganism());
 			d.put(prots.get(1).getOrganism(), cache);
+
+			HashMap<Organism, OrganismPairOrthologCache> f = this.orthologCacheIndex.get(prots.get(1).getOrganism());
+			if (f == null) {
+				f = new HashMap<Organism, OrganismPairOrthologCache>();
+				this.orthologCacheIndex.put(prots.get(1).getOrganism(), f);
+			}
+			f.put(prots.get(0).getOrganism(), cache);
 		}
 
 		//Add orthology to the organism pair orthology cache
 		cache.addOrthologGroup(prots.get(0), prots.get(1));
+		save();
 	}
 
 	public File getOrthologCacheFolder() {
 		return orthologCacheFolder;
 	}
 
+	//For test purpose only
+	protected void setOrthologCacheFolder(File orthologCacheFolder) throws IOException {
+		this.orthologCacheFolder = orthologCacheFolder;
+		orthologCacheIndexFile = new File(orthologCacheFolder, "ortholog-cache.idx");
 
+		if (orthologCacheIndexFile.exists())
+			orthologCacheIndex = load();
+		else {
+			orthologCacheIndex = new HashMap<Organism, HashMap<Organism, OrganismPairOrthologCache>>();
+			save();
+		}
+	}
 }

@@ -3,7 +3,7 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;

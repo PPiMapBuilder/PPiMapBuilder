@@ -1,95 +1,56 @@
 package tk.nomis_tech.ppimapbuilder.data.store.otholog;
 
-import tk.nomis_tech.ppimapbuilder.data.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
 import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 
 import java.io.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class OrganismPairOrthologCache implements Serializable {
 
-	private final String cacheDataFileName;
-	private final String proteinIndexFileName;
+	private final String identifier;
 
-	private transient ProteinIndex proteinIndex;
+	private transient OrthologProteinIndex orthologProteinIndex;
 
-	private transient File proteinIndexFile;
 	private transient File cacheDataFile;
 
-	public OrganismPairOrthologCache(Organism organismA, Organism organismB) throws IOException {
+	protected OrganismPairOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		// Ortholog cache data file for this organism pair
-		cacheDataFileName = organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".dat";
-		proteinIndexFileName = organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".idx";
+		identifier = organismA.getAbbrName() + "-" + organismB.getAbbrName();
 
-		// Ortholog cache proteinIndex file for this organism pair
-		proteinIndex = new ProteinIndex(organismA, organismB);
-		saveProteinIndex();
-	}
-
-	private File getProteinIndexFile() throws IOException {
-		if (proteinIndexFile == null)
-			proteinIndexFile = new File(PMBStore.getInstance().getOrthologCacheManager().getOrthologCacheFolder(), proteinIndexFileName);
-		return proteinIndexFile;
+		// Ortholog cache orthologProteinIndex file for this organism pair
+		orthologProteinIndex = new OrthologProteinIndex(identifier);
 	}
 
 	private File getCacheDataFile() throws IOException {
 		if (cacheDataFile == null)
-			cacheDataFile = new File(PMBStore.getInstance().getOrthologCacheManager().getOrthologCacheFolder(), cacheDataFileName);
+			cacheDataFile = new File(PMBStore.getInstance().getOrthologCacheManager().getOrthologCacheFolder(), identifier + ".dat");
 		return cacheDataFile;
 	}
 
-	private void loadProteinIndex() throws IOException {
-		FileInputStream fileIn = null;
-		ObjectInputStream in = null;
-
-		try {
-			fileIn = new FileInputStream(getProteinIndexFile());
-			in = new ObjectInputStream(fileIn);
-
-			proteinIndex = (ProteinIndex) in.readObject();
-
-		} catch (IOException e) {
-			throw e;
-		} catch (ClassNotFoundException e) {
-			//TODO: treat case when ProteinIndex is unrecognized
-		} finally {
-			if (in != null) in.close();
-			if (fileIn != null) fileIn.close();
-		}
-	}
-
-	private void saveProteinIndex() throws IOException {
-		FileOutputStream fileOut = null;
-		ObjectOutput out = null;
-
-		try {
-			fileOut = new FileOutputStream(getProteinIndexFile());
-			out = new ObjectOutputStream(fileOut);
-
-			out.writeObject(proteinIndex);
-
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (out != null) fileOut.close();
-			if (fileOut != null) fileOut.close();
-		}
-	}
-
-	public void addOrthologGroup(Protein proteinA, Protein proteinB) throws IOException {
+	public synchronized void addOrthologGroup(Protein proteinA, Protein proteinB) throws IOException {
 		if (getOrtholog(proteinA, proteinB.getOrganism()) == null) {
-			int sourceProtIndex = proteinIndex.addProtein(proteinA);
-			int destProtIndex = proteinIndex.addProtein(proteinB);
+			//Add protein (or not if already exist) to protein index and get its index
+			int sourceProtIndex = orthologProteinIndex.addProtein(proteinA);
+			int destProtIndex = orthologProteinIndex.addProtein(proteinB);
 
-			File cacheDataFile = new File(PMBStore.getInstance().getOrthologCacheManager().getOrthologCacheFolder(), cacheDataFileName);
+			Future f = Executors.newSingleThreadExecutor().submit(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					orthologProteinIndex.save();
+					return null;
+				}
+			});
 
 			//Append prot index pair to file
-			FileOutputStream fileOut = null;
 			DataOutputStream out = null;
 
 			try {
-				fileOut = new FileOutputStream(cacheDataFile, true);
-				out = new DataOutputStream(fileOut);
+				out = new DataOutputStream(new FileOutputStream(getCacheDataFile(), true));
 
 				out.writeInt(sourceProtIndex);
 				out.writeInt(destProtIndex);
@@ -97,28 +58,35 @@ public class OrganismPairOrthologCache implements Serializable {
 			} catch (IOException e) {
 				throw e;
 			} finally {
-				if (out != null) fileOut.close();
-				if (fileOut != null) fileOut.close();
+				if (out != null) out.close();
+			}
+
+			try {
+				f.get();
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof IOException)
+					throw (IOException) e.getCause();
+				e.printStackTrace();
+			} catch (InterruptedException e) {
 			}
 		}
 	}
 
-	public Protein getOrtholog(Protein proteinA, Organism organismB) throws IOException {
-		int sourceProtIndex = proteinIndex.indexOfProtein(proteinA);
+	public synchronized Protein getOrtholog(Protein proteinA, Organism organismB) throws IOException {
+		if (orthologProteinIndex == null) {
+			orthologProteinIndex = new OrthologProteinIndex(identifier);
+		}
+		int sourceProtIndex = orthologProteinIndex.indexOfProtein(proteinA);
 
 		if (sourceProtIndex < 0)
 			return null;
 
-		File cacheDataFile = new File(PMBStore.getInstance().getOrthologCacheManager().getOrthologCacheFolder(), cacheDataFileName);
-
 		Protein destProt = null;
 
-		FileInputStream fileIn = null;
 		DataInputStream in = null;
 
 		try {
-			fileIn = new FileInputStream(cacheDataFile);
-			in = new DataInputStream(fileIn);
+			in = new DataInputStream(new FileInputStream(getCacheDataFile()));
 
 			boolean EOF = false;
 			while (!EOF) {
@@ -128,22 +96,22 @@ public class OrganismPairOrthologCache implements Serializable {
 					int protBIndex = in.readInt();
 
 					if (protAIndex == sourceProtIndex) {
-						destProt = proteinIndex.getProtein(protBIndex, organismB);
+						destProt = orthologProteinIndex.getProtein(protBIndex);
 					} else if (protBIndex == sourceProtIndex) {
-						destProt = proteinIndex.getProtein(protAIndex, organismB);
+						destProt = orthologProteinIndex.getProtein(protAIndex);
 					}
 
-					if (destProt != null) break;
+					if (destProt != null && destProt.getOrganism().equals(organismB))
+						break;
+					else destProt = null;
 				} catch (EOFException e) {
 					EOF = true;
 				}
 			}
-
 		} catch (IOException e) {
 			throw e;
 		} finally {
-			if (in != null) fileIn.close();
-			if (fileIn != null) fileIn.close();
+			if (in != null) in.close();
 		}
 
 		return destProt;

@@ -1,12 +1,16 @@
 package tk.nomis_tech.ppimapbuilder.data.store.otholog;
 
 import junit.framework.Assert;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
-import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.TestUtils;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
+import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 
+import java.io.File;
 import java.io.IOException;
 
 public class OrganismPairOrthologCacheTest {
@@ -24,10 +28,14 @@ public class OrganismPairOrthologCacheTest {
 	private static Protein P24270;
 
 	private static OrganismPairOrthologCache cache;
-	private static OrganismPairOrthologCache cacheEmpty;
+
+	private static File testFolderOutput;
 
 	@BeforeClass
-	public static void init() throws IOException {
+	public static void before() throws IOException {
+		testFolderOutput = TestUtils.createTestOutPutFolder();
+		PMBStore.getInstance().getOrthologCacheManager().setOrthologCacheFolder(testFolderOutput);
+
 		human = OrganismRepository.getInstance().getOrganismByTaxId(9606);
 		mouse = OrganismRepository.getInstance().getOrganismByTaxId(10090);
 
@@ -39,12 +47,10 @@ public class OrganismPairOrthologCacheTest {
 		P24270 = new Protein("P24270", mouse);
 
 
-		cacheEmpty = new OrganismPairOrthologCache(human, mouse);
 		cache = new OrganismPairOrthologCache(human, mouse) {{
 			addOrthologGroup(Q06141, P35230);
 			addOrthologGroup(Q58A65, O60271);
 		}};
-		//TODO: change ortholog cache folder specially for JUnit tests
 	}
 
 	@Test
@@ -57,7 +63,9 @@ public class OrganismPairOrthologCacheTest {
 
 	@Test
 	public void testGetOrthologFail() throws Exception {
-		Protein actual = cacheEmpty.getOrtholog(P04040, mouse);
+		Protein actual;
+
+		actual = cache.getOrtholog(new Protein("DSF", null), mouse);
 		Assert.assertNull(actual);
 	}
 
@@ -70,12 +78,13 @@ public class OrganismPairOrthologCacheTest {
 		actual = cache.getOrtholog(P35230, human);
 		Assert.assertEquals(expected, actual);
 
-		expected = null;
-		actual = cache.getOrtholog(P35230, mouse);
-		Assert.assertEquals(expected, actual);
-
 		expected = Q58A65;
 		actual = cache.getOrtholog(O60271, mouse);
 		Assert.assertEquals(expected, actual);
+	}
+
+	@AfterClass
+	public static void after() throws IOException {
+		TestUtils.recursiveDelete(testFolderOutput);
 	}
 }

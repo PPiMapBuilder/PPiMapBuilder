@@ -1,17 +1,23 @@
 package tk.nomis_tech.ppimapbuilder.data.store.otholog;
 
 import junit.framework.Assert;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
-import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.TestUtils;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
 
-public class ProteinIndexTest {
+import java.io.File;
+import java.io.IOException;
 
-	static ProteinIndex indexEmpty;
-	static ProteinIndex indexExample;
-	static ProteinIndex indexBig;
+public class OrthologProteinIndexTest {
+
+	static OrthologProteinIndex indexEmpty;
+	static OrthologProteinIndex indexExample;
+	static OrthologProteinIndex indexBig;
 	static int maxIndexBig;
 	//Test organisms
 	private static Organism mouse;
@@ -30,8 +36,14 @@ public class ProteinIndexTest {
 	private static Protein O95273;
 	private static Protein P31689;
 
+
+	private static File testFolderOutput;
+
 	@BeforeClass
-	public static void init() {
+	public static void before() throws IOException {
+		testFolderOutput = TestUtils.createTestOutPutFolder();
+		PMBStore.getInstance().getOrthologCacheManager().setOrthologCacheFolder(testFolderOutput);
+
 		human = OrganismRepository.getInstance().getOrganismByTaxId(9606);
 		mouse = OrganismRepository.getInstance().getOrganismByTaxId(10090);
 
@@ -51,10 +63,11 @@ public class ProteinIndexTest {
 		O95273 = new Protein("O95273", human);
 		P31689 = new Protein("P31689", human);
 
-		indexEmpty = new ProteinIndex(human, mouse);
-		System.out.println("Empty index: " + indexEmpty);
+		indexEmpty = new OrthologProteinIndex("indexEmpty");
+		indexEmpty.save();
+		//System.out.println("Empty index: " + indexEmpty);
 
-		indexExample = new ProteinIndex(human, mouse) {{
+		indexExample = new OrthologProteinIndex("indexExample") {{
 			addProtein(Q9ESJ7);
 			addProtein(Q78IQ7);
 			addProtein(Q01815);
@@ -69,18 +82,18 @@ public class ProteinIndexTest {
 			addProtein(O95273);
 			addProtein(P31689);
 		}};
-		System.out.println("Example index: " + indexExample);
+		indexExample.save();
+		//System.out.println("Example index: " + indexExample);
 
-		indexBig = new ProteinIndex(human, mouse) {{
+		indexBig = new OrthologProteinIndex("indexBig") {{
 			int i = 0;
 			for (; i <= 10000; i++) {
 				addProtein(new Protein(Integer.toString(i), mouse));
-				addProtein(new Protein(Integer.toString(i), human));
 			}
-			addProtein(Q01815);
 			addProtein(P04040);
 			maxIndexBig = i;
 		}};
+		indexBig.save();
 		//System.out.println("Empty index: "+indexBig);
 	}
 
@@ -100,28 +113,28 @@ public class ProteinIndexTest {
 	public void testGetProteinFailWhenEmpty() throws Exception {
 		Protein actual;
 
-		actual = indexEmpty.getProtein(0, human);
+		actual = indexEmpty.getProtein(0);
 		Assert.assertNull(actual);
 
-		actual = indexEmpty.getProtein(0, mouse);
+		actual = indexEmpty.getProtein(0);
 		Assert.assertNull(actual);
 	}
 
 	@Test
 	public void testIndexOfProteinSuccess() throws Exception {
-		int expected = -1;
+		int expected;
 		int actual;
 
 		{
-			expected = 0;
+			expected = 5;
 			actual = indexExample.indexOfProtein(P10144);
 			Assert.assertEquals(expected, actual);
 
-			expected = 3;
+			expected = 8;
 			actual = indexExample.indexOfProtein(P04040);
 			Assert.assertEquals(expected, actual);
 
-			expected = 5;
+			expected = 10;
 			actual = indexExample.indexOfProtein(O95273);
 			Assert.assertEquals(expected, actual);
 		}
@@ -147,70 +160,50 @@ public class ProteinIndexTest {
 
 		{
 			expected = P10144;
-			actual = indexExample.getProtein(0, human);
+			actual = indexExample.getProtein(5);
 			Assert.assertEquals(expected, actual);
 
 			expected = P04040;
-			actual = indexExample.getProtein(3, human);
+			actual = indexExample.getProtein(8);
 			Assert.assertEquals(expected, actual);
 
 			expected = O95273;
-			actual = indexExample.getProtein(5, human);
+			actual = indexExample.getProtein(10);
 			Assert.assertEquals(expected, actual);
 		}
 
 		{
 			expected = Q9ESJ7;
-			actual = indexExample.getProtein(0, mouse);
+			actual = indexExample.getProtein(0);
 			Assert.assertEquals(expected, actual);
 
 			expected = Q99KG5;
-			actual = indexExample.getProtein(3, mouse);
+			actual = indexExample.getProtein(3);
 			Assert.assertEquals(expected, actual);
 
 			expected = Q8R2G6;
-			actual = indexExample.getProtein(4, mouse);
+			actual = indexExample.getProtein(4);
 			Assert.assertEquals(expected, actual);
 		}
 	}
 
 	@Test
-	public void testGetProteinSpeedOnBigIndexHuman() throws Exception {
+	public void testGetProteinSpeedOnBigIndex() throws Exception {
 		Protein expected;
 		Protein actual;
 
 		expected = P04040;
-		actual = indexBig.getProtein(maxIndexBig, human);
+		actual = indexBig.getProtein(maxIndexBig);
 		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
-	public void testGetProteinSpeedOnBigIndexMouse() throws Exception {
-		Protein expected;
-		Protein actual;
-
-		expected = Q01815;
-		actual = indexBig.getProtein(maxIndexBig, mouse);
-		Assert.assertEquals(expected, actual);
-	}
-
-	@Test
-	public void testIndexOfProteinSpeedOnBigIndexHuman() throws Exception {
+	public void testIndexOfProteinSpeedOnBigIndex() throws Exception {
 		int expected;
 		int actual;
 
 		expected = maxIndexBig;
 		actual = indexBig.indexOfProtein(P04040);
-		Assert.assertEquals(expected, actual);
-	}
-
-	@Test
-	public void testIndexOfProteinSpeedOnBigIndexMouse() throws Exception {
-		int expected;
-		int actual;
-
-		expected = maxIndexBig;
-		actual = indexBig.indexOfProtein(Q01815);
 		Assert.assertEquals(expected, actual);
 	}
 
@@ -236,5 +229,23 @@ public class ProteinIndexTest {
 		expected = indexExample.addProtein(P24270);
 		actual = indexExample.indexOfProtein(P24270);
 		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testSaveLoadIndex() throws IOException {
+		//Manual saving
+		OrthologProteinIndex index = new OrthologProteinIndex("indexSaveTest");
+		int expected = index.addProtein(P04040);
+		index.save();
+
+		//Automatic loading from file
+		OrthologProteinIndex index2 = new OrthologProteinIndex("indexSaveTest");
+		int actual = index2.indexOfProtein(P04040);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@AfterClass
+	public static void after() throws IOException {
+		TestUtils.recursiveDelete(testFolderOutput);
 	}
 }

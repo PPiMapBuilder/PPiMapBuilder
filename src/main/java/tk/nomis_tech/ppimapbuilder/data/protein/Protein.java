@@ -1,13 +1,15 @@
 package tk.nomis_tech.ppimapbuilder.data.protein;
 
 import com.eclipsesource.json.JsonObject;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
-import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.OrganismRepository;
+
+import java.io.Serializable;
 
 /**
  * Simple protein model with only a UniProt id and an Organism
  */
-public class Protein {
+public class Protein implements Serializable {
 	protected final String uniProtId;
 	protected final Organism organism;
 
@@ -35,5 +37,14 @@ public class Protein {
 		out.add("uniProtId", uniProtId);
 		out.add("organism", organism.toString());
 		return out.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		try {
+			return uniProtId.equals(((Protein) o).getUniProtId());
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }

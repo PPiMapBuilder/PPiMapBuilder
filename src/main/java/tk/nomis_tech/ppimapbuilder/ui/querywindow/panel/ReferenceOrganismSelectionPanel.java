@@ -3,7 +3,7 @@ package tk.nomis_tech.ppimapbuilder.ui.querywindow.panel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.listener.ReferenceOrganismListener;
 import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
-import tk.nomis_tech.ppimapbuilder.data.Organism;
+import tk.nomis_tech.ppimapbuilder.data.store.Organism;
 
 import javax.swing.*;
 import java.util.List;

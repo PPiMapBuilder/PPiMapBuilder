@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data;
+package tk.nomis_tech.ppimapbuilder.data.store;
 
 import java.io.Serializable;
 
@@ -62,5 +62,15 @@ public class Organism implements Comparable<Organism>, Serializable {
 	@Override
 	public int compareTo(Organism o) {
 		return this.getAbbrName().compareTo(o.getAbbrName());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return ncbiTaxId == ((Organism)obj).ncbiTaxId;
+	}
+
+	@Override
+	public int hashCode() {
+		return ncbiTaxId;
 	}
 }
