@@ -12,13 +12,13 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import tk.nomis_tech.ppimapbuilder.data.store.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicResultTranslator;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicResultTranslator;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.*;
@@ -101,7 +101,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			//Create nodes using interactors pool
 			createNodes(network);
 			
-			//Create edges using reference interactions and store interactions
+			//Create edges using reference interactions and organism interactions
 			createEdges(network);
 			
 			// Creation on the view

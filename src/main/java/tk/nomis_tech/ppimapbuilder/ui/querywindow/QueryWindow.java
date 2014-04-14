@@ -7,8 +7,8 @@ import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.DatabaseSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.OtherOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.ReferenceOrganismSelectionPanel;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.panel.UniprotSelection;
-import tk.nomis_tech.ppimapbuilder.data.store.Organism;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;

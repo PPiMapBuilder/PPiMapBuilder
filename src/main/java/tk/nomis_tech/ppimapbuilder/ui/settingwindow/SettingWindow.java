@@ -1,10 +1,10 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
 import org.cytoscape.work.TaskManager;
-import tk.nomis_tech.ppimapbuilder.data.store.settings.PMBSettingSaveTaskFactory;
-import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -80,7 +80,7 @@ public class SettingWindow extends JFrame {
 				for (PsicquicService s : getSelectedDatabases()) {
 					databases.add(s.getName());
 				}
-				PMBStore.getInstance().getSettings().setDatabaseList(databases);
+				PMBSettings.getInstance().setDatabaseList(databases);
 				taskManager.execute(saveSettingFactory.createTaskIterator());
 
 			}

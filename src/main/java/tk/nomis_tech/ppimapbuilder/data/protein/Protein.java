@@ -1,8 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.data.protein;
 
 import com.eclipsesource.json.JsonObject;
-import tk.nomis_tech.ppimapbuilder.data.store.Organism;
-import tk.nomis_tech.ppimapbuilder.data.store.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
 
 import java.io.Serializable;
 

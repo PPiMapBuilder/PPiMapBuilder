@@ -28,9 +28,9 @@ import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import tk.nomis_tech.ppimapbuilder.data.store.settings.PMBSettingSaveTaskFactory;
-import tk.nomis_tech.ppimapbuilder.data.store.PMBStore;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.credits.CreditFrame;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.ui.resultpanel.ResultPanel;
@@ -68,7 +68,7 @@ public class PMBActivator extends AbstractCyActivator {
 		CreditFrame creditWindow = new CreditFrame(openBrowser);
 
 		// Will load PMBSettings
-		PMBStore.getInstance().getSettings();
+		PMBSettings.getInstance();
 
 		// Task factory
 		PMBInteractionNetworkBuildTaskFactory createNetworkfactory;
