@@ -9,7 +9,7 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicRegistry;
 
 /**
  * The interaction query menu

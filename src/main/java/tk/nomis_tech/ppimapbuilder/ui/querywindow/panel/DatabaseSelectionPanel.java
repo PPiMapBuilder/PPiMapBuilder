@@ -1,8 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.ui.querywindow.panel;
 
-import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -76,7 +76,7 @@ public class DatabaseSelectionPanel {
 		
 		// Checked and active
 		for (PsicquicService db : dbs) {
-			if (PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
+			if (PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(true);
 				j.setSelected(true);
@@ -87,7 +87,7 @@ public class DatabaseSelectionPanel {
 		}
 		// Checked and inactive
 		for (PsicquicService db : dbs) {
-			if (PMBSettings.getDatabaseList().contains(db.getName()) && !db.isActive()) {
+			if (PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && !db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(false);
 				j.setSelected(false);
@@ -98,7 +98,7 @@ public class DatabaseSelectionPanel {
 		}
 		// Unchecked but active
 		for (PsicquicService db : dbs) {
-			if (!PMBSettings.getDatabaseList().contains(db.getName()) && db.isActive()) {
+			if (!PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && db.isActive()) {
 				JCheckBox j = new JCheckBox(db.getName(), true);
 				j.setEnabled(true);
 				j.setSelected(false);

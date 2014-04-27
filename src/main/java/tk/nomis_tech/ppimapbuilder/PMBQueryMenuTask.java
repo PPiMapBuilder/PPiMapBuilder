@@ -2,9 +2,9 @@ package tk.nomis_tech.ppimapbuilder;
 
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import tk.nomis_tech.ppimapbuilder.data.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicRegistry;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicRegistry;
 
 import javax.swing.*;
 import java.io.IOException;

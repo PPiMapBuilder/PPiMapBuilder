@@ -1,25 +1,17 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
+import org.cytoscape.work.TaskManager;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
+import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
+import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import org.cytoscape.work.TaskManager;
-
-import tk.nomis_tech.ppimapbuilder.settings.PMBSettingSaveTaskFactory;
-import tk.nomis_tech.ppimapbuilder.settings.PMBSettings;
-import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
-import tk.nomis_tech.ppimapbuilder.webservice.psicquic.PsicquicService;
 
 /**
  * PPiMapBuilder interaction query window
@@ -88,7 +80,7 @@ public class SettingWindow extends JFrame {
 				for (PsicquicService s : getSelectedDatabases()) {
 					databases.add(s.getName());
 				}
-				PMBSettings.setDatabaseList(databases);
+				PMBSettings.getInstance().setDatabaseList(databases);
 				taskManager.execute(saveSettingFactory.createTaskIterator());
 
 			}
