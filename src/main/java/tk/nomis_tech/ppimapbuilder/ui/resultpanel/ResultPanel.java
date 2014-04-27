@@ -354,21 +354,35 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param row
 	 */
 	public void setProteinView(CyRow row) {
+		System.out.println(row.getAllValues());
 
 		this.setProteinId(row.get("uniprot_id", String.class));
+		System.out.println("#1");
 		this.setPtnName(row.get("protein_name", String.class));
+		System.out.println("#2");
 		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
+		System.out.println("#3");
 		this.setGeneName(row.get("gene_name", String.class), row.get("tax_id", String.class));
+		System.out.println("#4");
 
 		this.setEcNumber(row.get("ec_number", String.class) != null ? row.get("ec_number", String.class) : "");
+		System.out.println("#5");
 		//
 		this.setGeneNameSynonyms(row.getList("synonym_gene_names", String.class));
+		System.out.println("#6");
 		this.setOntology(row.getList("biological_processes_hidden", String.class), row.getList("cellular_components_hidden", String.class),
 				row.getList("molecular_functions_hidden", String.class));
+		System.out.println("#7");
 		this.setOrganism(row.get("tax_id", String.class));
-		this.setOrhologs(row.getList("orthologs", String.class));
+		System.out.println("#8");
+		this.setOrthologs(row.getList("orthologs", String.class));
+		
+
+		System.out.println("#9");
 		
 		this.showProteinView();
+
+		System.out.println("#10");
 	}
 	
 	private void setStaticInteractionView() {
@@ -812,13 +826,14 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * 
 	 * @param orthologs
 	 */
-	private void setOrhologs(List<String> orthologs) {
+	private void setOrthologs(List<String> orthologs) {
 		// TODO: Add orthologs column
 		// throw new NotImplementedException("Ortholog are not handle yet");
 		this.panelOrthologs.removeAll();
+
 		for (String str : orthologs) {
 			JsonObject json = JsonObject.readFrom(str);
-			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("taxId").asInt() + "]"));
+			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("organism").asString() + "]"));
 		}
 
 	}

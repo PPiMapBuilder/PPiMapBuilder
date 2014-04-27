@@ -26,13 +26,13 @@ public class ResultPanelAction implements RowsSetListener {
 		// Node selection
 		
 		if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultNodeTable()) {
-			System.out.println("Node selected");
 			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
 
 			int nbSelected = 0;
 			CyRow myRow = null;
 
 			for (RowSetRecord rowSetRecord : rowsSet) {
+
 				if (rowSetRecord.getRow().get("selected", Boolean.class)) {
 					nbSelected++;
 					if (nbSelected > 1) {
@@ -40,6 +40,7 @@ public class ResultPanelAction implements RowsSetListener {
 						pmbResultPanel.showDefaultView();
 						break;
 					}
+					System.out.println(rowSetRecord.getRow());
 					myRow = rowSetRecord.getRow();
 				}
 			}
