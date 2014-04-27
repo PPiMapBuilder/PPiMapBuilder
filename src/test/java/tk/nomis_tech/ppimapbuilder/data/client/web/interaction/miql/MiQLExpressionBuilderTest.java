@@ -1,10 +1,10 @@
 package tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MiQLExpressionBuilderTest {
 
@@ -60,7 +60,7 @@ public class MiQLExpressionBuilderTest {
 	public void test4() {
 		String expected = "(test OR \"te st\" AND 3123)";
 
-		List<String> elems = Arrays.asList(new String[] { "test", "te st" });
+		List<String> elems = Arrays.asList("test", "te st");
 		
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
 		expr.addAllCondition(MiQLExpressionBuilder.Operator.OR, elems);
@@ -74,7 +74,7 @@ public class MiQLExpressionBuilderTest {
 	public void test5() {
 		String expected = "(test \"te st\")";
 
-		List<String> elems = Arrays.asList(new String[] { "test", "te st" });
+		List<String> elems = Arrays.asList("test", "te st");
 		
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
 		expr.addAll(elems);

@@ -1,18 +1,13 @@
 package tk.nomis_tech.ppimapbuilder;
 
+import tk.nomis_tech.ppimapbuilder.util.FileUtil;
+
 import java.io.File;
 import java.io.IOException;
 
 public class TestUtils {
 	public static void recursiveDelete(File file) {
-		if (!file.exists())
-			return;
-		if (file.isDirectory()) {
-			for (File f : file.listFiles()) {
-				recursiveDelete(f);
-			}
-		}
-		file.delete();
+		FileUtil.recursiveDelete(file);
 	}
 
 	public static File createTestOutPutFolder() {

@@ -3,6 +3,7 @@ package tk.nomis_tech.ppimapbuilder.data.client.web.interaction;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import tk.nomis_tech.ppimapbuilder.data.client.AbstractThreadedClient;
 
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
@@ -15,19 +16,18 @@ import java.util.concurrent.*;
  * An advanced PSICQUIC simple client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
-public class ThreadedPsicquicSimpleClient {
+public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 
 	private final List<PsicquicService> services;
-	private final int NB_THREAD;
 
 	/**
 	 * Constructs a new ThreadedPsicquicSimpleClient
 	 * @param services list of PSICQUIC services that will be use during query
-	 * @param NB_THREAD number of parallel request that need to be sent
+	 * @param nThread number of parallel request that need to be sent
 	 */
-	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, final int NB_THREAD) {
+	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, int nThread) {
+		super(nThread);
 		this.services = services;
-		this.NB_THREAD = NB_THREAD;
 	}
 
 	/**
@@ -35,9 +35,8 @@ public class ThreadedPsicquicSimpleClient {
 	 */
 	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
 		final List<Future<List<BinaryInteraction>>> requests = new ArrayList<Future<List<BinaryInteraction>>>();
-		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
 		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(
-				executor);
+				newFixedThreadPool());
 
 		// Launch and organism interaction requests
 		for (final PsicquicService service : services) {
@@ -103,11 +102,10 @@ public class ThreadedPsicquicSimpleClient {
 	 */
 	public List<BinaryInteraction> getByQueries(final List<String> queries) throws Exception {
 		// Thread manager
-		ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
-		CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(executor);
+		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(newFixedThreadPool());
 
 		// Launch queries in thread
-		List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
+		final List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
 		for (final String query : queries) {
 			interactionRequests.add(completionService.submit(new Callable<List<BinaryInteraction>>() {
 				@Override
@@ -118,7 +116,7 @@ public class ThreadedPsicquicSimpleClient {
 					int i = 0;
 					while (result == null) {
 						try {
-							result = (List<BinaryInteraction>) getByQuery(query);
+							result = getByQuery(query);
 							// System.out.println((queries.indexOf(query)+1)+"/"+queries.size());
 						} catch (Exception e) {
 							if (++i >= MAX_TRY)
@@ -132,7 +130,7 @@ public class ThreadedPsicquicSimpleClient {
 		}
 
 		// Collect all interaction results
-		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
+		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		for (Future<List<BinaryInteraction>> interactionRequest : interactionRequests) {
 			try {
 				results.addAll(completionService.take().get());

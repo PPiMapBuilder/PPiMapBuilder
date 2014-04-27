@@ -46,7 +46,6 @@ public class SpeciesPairProteinOrthologCacheTest {
 		Q58A65 = new Protein("Q58A65", mouse);
 		P24270 = new Protein("P24270", mouse);
 
-
 		cache = new SpeciesPairProteinOrthologCache(human, mouse) {{
 			addOrthologGroup(Q06141, P35230);
 			addOrthologGroup(Q58A65, O60271);

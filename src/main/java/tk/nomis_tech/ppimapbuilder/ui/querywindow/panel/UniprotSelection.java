@@ -1,66 +1,17 @@
 package tk.nomis_tech.ppimapbuilder.ui.querywindow.panel;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
-
 import net.miginfocom.swing.MigLayout;
 import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-
-import java.awt.BorderLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
-import javax.swing.JComboBox;
-import javax.swing.JButton;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-
-import net.miginfocom.swing.MigLayout;
-
-import javax.swing.border.EmptyBorder;
-import javax.swing.JCheckBox;
-
-import java.awt.Color;
-
-import javax.swing.border.MatteBorder;
-import javax.swing.border.LineBorder;
-
-import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-
+import javax.swing.*;
 import javax.swing.border.CompoundBorder;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
-import javax.swing.BoxLayout;
-
-import java.awt.Font;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 public class UniprotSelection extends JPanel {
 

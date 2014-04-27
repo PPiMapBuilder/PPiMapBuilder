@@ -18,6 +18,7 @@ public class OrganismRepository {
 	}
 
 	private OrganismRepository() {
+		// TODO : load from file
 		listOrganism = Arrays.asList(
 				new Organism("Homo", "sapiens", 9606, 264),
 				new Organism("Arabidopsis", "thaliana", 3702, 188),
@@ -26,6 +27,7 @@ public class OrganismRepository {
 				new Organism("Mus", "musculus", 10090, 128),
 				new Organism("Saccharomyces", "cerevisiae", 4932, 208),
 				new Organism("Schizosaccharomyces", "pombe", 4896, 173),
+				new Organism("Plasmodium", "falciparum", 5833, 185),
 				new Organism("Gallus", "gallus", 9031, 255)
 		);
 	}

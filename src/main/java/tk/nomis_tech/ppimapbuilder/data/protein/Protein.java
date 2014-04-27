@@ -10,6 +10,9 @@ import java.io.Serializable;
  * Simple protein model with only a UniProt id and an Organism
  */
 public class Protein implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
 	protected final String uniProtId;
 	protected final Organism organism;
 

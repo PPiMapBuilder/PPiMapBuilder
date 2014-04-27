@@ -1,8 +1,5 @@
 package tk.nomis_tech.ppimapbuilder.networkbuilder;
 
-import java.util.Collection;
-import java.util.HashMap;
-
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyTableFactory;
@@ -14,12 +11,15 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
+
+import java.util.Collection;
+import java.util.HashMap;
 
 /**
  * PPiMapBuilder network query and build
@@ -39,7 +39,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final QueryWindow queryWindow;
 
 	// Data collection for network generation
-	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
+	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
 	
 	// Error output
@@ -60,7 +60,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.vmm = visualMappingManager;
 		this.queryWindow = queryWindow;
 
-		this.interactionsByOrg = new HashMap<Integer, Collection<EncoreInteraction>>();
+		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
 		this.interactorPool = new UniProtEntryCollection();
 		
 		this.error_message = null;
@@ -68,11 +68,11 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 	@Override
 	public TaskIterator createTaskIterator() {
+		long startTime = System.currentTimeMillis();
 		return new TaskIterator(
-			new PMBQueryInteractionTask(this, interactionsByOrg, interactorPool, queryWindow),
-			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, queryWindow)
+			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, queryWindow),
+			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, queryWindow, startTime)
 		);
-		
 	}
 
 	public void setError_message(String error_message) {

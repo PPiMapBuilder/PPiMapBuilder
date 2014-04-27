@@ -6,7 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import tk.nomis_tech.ppimapbuilder.data.client.ProteinOrthologClient;
+import tk.nomis_tech.ppimapbuilder.data.client.AbstractProteinOrthologClient;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
@@ -14,275 +14,51 @@ import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Simple Java client for InParanoid database
  */
-public class InParanoidClient extends ProteinOrthologClient {
+public class InParanoidClient extends AbstractProteinOrthologClient {
 
-	private static InParanoidClient _instance;
+	private final String BASE_URL = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi";
 
-	private final String baseUrl = "http://inparanoid.sbc.su.se/cgi-bin/gene_search.cgi";
-
-	final private int NB_THREAD;
-	final private double scoreLimit;
+	private final double SCORE_LIMIT;
 
 	/**
-	 * Constructs a InParanoid client with specified specified score limit and a default number of thread: 3
+	 * Simple inParanoid cache of XML responses indexed by UniProt identifier
 	 */
-	public InParanoidClient(double scoreLimit) {
-		this(3, scoreLimit);
-	}
+	private Map<String, Document> inParanoidEntryCache;
 
 	/**
 	 * Constructs a InParanoid client with specified number of thread and specified score
 	 */
-	public InParanoidClient(int NB_THREAD, double scoreLimit) {
-		this.NB_THREAD = NB_THREAD;
-		this.scoreLimit = scoreLimit;
+	public InParanoidClient(int nThread, double SCORE_LIMIT) {
+		super(nThread);
+		this.SCORE_LIMIT = SCORE_LIMIT;
+	}
+
+	public InParanoidClient(double scoreLimit) {
+		this(9, scoreLimit);
 	}
 
 	/**
-	 * Search orthologs of a protein in a specified organisms
+	 * Enables or disables the inParanoid cache.
+	 * This cache keeps in memory the inParanoid request response for each queried proteins.
+	 * If enabled, make sure to disable it after a long session of ortholog search to free the memory of the cache.
 	 *
-	 * @throws IOException if a connection error occurred
+	 * @param enable true to activate the cache; false to
 	 */
-	public HashMap<Integer, String> getOrthologsSingleProtein(String uniProtId, Collection<Integer> taxIds) throws IOException {
-		HashMap<Integer, String> out = new HashMap<Integer, String>();
-
-		// Create request parameters
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("id", uniProtId);
-		params.put("idtype", "proteinid");
-		params.put("all_or_selection", "all");
-		params.put("rettype", "xml");
-
-		/*// Add organism list to request URL
-		for (Integer taxId : taxIds) {
-			Integer org = Ortholog.translateTaxID(taxId);
-			if(org != null) {
-				reqURL.append("&specieslist=").append(org);
-			}
-			else System.err.println("Org id conversion failed [taxid:"+taxId+"]");
-		}*/
-
-		//System.out.println(req);
-
-		Document doc = null;
-
-		// Load xml response file (with multiple try)
-		final int MAX_TRY = 2;
-		int pos = 1;
-		IOException lastError = null;
-		do {
-			try {
-				Connection connect = Jsoup.connect(baseUrl);
-				connect.timeout(18000 + (18000 * pos) / 3);
-				connect.data(params);
-				pos++;
-				doc = connect.get();
-				break;
-			} catch (HttpStatusException e) {
-				if (e.getStatusCode() == 500)
-					return out; //protein organism not found or inparanoid server down
-				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
-					throw new IOException(e);
-				}
-
-				//lastError = new IOException(e);
-				//throw new IOException(e);
-			} catch (SocketTimeoutException e) {
-				//Connection response timeout
-				//lastError = new IOException(e);
-				throw new IOException(e);
-			}
-		} while (doc == null && ++pos <= MAX_TRY);
-
-		System.out.print("p" + pos + "-");
-
-		//if(doc == null) throw lastError;
-		//System.out.println("done with "+(pos-1)+" try");
-
-		//For each cluster of organism
-		for (Element speciesPair : doc.select("speciespair")) {
-			try {
-				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
-				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
-
-				// If organism cluster correspond an organism asked in input
-				if (currentTaxId != null && taxIds.contains(currentTaxId)) {
-					String orthologFound = null;
-
-					// Find the the protein organism (with the best score)
-					Double betterScore = Double.NaN;
-					for (Element protein : speciesPair.select("protein")) {
-						try {
-							if (Integer.valueOf(protein.attr("spec_id")) == currentInpOrgID) {
-								double score = Double.valueOf(protein.attr("score"));
-
-								if (betterScore.isNaN() || score > betterScore) {
-									orthologFound = protein.attr("prot_id");
-									betterScore = score;
-								}
-							}
-						} finally {
-						}
-					}
-
-					if (betterScore > scoreLimit)
-						out.put(currentTaxId, orthologFound);
-				}
-			} finally {
-			}
-		}
-		return out;
+	public void enableCache(boolean enable) {
+		if (enable && inParanoidEntryCache == null)
+			inParanoidEntryCache = new HashMap<String, Document>();
+		else if (!enable)
+			inParanoidEntryCache = null;
 	}
 
-	/**
-	 * Search orthologs of proteins in desired organisms
-	 */
-	public HashMap<String, HashMap<Integer, String>> getOrthologsMultipleProtein(Collection<String> uniProtIds, final Collection<Integer> taxIds) throws IOException, UnknownHostException {
-		final List<Future<HashMap<Integer, String>>> requests = new ArrayList<Future<HashMap<Integer, String>>>();
-		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
-		final CompletionService<HashMap<Integer, String>> completionService = new ExecutorCompletionService<HashMap<Integer, String>>(executor);
-
-
-		// For each protein => search orthologs in organisms
-		for (final String uniProtId : uniProtIds) {
-			requests.add(completionService.submit(new Callable<HashMap<Integer, String>>() {
-				@Override
-				public HashMap<Integer, String> call() throws Exception {
-					return getOrthologsSingleProtein(uniProtId, taxIds);
-				}
-			}));
-		}
-
-
-		// Collect all organism results
-		final List<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
-		final HashMap<String, HashMap<Integer, String>> results = new HashMap<String, HashMap<Integer, String>>();
-
-		for (Future<HashMap<Integer, String>> req : requests) {
-			try {
-				Future<HashMap<Integer, String>> take = completionService.take();
-				HashMap<Integer, String> result = take.get();
-				if (result != null)
-					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
-
-			} catch (ExecutionException e) {
-				Throwable cause = e.getCause();
-				if (cause instanceof UnknownHostException)
-					throw (UnknownHostException) cause;
-				if (cause instanceof SocketTimeoutException)
-					continue;
-				if (cause instanceof IOException)
-					throw (IOException) cause;
-				else
-					cause.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-
-
-		System.out.println("\n--");
-		return results;
-	}
-
-	/**
-	 * Search protein organism for the reference organism
-	 *
-	 * @throws IOException if a connection error occurred
-	 */
-	public String getOrthologForRefOrga(String uniProtId, Integer taxId) throws IOException {
-		String out = "";
-
-		// Create request parameters
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("id", uniProtId);
-		params.put("idtype", "proteinid");
-		params.put("all_or_selection", "all");
-		params.put("rettype", "xml");
-
-		Document doc = null;
-
-		// Load xml response file (with multiple try)
-		final int MAX_TRY = 5;
-		int pos = 1;
-		IOException lastError = null;
-		do {
-			try {
-				Connection connect = Jsoup.connect(baseUrl);
-				connect.timeout(18000 + (18000 * pos) / 3);
-				connect.data(params);
-				pos++;
-				doc = connect.get();
-				break;
-			} catch (HttpStatusException e) {
-				if (e.getStatusCode() == 500)
-					return out; //protein organism not found or inparanoid server down
-				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
-					throw new IOException(e);
-				}
-
-				//lastError = new IOException(e);
-				throw new IOException(e);
-			} catch (SocketTimeoutException e) {
-				//Connection response timeout
-				//lastError = new IOException(e);
-				throw new IOException(e);
-			}
-		} while (doc == null);// && ++pos <= MAX_TRY);
-
-		System.out.print("p" + pos + "-");
-
-		//if(doc == null) throw lastError;
-		//System.out.println("done with "+(pos-1)+" try");
-
-		//For each cluster of organism
-		for (Element speciesPair : doc.select("speciespair")) {
-			try {
-				int currentInpOrgID = Integer.valueOf(speciesPair.select("species").get(1).attr("id"));
-				Integer currentTaxId = OrganismRepository.getInstance().getOrganismByInParanoidOrgId(currentInpOrgID).getTaxId();
-
-				// If organism cluster correspond an organism asked in input
-				if (currentTaxId != null && taxId.equals(currentTaxId)) {
-					String orthologFound = null;
-
-					// Find the the protein organism (with the best score)
-					Double betterScore = Double.NaN;
-					for (Element protein : speciesPair.select("protein")) {
-						try {
-							if (Integer.valueOf(protein.attr("spec_id")) == currentInpOrgID) {
-								double score = Double.valueOf(protein.attr("score"));
-
-								if (betterScore.isNaN() || score > betterScore) {
-									orthologFound = protein.attr("prot_id");
-									betterScore = score;
-								}
-							}
-						} finally {
-						}
-					}
-
-					if (betterScore > scoreLimit)
-						out = orthologFound;
-				}
-			} finally {
-			}
-		}
-		return out;
-	}
-
-
-	@Override
-	public Map<Organism, Protein> getOrthologsMultiOrganism(Protein protein, List<Organism> organisms) throws IOException {
-
-		Map<Organism, Protein> out = new HashMap<Organism, Protein>();
-
+	private Document searchOrthologEntry(Protein protein, int timeout) throws IOException {
 		// Create request parameters
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("id", protein.getUniProtId());
@@ -290,36 +66,52 @@ public class InParanoidClient extends ProteinOrthologClient {
 		params.put("all_or_selection", "all");
 		params.put("rettype", "xml");
 
-		/*// Add organism list to request URL
-		for (Integer taxId : taxIds) {
-			Integer org = Ortholog.translateTaxID(taxId);
-			if(org != null) {
-				reqURL.append("&specieslist=").append(org);
-			}
-			else System.err.println("Org id conversion failed [taxid:"+taxId+"]");
-		}*/
+		// Create JSoup connection
+		Connection connect = Jsoup.connect(BASE_URL);
+		connect.timeout(timeout);
+		connect.data(params);
+		return connect.get();
+	}
 
-		//System.out.println(req);
-
+	private Document searchOrthologEntryWithRetryAndCache(final Protein protein) throws IOException {
 		Document doc = null;
 
 		// Load xml response file (with multiple try)
-		final int MAX_TRY = 2;
+		final int MAX_TRY = 3;
 		int pos = 1;
 		IOException lastError = null;
 		do {
 			try {
-				Connection connect = Jsoup.connect(baseUrl);
-				connect.timeout(18000 + (18000 * pos) / 3);
-				connect.data(params);
-				pos++;
-				doc = connect.get();
+				// sleep to temporize requests
+				if (pos > 1)
+					Thread.sleep(500);
+
+				final int timeout = 18000 + (18000 * pos) / 3;
+
+				System.out.print("inparanoid-");
+				// Cache enabled?
+				if (inParanoidEntryCache != null) {
+					// Thread-safe to ensure that only one inParanoid request is made for a protein.
+					// (and then cached so that other thread can get the XML document without re-requesting it)
+					synchronized (protein.getUniProtId()) {
+						doc = inParanoidEntryCache.get(protein.getUniProtId());
+
+						if (doc == null) {
+							doc = searchOrthologEntry(protein, timeout);
+
+							inParanoidEntryCache.put(protein.getUniProtId(), doc);
+						} else System.out.print("cached-");
+						break;
+					}
+				}
+
+				doc = searchOrthologEntry(protein, timeout);
 				break;
 			} catch (HttpStatusException e) {
 				if (e.getStatusCode() == 500)
-					return out; //no entry found or inparanoid server down
+					break; //no entry found or inParanoid server error
 				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
-					throw new IOException(e);
+					throw e;
 				}
 
 				//lastError = new IOException(e);
@@ -328,31 +120,44 @@ public class InParanoidClient extends ProteinOrthologClient {
 				//Connection response timeout
 				//lastError = new IOException(e);
 				throw new IOException(e);
+			} catch (InterruptedException e) {
 			}
 		} while (doc == null && ++pos <= MAX_TRY);
 
-		System.out.print("p" + pos + "-");
+		System.out.print(protein.getUniProtId() + ":" + pos + "try");
 
 		//if(doc == null) throw lastError;
 		//System.out.println("done with "+(pos-1)+" try");
+
+		return doc;
+	}
+
+	@Override
+	public Protein getOrtholog(Protein protein, Organism organism) throws IOException {
+		Document doc = searchOrthologEntryWithRetryAndCache(protein);
+
+		if (doc == null) return null;
+		System.out.println(":OK:" +organism);
 
 		// For each species pair
 		for (Element speciesPair : doc.select("speciespair")) {
 			Elements species = speciesPair.select("species");
 
-			Organism orgA = OrganismRepository.getInstance().getOrganismByCommonName(species.get(0).attr("speclong"));
-			Organism orgB = OrganismRepository.getInstance().getOrganismByCommonName(species.get(1).attr("speclong"));
+			String nameA = species.get(0).attr("speclong");
+			String nameB = species.get(1).attr("speclong");
+			Organism orgA = OrganismRepository.getInstance().getOrganismByCommonName(nameA);
+			Organism orgB = OrganismRepository.getInstance().getOrganismByCommonName(nameB);
 
-			Organism currentOrg;
+			if (orgA == null || orgB == null) continue;
 
-			if (organisms.contains(orgA) && organisms.contains(orgB))
-				break;
-			else if (orgA.equals(protein.getOrganism()) && organisms.contains(orgB)) {
+			Organism currentOrg = null;
+			if (orgA.equals(protein.getOrganism()) && organism.equals(orgB)) {
 				currentOrg = orgB;
-			} else if (orgB.equals(protein.getOrganism()) && organisms.contains(orgA)) {
+			} else if (orgB.equals(protein.getOrganism()) && organism.equals(orgA)) {
 				currentOrg = orgA;
-			} else break;
+			}
 
+			if (currentOrg == null) continue;
 
 			Protein ortholog = null;
 			Double betterScore = Double.NaN;
@@ -376,17 +181,35 @@ public class InParanoidClient extends ProteinOrthologClient {
 			}
 
 			// If ortholog found with best score has sufficient score
-			if (ortholog != null && betterScore > scoreLimit) {
-				// Add ortholog to output
-				out.put(currentOrg, ortholog);
+			if (ortholog != null && betterScore > SCORE_LIMIT) {
+				// return ortholog
+				return ortholog;
 			}
 		}
 
-		return out;
+		return null;
 	}
 
 	@Override
-	public Protein getOrtholog(Protein protein, Organism organism) throws IOException {
-		return getOrthologsMultiOrganism(protein, Arrays.asList(organism)).get(organism);
+	public Map<Protein, Map<Organism, Protein>> getOrthologsMultiOrganismMultiProtein(List<Protein> proteins, List<Organism> organisms) throws IOException {
+		boolean cacheEnabled = (inParanoidEntryCache != null);
+
+		if (!cacheEnabled) enableCache(true);
+		Map<Protein, Map<Organism, Protein>> result = super.getOrthologsMultiOrganismMultiProtein(proteins, organisms);
+		if (!cacheEnabled) enableCache(false);
+
+		return result;
 	}
+
+	@Override
+	public Map<Organism, Protein> getOrthologsMultiOrganism(Protein protein, List<Organism> organisms) throws IOException {
+		boolean cacheEnabled = (inParanoidEntryCache != null);
+
+		if (!cacheEnabled) enableCache(true);
+		Map<Organism, Protein> result = super.getOrthologsMultiOrganism(protein, organisms);
+		if (!cacheEnabled) enableCache(false);
+
+		return result;
+	}
+
 }

@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class InteractionsUtilTest {
+public class InteractionUtilsTest {
 
 	private static List<BinaryInteraction> sampleBinaryInteractions;
 	private static List<PsicquicService> services;
@@ -43,13 +43,14 @@ public class InteractionsUtilTest {
 
 	@Test
 	public void getInteractorsBinary() {
-		Set<String> interactors = InteractionsUtil.getInteractorsBinary(sampleBinaryInteractions, 9606);
+		Set<String> interactors = InteractionUtils.getInteractorsBinary(sampleBinaryInteractions);
 		// System.out.println(interactors);
 	}
 
 	@Test
 	public void getInteractionBetweenProtein() throws Exception {
-		final HashSet<String> prots = new HashSet<String>(Arrays.asList(new String[]{"Q53YK7", "P27635", "Q5NGF9", "Q9UGK8", "O15350-1",
+		final HashSet<String> prots;
+		prots = new HashSet<String>(Arrays.asList(new String[]{"Q53YK7", "P27635", "Q5NGF9", "Q9UGK8", "O15350-1",
 				"Q5NGF3", "P53621", "P07101", "P41134", "Q8NBU8", "P98077", "P14907", "Q9UGJ8", "Q5NGE9", "Q9NUY6", "Q96SB8", "Q9UGJ0",
 				"P13073", "P47901", "P47900", "Q9P1A6", "P98082", "P21809", "Q96SA5", "P13861", "A0AV37", "Q53GK5", "P41743", "Q9UBU3-1",
 				"P40616", "Q8TCX1", "Q9H4L7", "Q494Z3", "P14921", "P14920", "P35590", "P14923", "A1Z5I9", "P06576", "P13051", "Q16716",
@@ -122,9 +123,10 @@ public class InteractionsUtilTest {
 			for (String p : prots)
 				add(new Protein(p, human));
 		}};
-		List<BinaryInteraction> res = InteractionsUtil.getInteractionsInProteinPool(proteins, human, services);
+		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 3);
+		List<BinaryInteraction> res = InteractionUtils.getInteractionsInProteinPool(proteins, human, client);
 		System.out.println("before cluster: " + res.size());
-		System.out.println("after cluster: " + InteractionsUtil.clusterInteraction(res).size());
+		System.out.println("after cluster: " + InteractionUtils.clusterInteraction(res).size());
 	}
 
 	// @Test
@@ -136,7 +138,7 @@ public class InteractionsUtilTest {
 
 		int i = 0;
 		do {
-			prots = InteractionsUtil.getInteractorsBinary(client.getByQuery(query.toString()), 9606);
+			prots = InteractionUtils.getInteractorsBinary(client.getByQuery(query.toString()));
 			System.out.println(prots);
 			System.out.println(prots.size());
 			MiQLExpressionBuilder protsE = new MiQLExpressionBuilder();
@@ -144,6 +146,17 @@ public class InteractionsUtilTest {
 			query = new MiQLParameterBuilder("id", protsE);
 			i++;
 		} while (i < 2);
+	}
+
+
+	@Test
+	public void testFilterNonUniProt() throws Exception {
+		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(PsicquicRegistry.getInstance().getServices(), 3);
+		List<BinaryInteraction> byQuery = client.getByQuery("id:P04040");
+
+		System.out.println(byQuery.size());
+		InteractionUtils.filterNonUniprotInteractors(byQuery);
+		System.out.println(byQuery.size());
 	}
 
 }

@@ -5,7 +5,6 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLExpressionBuilder.Operator;
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLParameterBuilder;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
@@ -22,13 +21,13 @@ import java.util.*;
 /**
  * Group of method useful for manipulation of interaction list
  */
-public class InteractionsUtil {
+public class InteractionUtils {
 
 	/**
 	 * Retrieve all interactions with the given interactors (optimized and threaded)
 	 */
 	public static List<BinaryInteraction> getInteractionsInProteinPool(Set<Protein> proteins, Organism sourceOrganism,
-			final List<PsicquicService> services) throws Exception {
+	                                                            ThreadedPsicquicSimpleClient psicquicClient) throws Exception {
 		List<Protein> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
 		baseQuery.setRoot(true);
@@ -95,19 +94,19 @@ public class InteractionsUtil {
 				for (int i = 0; i < protsExprs.size(); i++) {
 					protsIdA = protsExprs.get(i);
 					//System.out.println(protsIdA);
-					
+
 					for (int j = i; j < protsExprs.size(); j++) {
 						protsIdB = protsExprs.get(j);
 						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
-						q.addCondition(Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
-						q.addCondition(Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
+						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
+						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
 						queries.add(q.toString());
 						//System.out.println(q);
 					}
 				}
 			} else {
-				baseQuery.addCondition(Operator.AND, idA);
-				baseQuery.addCondition(Operator.AND, idB);
+				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idA);
+				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idB);
 				queries.add(baseQuery.toString());
 			}
 			System.gc();
@@ -117,9 +116,8 @@ public class InteractionsUtil {
 
 		// Executing all MiQL queries using ThreadedPsicquicSimpleClient
 		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 3);
-		results.addAll(client.getByQueries(queries));
-		
+		results.addAll(psicquicClient.getByQueries(queries));
+
 		return results;
 	}
 
@@ -166,7 +164,7 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static Set<String> getInteractorsEncore(Collection<EncoreInteraction> interactions) {
+	public static Set<String> getInteractorsEncore(List<EncoreInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
 
 		for (EncoreInteraction interaction : interactions) {
@@ -188,10 +186,11 @@ public class InteractionsUtil {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static Set<String> getInteractorsBinary(Collection<BinaryInteraction> interactions, int refTaxId) {
+	public static Set<String> getInteractorsBinary(List<BinaryInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
 
-		for (BinaryInteraction interaction : filterNonUniprotAndNonRefOrg(interactions, refTaxId)) {
+		filterNonUniprotInteractors(interactions);
+		for (BinaryInteraction interaction : interactions) {
 			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier());
 			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
 		}
@@ -203,16 +202,15 @@ public class InteractionsUtil {
 	 * Remove all interaction from a list if at least one of the interactor doesn't have an "uniprotkb" identifier. Also sort the
 	 * identifiers of interactor to make uniprotkb appear first
 	 */
-	public static Collection<BinaryInteraction> filterNonUniprotAndNonRefOrg(Collection<BinaryInteraction> interactions, int refTaxId) {
-		List<BinaryInteraction> out = new ArrayList<BinaryInteraction>();
-
+	public static void filterNonUniprotInteractors(List<BinaryInteraction> interactions) {
+		ArrayList<BinaryInteraction> wrongInteractorIdFormatInteractions = new ArrayList<BinaryInteraction>();
 		for (BinaryInteraction binaryInteraction : interactions) {
 			boolean ok = true;
 			for (Interactor interactor : Arrays.asList(new Interactor[]{binaryInteraction.getInteractorA(),
 					binaryInteraction.getInteractorB()})) {
 
 				List<CrossReference> ids = interactor.getIdentifiers();
-				// ids.addAll(interactor.getAlternativeIdentifiers());
+				ids.addAll(interactor.getAlternativeIdentifiers());
 
 				if (ids.size() == 1 && !ids.get(0).getDatabase().equals("uniprotkb")) {
 					ok = false;
@@ -222,7 +220,7 @@ public class InteractionsUtil {
 				CrossReference uniprot = null;
 				boolean hasUniprot = false;
 				for (CrossReference ref : ids) {
-					final boolean isUniprot = ref.getDatabase().equals("uniprotkb");
+					final boolean isUniprot = ref.getDatabase().equals("uniprotkb") && UniprotId.isValid(ref.getIdentifier());
 					if (!hasUniprot)
 						uniprot = ref;
 					hasUniprot = hasUniprot || isUniprot;
@@ -232,10 +230,6 @@ public class InteractionsUtil {
 					ok = false;
 					break;
 				}
-				
-				/*//TODO change taxID parameter => maybe split in two methods
-				if(!interactor.getOrganism().getTaxid().equals(refTaxId+""))
-					ok = false;*/
 
 				List<CrossReference> sortedIdentifiers = new ArrayList<CrossReference>();
 				ids.remove(uniprot);
@@ -244,9 +238,26 @@ public class InteractionsUtil {
 				interactor.setIdentifiers(sortedIdentifiers);
 			}
 
-			if (ok) out.add(binaryInteraction);
+			if (!ok) wrongInteractorIdFormatInteractions.add(binaryInteraction);
 		}
+		interactions.removeAll(wrongInteractorIdFormatInteractions);
+	}
 
-		return out;
+	/**
+	 * Remove all interaction from a list if at least one of the interactor has the wrong organism.
+	 */
+	public static void filterByOrganism(List<BinaryInteraction> interactions, Organism organism) {
+		ArrayList<BinaryInteraction> wrongOrganismInteractions = new ArrayList<BinaryInteraction>();
+		for (BinaryInteraction binaryInteraction : interactions) {
+			for (Interactor interactor : Arrays.asList(new Interactor[]{binaryInteraction.getInteractorA(),
+					binaryInteraction.getInteractorB()})) {
+
+				if(!interactor.getOrganism().getTaxid().equals(String.valueOf(organism.getTaxId()))) {
+					wrongOrganismInteractions.add(binaryInteraction);
+					break;
+				}
+			}
+		}
+		interactions.removeAll(wrongOrganismInteractions);
 	}
 }

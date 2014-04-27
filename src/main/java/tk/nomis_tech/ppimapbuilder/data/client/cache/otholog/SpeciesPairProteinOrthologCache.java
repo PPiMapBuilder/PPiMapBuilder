@@ -27,8 +27,9 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 	}
 
 	private File getCacheDataFile() throws IOException {
-		if (cacheDataFile == null)
+		if (cacheDataFile == null) {
 			cacheDataFile = new File(PMBSettings.getInstance().getOrthologCacheFolder(), identifier + ".dat");
+		}
 		return cacheDataFile;
 	}
 
@@ -50,6 +51,12 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 			DataOutputStream out = null;
 
 			try {
+				File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
+				if(!orthologCacheFolder.exists())
+					orthologCacheFolder.mkdirs();
+				if(!getCacheDataFile().exists())
+					getCacheDataFile().createNewFile();
+
 				out = new DataOutputStream(new FileOutputStream(getCacheDataFile(), true));
 
 				out.writeInt(sourceProtIndex);
@@ -78,7 +85,7 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 		if (sourceProtIndex < 0)
 			return null;
 
-		Protein destProt = null;
+		Protein ortholog = null;
 
 		DataInputStream in = null;
 
@@ -93,22 +100,24 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 					int protBIndex = in.readInt();
 
 					if (protAIndex == sourceProtIndex) {
-						destProt = proteinOrthologIndex.getProtein(protBIndex);
+						ortholog = proteinOrthologIndex.getProtein(protBIndex);
 					} else if (protBIndex == sourceProtIndex) {
-						destProt = proteinOrthologIndex.getProtein(protAIndex);
+						ortholog = proteinOrthologIndex.getProtein(protAIndex);
 					}
 
-					if (destProt != null && destProt.getOrganism().equals(organism))
+					if (ortholog != null && ortholog.getOrganism().equals(organism))
 						break;
-					else destProt = null;
+					else ortholog = null;
 				} catch (EOFException e) {
 					EOF = true;
 				}
 			}
+		} catch (FileNotFoundException e) {
+			return null;
 		} finally {
 			if (in != null) in.close();
 		}
 
-		return destProt;
+		return ortholog;
 	}
 }

@@ -8,6 +8,6 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses(value = {
 		ProteinOrthologIndexTest.class,
 		SpeciesPairProteinOrthologCacheTest.class,
-		ProteinOrthologCacheClientTest.class,
+		ProteinOrthologCacheClientTest.class
 })
 public class OrthologCacheTestSuite {}

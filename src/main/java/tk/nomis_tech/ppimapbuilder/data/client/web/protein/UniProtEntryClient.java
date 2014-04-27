@@ -7,125 +7,116 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyCategory;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
+import tk.nomis_tech.ppimapbuilder.data.client.AbstractThreadedClient;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
  * Simple Java client for UniProt entry service
  */
-public class UniProtEntryClient {
-	private static final String uniprotUrl = "http://www.uniprot.org/uniprot/";
-	private static final int NB_THREAD = 5;
-	private static UniProtEntryClient _instance;
+public class UniProtEntryClient extends AbstractThreadedClient {
 
-	private UniProtEntryClient() {}
-	
-	public static UniProtEntryClient getInstance() {
-		if (_instance == null)
-			_instance = new UniProtEntryClient();
-		return _instance;
+	private static final String UNIPROT_URL = "http://www.uniprot.org/uniprot/";
+
+	public UniProtEntryClient(int nThread) {
+		super(nThread);
 	}
 
 	/**
-	 * Retrieve UniProt entry of a protein 
+	 * Retrieve UniProt entry of a protein
 	 */
 	public UniProtEntry retrieveProteinData(String uniprotId) throws IOException {
-		UniProtEntry prot = null;
-		
+		UniProtEntry protein = null;
+
 		Document doc = null;
 		final int MAX_TRY = 4;
 		int pos = 0;
 		IOException lastError = null;
-		do{
+		do {
 			try {
-				Connection connect = Jsoup.connect(new StringBuilder(uniprotUrl).append(uniprotId).append(".xml").toString());
+				Connection connect = Jsoup.connect(new StringBuilder(UNIPROT_URL).append(uniprotId).append(".xml").toString());
 				connect.timeout(6000);
 				doc = connect.get();
 			} catch (HttpStatusException e) {
-				if(e.getStatusCode() == 404) return null;//No protein entry found
+				if (e.getStatusCode() == 404) return null;//No protein entry found
 				lastError = new IOException(e);
-			} catch(SocketTimeoutException e) {
+			} catch (SocketTimeoutException e) {
 				lastError = new IOException(e);
 			}
-		} while(++pos < MAX_TRY);
-		if(doc == null) throw lastError;
-		
-		Integer taxId = null;
+		} while (doc == null && ++pos < MAX_TRY);
+		if (doc == null) throw lastError;
+
+		Organism organism = null;
 		String geneName = null;
 		ArrayList<String> synonymGeneNames = new ArrayList<String>();
 		String proteinName = null;
 		String ec_number = null;
 		boolean reviewed = false;
-		
-		// TAX ID
+
+		// ORGANISM
 		for (Element e : doc.select("organism")) {
-			taxId = Integer.valueOf(e.select("dbReference").attr("id")); // There is no problem, this is in the same way each time
+			organism = OrganismRepository.getInstance().getOrganismByTaxId(Integer.valueOf(e.select("dbReference").attr("id")));
 			break;
 		}
-		
+
 		// GENE NAME AND SYNONYMS
 		for (Element e : doc.select("gene")) {
 			for (Element f : e.select("name")) {
 				if (f.attr("type").equals("primary")) { // If the type is primary, this is the main name (sometimes there is no primary gene name :s)
 					geneName = f.text();
-				}
-				else { // Else, we organism the names as synonyms
+				} else { // Else, we organism the names as synonyms
 					synonymGeneNames.add(f.text());
 				}
 			}
 		}
-		
+
 		// PROTEIN NAME
 		for (Element e : doc.select("protein")) {
 			if (!e.select("recommendedName").isEmpty()) { // We retrieve the recommended name
 				proteinName = e.select("recommendedName").select("fullName").text();
-			}
-			else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exist, we take the submitted name (usually from TrEMBL but not always)
+			} else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exist, we take the submitted name (usually from TrEMBL but not always)
 				proteinName = e.select("submittedName").select("fullName").text();
 			}
 			break;
 		}
-		
+
 		// REVIEWED
 		for (Element e : doc.select("entry")) {
-			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot")?true:false; // If the protein comes from Swiss-Prot, it is reviewed
+			reviewed = e.attr("dataset").equalsIgnoreCase("Swiss-Prot"); // If the protein comes from Swiss-Prot, it is reviewed
 			break;
 		}
-		
+
 		// EC NUMBER
 		for (Element e : doc.select("ecNumber")) {
 			ec_number = e.text();
 			break;
 		}
-		
+
 		// PROTEIN CREATION
-		prot = new UniProtEntry(uniprotId, geneName, ec_number, taxId, proteinName, reviewed);
-		prot.setSynonymGeneNames(synonymGeneNames);
-		
+		protein = new UniProtEntry(uniprotId, geneName, ec_number, organism, proteinName, reviewed);
+		protein.setSynonymGeneNames(synonymGeneNames);
+
 		// GENE ONTOLOGIES
 		for (Element e : doc.select("dbReference")) {
 			if (e.attr("type").equals("GO")) {
 				String id = e.attr("id");
 				GeneOntologyCategory category = null;
 				String term = null;
-				for (Element f: e.select("property")) {
+				for (Element f : e.select("property")) {
 					if (f.attr("type").equals("term")) {
 						String value = f.attr("value");
 						String[] values = value.split(":");
 						if (values[0].equals("C")) {
 							category = GeneOntologyCategory.CELLULAR_COMPONENT;
-						}
-						else if (values[0].equals("F")) {
+						} else if (values[0].equals("F")) {
 							category = GeneOntologyCategory.MOLECULAR_FUNCTION;
-						}
-						else if (values[0].equals("P")) {
+						} else if (values[0].equals("P")) {
 							category = GeneOntologyCategory.BIOLOGICAL_PROCESS;
 						}
 						term = values[1];
@@ -134,41 +125,39 @@ public class UniProtEntryClient {
 				}
 				GeneOntologyModel go = new GeneOntologyModel(id, term, category);
 				if (category == GeneOntologyCategory.CELLULAR_COMPONENT) {
-					prot.addCellularComponent(go);
-				}
-				else if (category == GeneOntologyCategory.BIOLOGICAL_PROCESS) {
-					prot.addBiologicalProcess(go);
-				}
-				else if (category == GeneOntologyCategory.MOLECULAR_FUNCTION) {
-					prot.addMolecularFunction(go);
+					protein.addCellularComponent(go);
+				} else if (category == GeneOntologyCategory.BIOLOGICAL_PROCESS) {
+					protein.addBiologicalProcess(go);
+				} else if (category == GeneOntologyCategory.MOLECULAR_FUNCTION) {
+					protein.addMolecularFunction(go);
 				}
 			}
 		}
-		
-		return prot;
+
+		System.out.println("uniprotEntryClient:"+protein.getUniProtId()+":"+pos+"try-ok");
+		return protein;
 	}
 
 	/**
 	 * Retrieves UniProt entry data of a list of protein using threaded execution pool
 	 */
-	public HashMap<String, UniProtEntry> retrieveProteinsData(Collection<String> uniProtIds) throws IOException {
-		final ArrayList<String> uniProtIdsArray = new ArrayList<String>(uniProtIds);
+	public HashMap<String, UniProtEntry> retrieveProteinsData(Collection<String> uniProtIds) {
+		final List<String> uniProtIdsArray = new ArrayList<String>(new HashSet<String>(uniProtIds));
 		final List<Future<UniProtEntry>> requests = new ArrayList<Future<UniProtEntry>>();
-		final ExecutorService executor = Executors.newFixedThreadPool(NB_THREAD);
-		final CompletionService<UniProtEntry> completionService = new ExecutorCompletionService<UniProtEntry>(executor);
-		
+		final CompletionService<UniProtEntry> completionService = new ExecutorCompletionService<UniProtEntry>(newFixedThreadPool());
+
 		// For each protein => search UniProt entry
 		for (final String uniProtId : uniProtIdsArray) {
 			requests.add(completionService.submit(new Callable<UniProtEntry>() {
 				@Override
 				public UniProtEntry call() throws Exception {
 					UniProtEntry result = null;
-					
+
 					final int MAX_TRY = 2;
 					int i = 0;
 					do {
 						try {
-							if(!uniProtId.equals(null))
+							if (!uniProtId.equals(null))
 								result = retrieveProteinData(uniProtId);
 						} finally {
 							i++;
@@ -186,14 +175,11 @@ public class UniProtEntryClient {
 			try {
 				Future<UniProtEntry> take = completionService.take();
 				UniProtEntry result = take.get();
-				if(result != null)
+				if (result != null)
 					results.put(uniProtIdsArray.get(requests.indexOf(take)), result);
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
-				if(cause instanceof IOException)
-					throw (IOException)cause;
-				else
-					cause.printStackTrace();
+				cause.printStackTrace();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

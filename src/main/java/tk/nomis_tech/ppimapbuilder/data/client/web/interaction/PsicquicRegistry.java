@@ -20,7 +20,7 @@ public class PsicquicRegistry {
 	private static PsicquicRegistry _instance;
 	
 	/** The base URL for PSICQUIC registry. */
-	private static final String registryXmlUrl = "http://www.ebi.ac.uk/Tools/webservices/interaction/registry/registry?action=ACTIVE&format=xml";
+	private static final String registryXmlUrl = "http://www.ebi.ac.uk/Tools/webservices/psicquic/registry/registry?action=ACTIVE&format=xml";
 	
 	/** Structure to organism service names and services URLs. */
 	private final ArrayList<PsicquicService> services = new ArrayList<PsicquicService>();

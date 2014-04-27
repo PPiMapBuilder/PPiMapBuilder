@@ -1,6 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.data.protein;
 
+import com.eclipsesource.json.JsonObject;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,18 +10,18 @@ import java.util.List;
 
 public class UniProtEntry extends Protein {
 
-	private String geneName;
-	private List<String> synonymGeneNames = new ArrayList<String>();
-	private String proteinName;
-	private String ecNumber;
-	private boolean reviewed;
-	private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
-	private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
-	private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
-	private final HashMap<Integer, Protein> orthologs = new HashMap<Integer, Protein>();
+	transient private String geneName;
+	transient private List<String> synonymGeneNames = new ArrayList<String>();
+	transient private String proteinName;
+	transient private String ecNumber;
+	transient private boolean reviewed;
+	transient private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
+	transient private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
+	transient private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
+	transient private final HashMap<Organism, Protein> orthologs = new HashMap<Organism, Protein>();
 
-	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Integer taxId, String proteinName, boolean reviewed) {
-		super(uniprotId, taxId);
+	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Organism organism, String proteinName, boolean reviewed) {
+		super(uniprotId, organism);
 		this.proteinName = proteinName;
 		this.ecNumber = ecNumber;
 		this.geneName = geneName;
@@ -38,8 +40,8 @@ public class UniProtEntry extends Protein {
 		return list;
 	}
 	
-	public Protein getOrthologByTaxid(Integer taxid) {
-		return orthologs.get(taxid);
+	public Protein getOrtholog(Organism organism) {
+		return orthologs.get(organism);
 	}
 	
 	public List<Protein> getOrthologs() {
@@ -54,7 +56,7 @@ public class UniProtEntry extends Protein {
 	}
 	
 	public Protein addOrtholog(Protein prot) {
-		return orthologs.put(prot.getOrganism().getTaxId(), prot);
+		return orthologs.put(prot.getOrganism(), prot);
 	}
 
 	public void setCellularComponents(ArrayList<GeneOntologyModel> cellularComponents) {
@@ -156,14 +158,16 @@ public class UniProtEntry extends Protein {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder out = new StringBuilder();
-		out.append("{");
-		out.append("id:").append(uniProtId).append(", ");
-		out.append("taxId:").append(getOrganism().getTaxId()).append(", ");
-		out.append("proteinName:").append(proteinName).append(", ");
-		out.append("geneName:").append(geneName).append(", ");
-		out.append("reviewed:").append(reviewed);
-		out.append("}");
+		JsonObject out = new JsonObject();
+		out.add("id", uniProtId);
+		try {
+			out.add("taxId", getOrganism().getTaxId());
+		} catch (NullPointerException e) {
+			out.add("taxId", "null");
+		}
+		out.add("proteinName", proteinName);
+		out.add("geneName", geneName);
+		out.add("reviewed", reviewed);
 		return out.toString();
 	}
 

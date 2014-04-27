@@ -15,7 +15,7 @@ public class ProteinOrthologIndex {
 	 * ListOrderedSet objects, as their name indicates, are hybrid of list (sequence with index) and set (no duplicates)
 	 * which keeps insertion order.
 	 */
-	private final ListOrderedSet proteinIndex;
+	protected final ListOrderedSet proteinIndex;
 
 	private final File proteinIndexFile;
 
@@ -54,7 +54,15 @@ public class ProteinOrthologIndex {
 	public synchronized void save() throws IOException {
 		ObjectOutput out = null;
 
+		// Make sure index file exists
+		File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
+		if (!orthologCacheFolder.exists())
+			orthologCacheFolder.mkdirs();
+		if (!proteinIndexFile.exists())
+			proteinIndexFile.createNewFile();
+
 		try {
+
 			out = new ObjectOutputStream(new FileOutputStream(proteinIndexFile));
 
 			out.writeObject(proteinIndex);

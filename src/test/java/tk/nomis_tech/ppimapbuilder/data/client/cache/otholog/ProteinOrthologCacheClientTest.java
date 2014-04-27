@@ -5,13 +5,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
-import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProteinOrthologCacheClientTest {
 	//Test organisms
@@ -23,6 +26,11 @@ public class ProteinOrthologCacheClientTest {
 	private static Protein P04040;
 	private static Protein P24270;
 	private static Protein F1NGJ7;
+
+
+	private static Protein P10144;
+	private static Protein P04187;
+	private static Protein H9L027;
 
 
 	private static File testFolderOutput;
@@ -42,7 +50,19 @@ public class ProteinOrthologCacheClientTest {
 		P24270 = new Protein("P24270", mouse);
 		F1NGJ7 = new Protein("F1NGJ7", gallus);
 
+		P10144 = new Protein("P10144", human);
+		P04187 = new Protein("P04187", mouse);
+		H9L027 = new Protein("H9L027", gallus);
+
 		cache = ProteinOrthologCacheClient.getInstance();
+		cache.addOrthologGroup(P10144, P04187);
+		cache.addOrthologGroup(P10144, H9L027);
+		cache.addOrthologGroup(P04187, H9L027);
+	}
+
+	@AfterClass
+	public static void after() throws IOException {
+		TestUtils.recursiveDelete(testFolderOutput);
 	}
 
 	@Test
@@ -91,8 +111,30 @@ public class ProteinOrthologCacheClientTest {
 		Assert.assertEquals(expected, actual);
 	}
 
-	@AfterClass
-	public static void after() throws IOException {
-		TestUtils.recursiveDelete(testFolderOutput);
+	@Test
+	public void testGetOrthologMultiOrganism() throws IOException {
+		Map<Organism, Protein> expected = new HashMap<Organism, Protein>() {{
+			put(mouse, P24270);
+			put(gallus, F1NGJ7);
+		}};
+		Map<Organism, Protein> actual = cache.getOrthologsMultiOrganism(P04040, Arrays.asList(mouse, gallus));
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testGetOrthologMultiOrganismMultiProtein() throws IOException {
+		Map<Protein, Map<Organism, Protein>> expected = new HashMap<Protein, Map<Organism, Protein>>() {{
+			put(P04040, new HashMap<Organism, Protein>() {{
+				put(mouse, P24270);
+				put(gallus, F1NGJ7);
+			}});
+
+			put(P10144, new HashMap<Organism, Protein>() {{
+				put(mouse, P04187);
+				put(gallus, H9L027);
+			}});
+		}};
+		Map<Protein, Map<Organism, Protein>> actual = cache.getOrthologsMultiOrganismMultiProtein(Arrays.asList(P04040, P10144), Arrays.asList(mouse, gallus));
+		Assert.assertEquals(expected, actual);
 	}
 }

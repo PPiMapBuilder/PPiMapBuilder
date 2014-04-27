@@ -1,6 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
 
-import tk.nomis_tech.ppimapbuilder.data.client.ProteinOrthologClient;
+import tk.nomis_tech.ppimapbuilder.data.client.AbstractProteinOrthologClient;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
@@ -14,14 +14,14 @@ import java.util.*;
  * In the current model, a protein can have zero or one ortholog protein in another organism (doesn't reflect reality).
  * The orthology links stored in PPiMapBuilder's ortholog cache don't have any score of quality.
  */
-public class ProteinOrthologCacheClient extends ProteinOrthologClient {
+public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 
 	private static ProteinOrthologCacheClient _instance;
 	private File orthologCacheIndexFile;
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> orthologCacheIndex;
 
-
 	private ProteinOrthologCacheClient() throws IOException {
+		super();
 		orthologCacheIndexFile = new File(PMBSettings.getInstance().getOrthologCacheFolder(), "ortholog-cache.idx");
 
 		if (orthologCacheIndexFile.exists())
@@ -47,12 +47,9 @@ public class ProteinOrthologCacheClient extends ProteinOrthologClient {
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> load() throws IOException {
 		HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> index = null;
 
-		FileInputStream fileIn = null;
 		ObjectInputStream in = null;
-
 		try {
-			fileIn = new FileInputStream(orthologCacheIndexFile);
-			in = new ObjectInputStream(fileIn);
+			in = new ObjectInputStream(new FileInputStream(orthologCacheIndexFile));
 
 			index = (HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>) in.readObject();
 		} catch (IOException e) {
@@ -60,7 +57,6 @@ public class ProteinOrthologCacheClient extends ProteinOrthologClient {
 		} catch (ClassNotFoundException e) {
 		} finally {
 			if (in != null) in.close();
-			if (fileIn != null) fileIn.close();
 		}
 
 		return index;
@@ -72,11 +68,13 @@ public class ProteinOrthologCacheClient extends ProteinOrthologClient {
 	 * @throws IOException
 	 */
 	private synchronized void save() throws IOException {
+		File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
+		if(!orthologCacheFolder.exists())
+			orthologCacheFolder.mkdirs();
 		if (!orthologCacheIndexFile.exists())
 			orthologCacheIndexFile.createNewFile();
 
 		ObjectOutputStream out = null;
-
 		try {
 			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile));
 
@@ -154,4 +152,5 @@ public class ProteinOrthologCacheClient extends ProteinOrthologClient {
 		cache.addOrthologGroup(prots.get(0), prots.get(1));
 		save();
 	}
+
 }

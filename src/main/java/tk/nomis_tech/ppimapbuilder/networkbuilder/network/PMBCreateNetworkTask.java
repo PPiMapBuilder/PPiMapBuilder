@@ -44,17 +44,18 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final QueryWindow qw;
 
 
-	private final Organism refOrg;
-	private final HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg;
+	private final Organism referenceOrganism;
+	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
 	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 	
 	//Network data
 	private final HashMap<String, CyNode> nodeNameMap;
+	private final long startTime;
 
 	public PMBCreateNetworkTask(PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory, final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
 			final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm,
-			HashMap<Integer, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow queryWindow) {
+			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow queryWindow, long startTime) {
 		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
 		
 		// For the network
@@ -74,21 +75,24 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
-		this.refOrg = queryWindow.getSelectedRefOrganism();
+		this.referenceOrganism = queryWindow.getSelectedRefOrganism();
 		
 		this.nodeNameMap = new HashMap<String, CyNode>();
 		
 		this.qw = queryWindow;
+
+		this.startTime = startTime;
 	}
 
 	@Override
 	public void run(TaskMonitor monitor) {
-		
-		monitor.setTitle("Network building");
+
+		monitor.setTitle("PPiMapBuilder interaction network build");
+
 		monitor.setStatusMessage("Building Cytoscape network...");
 		monitor.setProgress(1.0);
 		
-		if (!interactionsByOrg.get(refOrg.getTaxId()).isEmpty() && !interactionsByOrg.isEmpty()) {
+		if (!interactionsByOrg.get(referenceOrganism).isEmpty() && !interactionsByOrg.isEmpty()) {
 			
 			// Create an empty network
 			CyNetwork network = networkFactory.createNetwork();
@@ -96,14 +100,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			
 			CyTable networkTable = network.getDefaultNetworkTable();
 			networkTable.createColumn("created by", String.class, true);
+			networkTable.createColumn("build time (seconds)", Integer.class, true);
 			network.getRow(network).set("created by", "PPiMapBuilder");
-			
+
 			//Create nodes using interactors pool
 			createNodes(network);
-			
+
 			//Create edges using reference interactions and organism interactions
 			createEdges(network);
-			
+
 			// Creation on the view
 			CyNetworkView view = applyView(network);
 
@@ -112,6 +117,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 			// Visual Style
 			applyVisualStyle(view);
+
+			network.getRow(network).set("build time (seconds)", (((int)(System.currentTimeMillis()- startTime))/1000));
 		}
 	}
 	
@@ -210,9 +217,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		edgeTable.createColumn("tax_id", String.class, false);
 		edgeTable.createColumn("interolog", String.class, false);
 		
-		for(Integer taxId: interactionsByOrg.keySet()) {
-			boolean inRefOrg = taxId == refOrg.getTaxId();
-			for(EncoreInteraction interaction: interactionsByOrg.get(taxId)) {
+		for(Organism organism: interactionsByOrg.keySet()) {
+			boolean inRefOrg = (organism.equals(referenceOrganism));
+			for(EncoreInteraction interaction: interactionsByOrg.get(organism)) {
 				String nodeAName = "", nodeBName = "";
 				CyNode nodeA = null, nodeB = null;
 				if(inRefOrg) {
@@ -223,7 +230,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				}
 				else {
 					for(UniProtEntry prot: interactorPool) {
-						Protein ortho = prot.getOrthologByTaxid(taxId);
+						Protein ortho = prot.getOrtholog(organism);
 						if(ortho != null) {
 							if(interaction.getInteractorA().equals(ortho.getUniProtId())) {
 								nodeAName = prot.getUniProtId();
@@ -271,7 +278,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
 					edgeAttr.set("pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
 					edgeAttr.set("confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
-					edgeAttr.set("tax_id", taxId.toString());
+					edgeAttr.set("tax_id", String.valueOf(organism.getTaxId()));
 					edgeAttr.set("interolog", Boolean.toString(!inRefOrg));
 				}
 			}

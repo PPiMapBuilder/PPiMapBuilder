@@ -1,16 +1,14 @@
 package tk.nomis_tech.ppimapbuilder.data.client.web.interaction;
 
+import com.google.common.collect.Lists;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import psidev.psi.mi.tab.model.BinaryInteraction;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import psidev.psi.mi.tab.model.BinaryInteraction;
-
-import com.google.common.collect.Lists;
 
 
 public class ThreadedPsicquicSimpleClientTest {
@@ -28,7 +26,7 @@ public class ThreadedPsicquicSimpleClientTest {
 		});
 		services = PsicquicRegistry.getInstance().getServices();*/
 
-		services = Arrays.asList(new PsicquicService[]{
+		services = Arrays.asList(
 			PsicquicRegistry.getInstance().getService("intact", false),
 			PsicquicRegistry.getInstance().getService("bind", false),
 			PsicquicRegistry.getInstance().getService("biogrid", false),
@@ -36,7 +34,7 @@ public class ThreadedPsicquicSimpleClientTest {
 			PsicquicRegistry.getInstance().getService("uniprot", false),
 			PsicquicRegistry.getInstance().getService("apid", false),
 			PsicquicRegistry.getInstance().getService("mint", false)
-		});
+		);
 
 		client = new ThreadedPsicquicSimpleClient(services, 3);
 	}
@@ -50,11 +48,11 @@ public class ThreadedPsicquicSimpleClientTest {
 
 	@Test
 	public void testGetByQueries() throws Exception {
-		List<String> queries = Lists.newArrayList(new String[] { 
+		List<String> queries = Lists.newArrayList(
 			"identifier:P04040", 
 			"identifier:P61106", 
 			"identifier:Q70EK8" 
-		});
+		);
 		List<BinaryInteraction> byQueries = client.getByQueries(queries);
 		
 		//System.out.println(byQueries.size());
