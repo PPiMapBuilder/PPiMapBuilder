@@ -140,7 +140,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 						try {
 							Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism);
 							entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
-						} catch (IOException e) {
+						} catch (Exception e) {
 							entry = null;
 						}
 					}
