@@ -39,6 +39,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private final List<PsicquicService> selectedDatabases;
 
 	// Data output
+	private final UniProtEntryCollection proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
 
@@ -49,9 +50,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private final double NB_STEP;
 	private int currentStep;
 
-	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow qw) {
+	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, UniProtEntryCollection proteinOfInterestPool, QueryWindow qw) {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
+		this.proteinOfInterestPool = proteinOfInterestPool;
 
 		this.NB_STEP = 7.0;
 		this.currentStep = 0;
@@ -122,7 +124,6 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		 * PART ONE: search interaction in reference organism
 		 * ------------------------------------------------------------------------------------------ */
 		final List<BinaryInteraction> baseRefInteractions = new ArrayList<BinaryInteraction>();
-		final UniProtEntryCollection proteinOfInterests = new UniProtEntryCollection();
 		{
 			interactionsByOrg.put(referenceOrganism, new ArrayList<EncoreInteraction>());
 
@@ -152,11 +153,11 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					}
 
 					// Save the protein into the interactor pool
-					proteinOfInterests.add(entry);
+					proteinOfInterestPool.add(entry);
 					interactorPool.add(entry);
 
 					// Add MiQL query to search interactions of the protein
-					queries.add(generateMiQLQueryIDTaxID(proteinID, referenceOrganism.getTaxId()));
+					queries.add(generateMiQLQueryIDTaxID(entry.getUniProtId(), referenceOrganism.getTaxId()));
 				}
 				//System.out.println(queries);
 
@@ -176,7 +177,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			Set<String> referenceInteractorsIDs = InteractionUtils.getInteractorsBinary(baseRefInteractions);
 
 			// Exclude proteins of interest
-			referenceInteractorsIDs.removeAll(proteinOfInterests.getAllAsUniProtId());
+			referenceInteractorsIDs.removeAll(proteinOfInterestPool.getAllAsUniProtId());
 
 			// Get UniProt entries
 			HashMap<String, UniProtEntry> uniProtProteins = uniProtEntryClient.retrieveProteinsData(referenceInteractorsIDs);
@@ -251,7 +252,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 							// Get list of protein of interest's orthologs in this organism
 							Set<Protein> proteinOfInterestsOrthologs = new HashSet<Protein>();
-							for (UniProtEntry proteinOfInterest : proteinOfInterests) {
+							for (UniProtEntry proteinOfInterest : proteinOfInterestPool) {
 								final Protein ortho = proteinOfInterest.getOrtholog(organism);
 
 								if (ortho != null)

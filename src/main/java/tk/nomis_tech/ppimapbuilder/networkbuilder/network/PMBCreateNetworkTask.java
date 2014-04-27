@@ -41,21 +41,31 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final VisualMappingManager vizMapManager;
 	
 
-	private final QueryWindow qw;
-
-
 	private final Organism referenceOrganism;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
+	private final UniProtEntryCollection proteinOfInterestPool;
 	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
-	
+
 	//Network data
 	private final HashMap<String, CyNode> nodeNameMap;
 	private final long startTime;
 
-	public PMBCreateNetworkTask(PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory, final CyNetworkManager netMgr, final CyNetworkNaming namingUtil, final CyNetworkFactory cnf, CyNetworkViewFactory cnvf,
-			final CyNetworkViewManager networkViewManager, final CyLayoutAlgorithmManager layoutMan, final VisualMappingManager vmm,
-			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, QueryWindow queryWindow, long startTime) {
+	public PMBCreateNetworkTask(
+			final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory,
+			final CyNetworkManager netMgr,
+			final CyNetworkNaming namingUtil,
+			final CyNetworkFactory cnf,
+			final CyNetworkViewFactory cnvf,
+			final CyNetworkViewManager networkViewManager,
+			final CyLayoutAlgorithmManager layoutMan,
+			final VisualMappingManager vmm,
+			final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
+			final UniProtEntryCollection interactorPool,
+			final UniProtEntryCollection proteinOfInterestPool,
+			final QueryWindow queryWindow,
+			long startTime
+	) {
 		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
 		
 		// For the network
@@ -75,12 +85,11 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
+		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.referenceOrganism = queryWindow.getSelectedRefOrganism();
 		
 		this.nodeNameMap = new HashMap<String, CyNode>();
 		
-		this.qw = queryWindow;
-
 		this.startTime = startTime;
 	}
 
@@ -123,8 +132,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 	
 	private void createNodes(CyNetwork network) {
-		ArrayList<String> selectedUniprotIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
-		
+
 		// Node attributes
 		CyTable nodeTable = network.getDefaultNodeTable();
 		nodeTable.createColumn("uniprot_id", String.class, false);
@@ -161,7 +169,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
 				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsStringList());
 				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
-				nodeAttr.set("queried", String.valueOf(selectedUniprotIDs.contains(protein.getUniProtId())));
+				nodeAttr.set("queried", String.valueOf(proteinOfInterestPool.contains(protein)));
 				
 				{
 					List<String> cellularComponent = protein.getCellularComponentsAsStringList();

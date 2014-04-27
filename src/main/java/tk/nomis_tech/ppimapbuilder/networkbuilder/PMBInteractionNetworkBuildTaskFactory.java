@@ -39,9 +39,10 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final QueryWindow queryWindow;
 
 	// Data collection for network generation
+	private final UniProtEntryCollection proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntryCollection interactorPool;
-	
+
 	// Error output
 	private String error_message;
 
@@ -62,6 +63,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
 		this.interactorPool = new UniProtEntryCollection();
+		this.proteinOfInterestPool = new UniProtEntryCollection();
 		
 		this.error_message = null;
 	}
@@ -70,8 +72,8 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
 		return new TaskIterator(
-			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, queryWindow),
-			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, queryWindow, startTime)
+			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
+			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow, startTime)
 		);
 	}
 
