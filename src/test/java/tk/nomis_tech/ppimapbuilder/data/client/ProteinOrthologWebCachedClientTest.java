@@ -1,7 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.data.client;
 
 import junit.framework.Assert;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
@@ -27,8 +26,7 @@ public class ProteinOrthologWebCachedClientTest {
 
 	@BeforeClass
 	public static void before() throws Exception {
-
-		output = TestUtils.createTestOutPutFolder();
+		output = TestUtils.createTestOutPutFolder(ProteinOrthologWebCachedClientTest.class.getSimpleName(), true);
 		PMBSettings.getInstance().setOrthologCacheFolder(output);
 
 		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
@@ -44,11 +42,6 @@ public class ProteinOrthologWebCachedClientTest {
 		client = new ProteinOrthologWebCachedClient();
 		client.setCacheClient(cacheClient);
 		client.setWebClient(webClient);
-	}
-
-	@AfterClass
-	public static void after() throws Exception {
-		TestUtils.recursiveDelete(output);
 	}
 
 	@Test

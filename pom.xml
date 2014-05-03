@@ -253,5 +253,12 @@
             <version>0.9.1</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- Stax XML Stream Parser -->
+        <dependency>
+            <groupId>stax</groupId>
+            <artifactId>stax</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
 </project>

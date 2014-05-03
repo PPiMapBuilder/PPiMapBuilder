@@ -1,7 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
 
 import junit.framework.Assert;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
@@ -33,7 +32,7 @@ public class SpeciesPairProteinOrthologCacheTest {
 
 	@BeforeClass
 	public static void before() throws IOException {
-		testFolderOutput = TestUtils.createTestOutPutFolder();
+		testFolderOutput = TestUtils.createTestOutPutFolder(SpeciesPairProteinOrthologCacheTest.class.getSimpleName(), true);
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 
 		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
@@ -80,10 +79,5 @@ public class SpeciesPairProteinOrthologCacheTest {
 		expected = Q58A65;
 		actual = cache.getOrtholog(O60271, mouse);
 		Assert.assertEquals(expected, actual);
-	}
-
-	@AfterClass
-	public static void after() throws IOException {
-		TestUtils.recursiveDelete(testFolderOutput);
 	}
 }

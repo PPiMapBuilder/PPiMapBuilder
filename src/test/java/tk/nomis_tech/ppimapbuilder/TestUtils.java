@@ -9,9 +9,19 @@ public class TestUtils {
 		FileUtil.recursiveDelete(file);
 	}
 
-	public static File createTestOutPutFolder() {
-		File testFolderOutput = new File("test-output" + System.currentTimeMillis());
+	public static File createTestOutPutFolder(String name, boolean deleteAtShutDown) {
+		final File testFolderOutput = new File(name + "-output-" + System.currentTimeMillis());
 		testFolderOutput.mkdir();
+
+		if(deleteAtShutDown) {
+			Runtime.getRuntime().addShutdownHook(new Thread(){
+				@Override
+				public void run() {
+					FileUtil.recursiveDelete(testFolderOutput);
+				}
+			});
+		}
+
 		return testFolderOutput;
 	}
 }

@@ -17,6 +17,7 @@ import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.util.SteppedTaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import javax.swing.*;
@@ -24,7 +25,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class PMBQueryInteractionTask extends AbstractTask {
+public class PMBQueryInteractionTaskMonitor extends AbstractTask {
 
 	// Clients
 	final UniProtEntryClient uniProtEntryClient;
@@ -46,17 +47,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	// Thread list
 	private final List<Thread> slaveThreads;
 
-	// Steps
-	private final double NB_STEP;
-	private int currentStep;
-
-	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, UniProtEntryCollection proteinOfInterestPool, QueryWindow qw) {
+	public PMBQueryInteractionTaskMonitor(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, UniProtEntryCollection proteinOfInterestPool, QueryWindow qw) {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
-
-		this.NB_STEP = 7.0;
-		this.currentStep = 0;
 
 		// Retrieve user input
 		referenceOrganism = qw.getSelectedRefOrganism();
@@ -113,7 +107,11 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	 * Complex network querying using PSICQUIC and InParanoid
 	 */
 	@Override
-	public void run(TaskMonitor monitor) throws Exception {
+	public void run(TaskMonitor taskMonitor) throws Exception {
+		// 7 steps for the task
+		SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor, 7.0);
+
+
 		interactionsByOrg.clear();
 		interactorPool.clear();
 
@@ -128,7 +126,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			interactionsByOrg.put(referenceOrganism, new ArrayList<EncoreInteraction>());
 
 			// Search interaction of protein of interest in reference organism
-			changeStep("Retrieving UniProt entries for protein of interest...", monitor);
+			monitor.setStep("Retrieving UniProt entries for protein of interest...");
 			{
 				List<String> queries = new ArrayList<String>();
 
@@ -162,7 +160,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				//System.out.println(queries);
 
 				// Get all primary interactions in reference organism
-				changeStep("Searching interaction for protein of interest...", monitor);
+				monitor.setStep("Searching interaction for protein of interest...");
 				baseRefInteractions.addAll(psicquicClient.getByQueries(queries));
 				System.out.println("interactions: " + baseRefInteractions.size());
 				InteractionUtils.filterNonUniprotInteractors(baseRefInteractions);
@@ -171,7 +169,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		}
 
 		// Get protein UniProt entries of the interactor pool
-		changeStep("Retrieving UniProt entries of all interaction's interactors...", monitor);
+		monitor.setStep("Retrieving UniProt entries of all interaction's interactors...");
 		{
 			// Get interactors across all interactions
 			Set<String> referenceInteractorsIDs = InteractionUtils.getInteractorsBinary(baseRefInteractions);
@@ -192,7 +190,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		 * ------------------------------------------------------------------------------------------ */
 		{
 			// Get orthologs of interactors
-			changeStep("Searching interactors orthologs...", monitor);
+			monitor.setStep("Searching interactors orthologs...");
 			final Map<Protein, Map<Organism, Protein>> orthologs = new HashMap<Protein, Map<Organism, Protein>>();
 			{
 				System.out.println("--Search orthologs--");
@@ -220,7 +218,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 
 			// Get interactions between orthologs (by organisms)
-			changeStep("Searching orthologs's interactions...", monitor);
+			monitor.setStep("Searching orthologs's interactions...");
 			{
 				class OrthologInteractionResult {
 					final Organism organism;
@@ -377,7 +375,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			InteractionUtils.filterByOrganism(baseRefInteractions, referenceOrganism);
 
 			// Add secondary interactions
-			changeStep("Searching secondary interactions in reference interactions...", monitor);
+			monitor.setStep("Searching secondary interactions in reference interactions...");
 			{
 				baseRefInteractions.addAll(InteractionUtils.getInteractionsInProteinPool(
 						new HashSet<Protein>(interactorPool), referenceOrganism, psicquicClient
@@ -385,7 +383,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 
 			// Remove duplicate interactions
-			changeStep("Clustering interactions in reference organism...", monitor);
+			monitor.setStep("Clustering interactions in reference organism...");
 			interactionsByOrg.get(referenceOrganism).addAll(InteractionUtils.clusterInteraction(baseRefInteractions));
 		}
 
@@ -413,10 +411,4 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		interactorPool.clear();
 		Thread.currentThread().interrupt();
 	}
-
-	private void changeStep(String message, TaskMonitor monitor) {
-		monitor.setStatusMessage(message);
-		monitor.setProgress(++currentStep / NB_STEP);
-	}
-
 }

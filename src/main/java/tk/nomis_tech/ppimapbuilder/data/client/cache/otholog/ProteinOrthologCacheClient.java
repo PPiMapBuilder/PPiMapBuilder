@@ -157,7 +157,7 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 	 * @return
 	 * @throws IOException
 	 */
-	private SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
+	public SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		//First organism exists in index?
 		HashMap<Organism, SpeciesPairProteinOrthologCache> d = this.orthologCacheIndex.get(organismA);
 		if (d == null) {

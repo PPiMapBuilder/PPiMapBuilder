@@ -16,6 +16,10 @@ public class Protein implements Serializable {
 	protected final String uniProtId;
 	protected final Organism organism;
 
+	public Protein(Protein protein) {
+		this(protein.getUniProtId(), protein.getOrganism());
+	}
+
 	public Protein(String uniProtId, Organism organism) {
 		this.uniProtId = uniProtId;
 		this.organism = organism;

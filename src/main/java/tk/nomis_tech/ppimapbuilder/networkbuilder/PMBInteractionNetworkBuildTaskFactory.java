@@ -14,7 +14,7 @@ import org.cytoscape.work.TaskIterator;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTaskMonitor;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
@@ -72,7 +72,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
 		return new TaskIterator(
-			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
+			new PMBQueryInteractionTaskMonitor(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
 			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow, startTime)
 		);
 	}

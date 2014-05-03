@@ -105,7 +105,10 @@ public class ProteinOrthologIndex {
 	 * @param protein
 	 * @return the index of the inserted protein (even if the protein already existed)
 	 */
-	public int addProtein(Protein protein) throws IOException {
+	public int addProtein(Protein protein) {
+		//copy protein to make sure its not an object initialized as a sub-class
+		protein = new Protein(protein);
+
 		if (proteinIndex.add(protein))
 			return this.proteinIndex.size() - 1;
 		else
@@ -119,5 +122,10 @@ public class ProteinOrthologIndex {
 
 	public int size() {
 		return proteinIndex.size();
+	}
+
+	public void clear() throws IOException {
+		proteinIndex.clear();
+		save();
 	}
 }

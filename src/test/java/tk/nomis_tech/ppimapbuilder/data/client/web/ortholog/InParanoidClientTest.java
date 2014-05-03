@@ -1,7 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.data.client.web.ortholog;
 
 import junit.framework.Assert;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
@@ -24,12 +23,12 @@ public class InParanoidClientTest {
 	private static Protein P24270;
 	private static List<Protein> humanProts;
 	private static InParanoidClient client;
-	private static File output;
+	private static File testFolderOutput;
 
 	@BeforeClass
 	public static void init() throws IOException {
-		output = TestUtils.createTestOutPutFolder();
-		PMBSettings.getInstance().setOrthologCacheFolder(output);
+		testFolderOutput = TestUtils.createTestOutPutFolder(InParanoidClientTest.class.getSimpleName(), true);
+		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 		client = new InParanoidClient(3, 0.85);
 
 		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
@@ -50,11 +49,6 @@ public class InParanoidClientTest {
 				add(new Protein(id, human));
 			}
 		}};
-	}
-
-	@AfterClass
-	public static void after() {
-		TestUtils.recursiveDelete(output);
 	}
 
 	@Test
