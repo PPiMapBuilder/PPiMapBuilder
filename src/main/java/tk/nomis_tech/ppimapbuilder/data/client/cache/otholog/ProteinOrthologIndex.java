@@ -116,4 +116,8 @@ public class ProteinOrthologIndex {
 	public String toString() {
 		return proteinIndex.toString();
 	}
+
+	public int size() {
+		return proteinIndex.size();
+	}
 }

@@ -1,7 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
 
-import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
 import java.io.*;
@@ -35,26 +35,32 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 
 	public synchronized void addOrthologGroup(Protein proteinA, Protein proteinB) throws IOException {
 		if (getOrtholog(proteinA, proteinB.getOrganism()) == null) {
+			int length = proteinOrthologIndex.size();
+
 			//Add protein (or not if already exist) to protein index and get its index
 			int sourceProtIndex = proteinOrthologIndex.addProtein(proteinA);
 			int destProtIndex = proteinOrthologIndex.addProtein(proteinB);
 
-			Future f = Executors.newSingleThreadExecutor().submit(new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					proteinOrthologIndex.save();
-					return null;
-				}
-			});
+			//At least one protein have been added => save the index
+			Future f = null;
+			if (length < proteinOrthologIndex.size()) {
+				f = Executors.newSingleThreadExecutor().submit(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						proteinOrthologIndex.save();
+						return null;
+					}
+				});
+			}
 
 			//Append prot index pair to file
 			DataOutputStream out = null;
 
 			try {
 				File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
-				if(!orthologCacheFolder.exists())
+				if (!orthologCacheFolder.exists())
 					orthologCacheFolder.mkdirs();
-				if(!getCacheDataFile().exists())
+				if (!getCacheDataFile().exists())
 					getCacheDataFile().createNewFile();
 
 				out = new DataOutputStream(new FileOutputStream(getCacheDataFile(), true));
@@ -66,13 +72,17 @@ public class SpeciesPairProteinOrthologCache implements Serializable {
 				if (out != null) out.close();
 			}
 
-			try {
-				f.get();
-			} catch (ExecutionException e) {
-				if (e.getCause() instanceof IOException)
-					throw (IOException) e.getCause();
-				e.printStackTrace();
-			} catch (InterruptedException e) {}
+			//Wait for the index save to finish before continuing
+			if (f != null) {
+				try {
+					f.get();
+				} catch (ExecutionException e) {
+					if (e.getCause() instanceof IOException)
+						throw (IOException) e.getCause();
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+				}
+			}
 		}
 	}
 

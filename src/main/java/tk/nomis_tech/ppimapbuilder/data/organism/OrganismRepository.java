@@ -23,7 +23,7 @@ public class OrganismRepository {
 				new Organism("Homo", "sapiens", 9606, 264),
 				new Organism("Arabidopsis", "thaliana", 3702, 188),
 				new Organism("Caenorhabditis", "elegans", 6239, 229),
-				new Organism("Drosophila", "Melanogaster", 7227, 242),
+				new Organism("Drosophila", "melanogaster", 7227, 242),
 				new Organism("Mus", "musculus", 10090, 128),
 				new Organism("Saccharomyces", "cerevisiae", 4932, 208),
 				new Organism("Schizosaccharomyces", "pombe", 4896, 173),

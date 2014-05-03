@@ -125,32 +125,49 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 			}
 		});
 
-		//First organism exists in index?
-		HashMap<Organism, SpeciesPairProteinOrthologCache> d = this.orthologCacheIndex.get(prots.get(0).getOrganism());
-		if (d == null) {
-			//Doesn't exist, create an index entry
-			d = new HashMap<Organism, SpeciesPairProteinOrthologCache>();
-			this.orthologCacheIndex.put(prots.get(0).getOrganism(), d);
-		}
-
 		//Second organism leads to the organism pair orthology cache?
-		SpeciesPairProteinOrthologCache cache = d.get(prots.get(1).getOrganism());
-		if (cache == null) {
-			//Doesn't exist, create a cache
-			cache = new SpeciesPairProteinOrthologCache(prots.get(0).getOrganism(), prots.get(1).getOrganism());
-			d.put(prots.get(1).getOrganism(), cache);
-
-			HashMap<Organism, SpeciesPairProteinOrthologCache> f = this.orthologCacheIndex.get(prots.get(1).getOrganism());
-			if (f == null) {
-				f = new HashMap<Organism, SpeciesPairProteinOrthologCache>();
-				this.orthologCacheIndex.put(prots.get(1).getOrganism(), f);
-			}
-			f.put(prots.get(0).getOrganism(), cache);
-		}
+		SpeciesPairProteinOrthologCache cache = getSpeciesPairProteinOrthologCache(prots.get(0).getOrganism(), prots.get(1).getOrganism());
 
 		//Add orthology to the organism pair orthology cache
 		cache.addOrthologGroup(prots.get(0), prots.get(1));
 		save();
+	}
+
+	/**
+	 * Gets the species pair ortholog cache from the ortholog index or create it using a species couple.
+	 * @param organismA
+	 * @param organismB
+	 * @return
+	 * @throws IOException
+	 */
+	private SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
+		//First organism exists in index?
+		HashMap<Organism, SpeciesPairProteinOrthologCache> d = this.orthologCacheIndex.get(organismA);
+		if (d == null) {
+			//Doesn't exist, create an index entry
+			d = new HashMap<Organism, SpeciesPairProteinOrthologCache>();
+			this.orthologCacheIndex.put(organismA, d);
+		}
+
+		//Second organism leads to the organism pair orthology cache?
+		SpeciesPairProteinOrthologCache cache = d.get(organismB);
+		if (cache == null) {
+			//Doesn't exist, create a cache
+			cache = new SpeciesPairProteinOrthologCache(organismA, organismB);
+			d.put(organismB, cache);
+
+			HashMap<Organism, SpeciesPairProteinOrthologCache> f = this.orthologCacheIndex.get(organismB);
+			if (f == null) {
+				f = new HashMap<Organism, SpeciesPairProteinOrthologCache>();
+				this.orthologCacheIndex.put(organismB, f);
+			}
+			f.put(organismA, cache);
+
+			//Save index
+			save();
+		}
+
+		return cache;
 	}
 
 }

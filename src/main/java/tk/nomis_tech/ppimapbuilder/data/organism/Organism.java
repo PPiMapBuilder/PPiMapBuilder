@@ -21,10 +21,10 @@ public class Organism implements Comparable<Organism>, Serializable {
 		this.genus = genus.trim().substring(0, 1).toUpperCase() + genus.trim().substring(1).toLowerCase();
 
 		//Format species name to be in lower case
-		this.species = species.toLowerCase().trim();
+		this.species = species.trim().toLowerCase();
 
-		this.commonName = genus + " " + species;
-		this.abbrName = genus.substring(0, 1) + "." + species;
+		this.commonName = this.genus + " " + this.species;
+		this.abbrName = this.genus.substring(0, 1) + "." + this.species;
 
 		this.ncbiTaxId = taxId;
 		this.inparanoidOrgID = inparanoidOrgID;
