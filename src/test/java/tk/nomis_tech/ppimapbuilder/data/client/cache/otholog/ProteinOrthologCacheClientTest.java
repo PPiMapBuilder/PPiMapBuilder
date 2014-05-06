@@ -35,10 +35,11 @@ public class ProteinOrthologCacheClientTest {
 	private static File testFolderOutput;
 
 	private static ProteinOrthologCacheClient cache;
+	private static ProteinOrthologCacheClient cacheEmpty;
 
 	@BeforeClass
 	public static void before() throws IOException {
-		testFolderOutput = TestUtils.createTestOutPutFolder(ProteinOrthologCacheClientTest.class.getSimpleName(), false);
+		testFolderOutput = TestUtils.createTestOutPutFolder(ProteinOrthologCacheClientTest.class.getSimpleName(), true);
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 
 		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
@@ -57,12 +58,6 @@ public class ProteinOrthologCacheClientTest {
 		cache.addOrthologGroup(P10144, P04187);
 		cache.addOrthologGroup(P10144, H9L027);
 		cache.addOrthologGroup(P04187, H9L027);
-	}
-
-	@Test
-	public void testGetFail() throws IOException {
-		Protein actual = cache.getOrtholog(P04040, mouse);
-		Assert.assertNull(actual);
 	}
 
 	@Test

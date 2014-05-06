@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
 
+import tk.nomis_tech.ppimapbuilder.data.Pair;
 import tk.nomis_tech.ppimapbuilder.data.client.AbstractProteinOrthologClient;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
@@ -15,7 +16,7 @@ import java.util.*;
  * In the current model, a protein can have zero or one ortholog protein in another organism (doesn't reflect reality).
  * The orthology links stored in PPiMapBuilder's ortholog cache don't have any score of quality.
  */
-public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
+public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient implements ProteinOrthologCache {
 
 	private static ProteinOrthologCacheClient _instance;
 	private File orthologCacheIndexFile;
@@ -109,6 +110,7 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 	 * @param organismB the organism of the desired ortholog
 	 * @return the orthologous protein
 	 */
+	@Override
 	public Protein getOrtholog(Protein protein, Organism organismB) throws IOException {
 		try {
 			SpeciesPairProteinOrthologCache cache = this.orthologCacheIndex.get(protein.getOrganism()).get(organismB);
@@ -122,6 +124,13 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 		}
 	}
 
+	@Override
+	public void addOrthologGroup(List<Pair<? extends Protein>> proteinPairs) throws Exception {
+		for(Pair<? extends  Protein> orthologGroup : proteinPairs) {
+			addOrthologGroup(orthologGroup.getFirst(), orthologGroup.getSecond());
+		}
+	}
+
 	/**
 	 * Adds an ortholog group into the PMB ortholog cache.
 	 * The order in which the two protein are given doesn't matter (their order will be switched according to the
@@ -131,6 +140,7 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 	 * @param proteinB
 	 * @throws IOException
 	 */
+	@Override
 	public void addOrthologGroup(Protein proteinA, Protein proteinB) throws IOException {
 		//Sort input to have always first organism ahead alphabetically
 		List<Protein> prots = Arrays.asList(proteinA, proteinB);
@@ -186,5 +196,7 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 
 		return cache;
 	}
+
+
 
 }

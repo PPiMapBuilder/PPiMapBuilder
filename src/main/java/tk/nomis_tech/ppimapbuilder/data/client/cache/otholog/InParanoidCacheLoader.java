@@ -35,9 +35,8 @@ public class InParanoidCacheLoader extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
-		SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor);
 
-		monitor.setTitle("Preparing list of files to load");
+		taskMonitor.setTitle("Preparing list of files to load");
 
 		List<Pair<Organism>> organismCombination = new ArrayList<Pair<Organism>>();
 
@@ -55,9 +54,10 @@ public class InParanoidCacheLoader extends AbstractTask {
 				organismCombination.add(new Pair<Organism>(organismCouple));
 			}
 		}
+		
+		SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor, organismCombination.size());
 
 		//Set number of steps
-		monitor.setNbStep(organismCombination.size());
 		monitor.setTitle("Loading OrthoXML files");
 
 		XMLInputFactory xmlif = XMLInputFactory.newInstance();

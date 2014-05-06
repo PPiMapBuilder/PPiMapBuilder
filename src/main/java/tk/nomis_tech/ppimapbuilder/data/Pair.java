@@ -51,4 +51,9 @@ public class Pair<T> {
 		else if(oldElement == second)
 			second = newElement;
 	}
+
+	@Override
+	public String toString() {
+		return "Pair["+first.toString()+", "+second.toString()+"]";
+	}
 }

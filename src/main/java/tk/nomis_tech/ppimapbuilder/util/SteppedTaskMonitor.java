@@ -7,22 +7,15 @@ import org.cytoscape.work.TaskMonitor;
  */
 public class SteppedTaskMonitor implements TaskMonitor {
 
-	private double nbStep;
+	private final double nbStep;
 	private int currentStep;
 	private TaskMonitor monitor;
 
-	public SteppedTaskMonitor(TaskMonitor monitor) {
-		this(monitor, 0);
-	}
 
 	public SteppedTaskMonitor(TaskMonitor monitor, final double nbStep) {
 		this.monitor = monitor;
 		this.nbStep = nbStep;
 		this.currentStep = -1;
-	}
-
-	public void setNbStep(double nbStep) {
-		this.nbStep = nbStep;
 	}
 
 	public void setStep(String message) {
@@ -35,7 +28,7 @@ public class SteppedTaskMonitor implements TaskMonitor {
 		if (monitor != null) {
 			monitor.setTitle(s);
 		}
-		System.out.println("[TITLE]\t" + s);
+		System.out.println("[TITLE]\t\t" + s);
 
 	}
 
@@ -44,8 +37,7 @@ public class SteppedTaskMonitor implements TaskMonitor {
 		if (monitor != null) {
 			monitor.setProgress(v);
 		}
-		System.out.println("[PROGRESS]\t" + ((int) v * 100) + "%");
-
+		System.out.println("[PROGRESS]\t" + (int) (v * 100.0) + "%");
 	}
 
 	@Override

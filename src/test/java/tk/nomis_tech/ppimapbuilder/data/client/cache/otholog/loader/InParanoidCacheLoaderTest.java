@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
+package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog.loader;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,7 +26,10 @@ public class InParanoidCacheLoaderTest {
 	public void testLoadInCache() throws Exception {
 		List<Organism> organisms = Arrays.asList(
 				OrganismRepository.getInstance().getOrganismByTaxId(9606),
-				OrganismRepository.getInstance().getOrganismByTaxId(10090)
+				OrganismRepository.getInstance().getOrganismByTaxId(10090),
+				OrganismRepository.getInstance().getOrganismByTaxId(4896),
+				OrganismRepository.getInstance().getOrganismByTaxId(5833),
+				OrganismRepository.getInstance().getOrganismByTaxId(4932)
 		);
 
 		InParanoidCacheLoader loader = new InParanoidCacheLoader(organisms);

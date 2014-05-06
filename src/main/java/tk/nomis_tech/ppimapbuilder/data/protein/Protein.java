@@ -37,7 +37,6 @@ public class Protein implements Serializable {
 		return organism;
 	}
 
-
 	@Override
 	public String toString() {
 		JsonObject out = new JsonObject();
@@ -53,5 +52,10 @@ public class Protein implements Serializable {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return uniProtId.hashCode();
 	}
 }
