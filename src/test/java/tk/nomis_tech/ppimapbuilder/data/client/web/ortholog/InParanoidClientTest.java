@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
@@ -32,9 +32,9 @@ public class InParanoidClientTest {
 		PMBSettings.getInstance().setOrthologCacheFolder(output);
 		client = new InParanoidClient(3, 0.85);
 
-		human = OrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = OrganismRepository.getInstance().getOrganismByTaxId(10090);
-		gallus = OrganismRepository.getInstance().getOrganismByTaxId(9031);
+		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		gallus = UserOrganismRepository.getInstance().getOrganismByTaxId(9031);
 
 		P04040 = new Protein("P04040", human);
 		P24270 = new Protein("P24270", mouse);

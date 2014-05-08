@@ -10,7 +10,7 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLExpressionBuilder;
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLParameterBuilder;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 
 import java.io.IOException;
@@ -118,7 +118,7 @@ public class InteractionUtilsTest {
 				"Q13952", "Q14344", "Q62132", "Q99677", "Q9UG90", "Q9BZH6", "Q9BQD3", "B4E025", "O60603", "Q01955", "Q92794", "Q5NHX7",
 				"Q92791", "Q5NHX6", "Q5NI96", "Q5NHX9", "Q92793", "Q5NHX8", "Q5NHX3", "Q5NI93", "Q01959", "Q5NHX5", "P10644", "Q8WTV0",
 				"Q6SA08", "C0LZJ3"}));
-		final Organism human = OrganismRepository.getInstance().getOrganismByTaxId(9606);
+		final Organism human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
 		HashSet<Protein> proteins = new HashSet<Protein>() {{
 			for (String p : prots)
 				add(new Protein(p, human));

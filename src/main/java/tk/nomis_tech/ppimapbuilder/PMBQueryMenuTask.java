@@ -2,7 +2,7 @@ package tk.nomis_tech.ppimapbuilder;
 
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicRegistry;
 
@@ -27,7 +27,7 @@ public class PMBQueryMenuTask extends AbstractTask {
 			public void run() {
 				try {
 					PsicquicRegistry reg = PsicquicRegistry.getInstance();
-					qw.updateLists(reg.getServices(), OrganismRepository.getInstance().getListOrganism());
+					qw.updateLists(reg.getServices(), UserOrganismRepository.getInstance().getOrganisms());
 
 					qw.setVisible(true);
 				} catch (IOException e) {

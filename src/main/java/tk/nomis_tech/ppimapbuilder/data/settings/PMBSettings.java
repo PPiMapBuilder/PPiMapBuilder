@@ -95,7 +95,6 @@ public final class PMBSettings {
 		return orthologCacheFolder;
 	}
 
-
 	//For test purpose only
 	public void setOrthologCacheFolder(File orthologCacheFolder) throws IOException {
 		this.orthologCacheFolder = orthologCacheFolder;

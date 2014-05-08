@@ -11,14 +11,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class DatabaseSettingPanel extends JPanel {
+public class DatabaseSettingPanel extends TabContentPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
 	public DatabaseSettingPanel() {
-		setLayout(new BorderLayout());
+		super(new BorderLayout(), "PSICQUIC Databases");
+
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
 

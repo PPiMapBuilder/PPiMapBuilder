@@ -2,7 +2,7 @@ package tk.nomis_tech.ppimapbuilder.data.protein;
 
 import com.eclipsesource.json.JsonObject;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 
 import java.io.Serializable;
 
@@ -22,7 +22,7 @@ public class Protein implements Serializable {
 	}
 
 	public Protein(String uniProtId, int taxId) {
-		this(uniProtId, OrganismRepository.getInstance().getOrganismByTaxId(taxId));
+		this(uniProtId, UserOrganismRepository.getInstance().getOrganismByTaxId(taxId));
 	}
 
 	public String getUniProtId() {

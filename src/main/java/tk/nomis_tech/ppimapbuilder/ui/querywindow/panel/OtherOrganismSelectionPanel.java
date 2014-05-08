@@ -74,7 +74,7 @@ public class OtherOrganismSelectionPanel {
 		organisms.clear();
 		panSourceOtherOrganisms.removeAll();
 		for (Organism og : ogs) {
-			JCheckBox j = new JCheckBox(og.getCommonName(), true);
+			JCheckBox j = new JCheckBox(og.getScientificName(), true);
 			j.setBackground(Color.white);
 			organisms.put(og, j);
 

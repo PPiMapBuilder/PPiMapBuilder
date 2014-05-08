@@ -2,40 +2,77 @@ package tk.nomis_tech.ppimapbuilder.data.organism;
 
 import java.io.Serializable;
 
+/**
+ * Organism representation inspired by UniProt taxonomy RDF format
+ */
 public class Organism implements Comparable<Organism>, Serializable {
 
+	private static final long serialVersionUID = 1L;
+
+	private final String scientificName;
+
+	// Scientific name composed of just the genus and species
+	private final String simpleScientificName;
+
+	private final String mnemonic;
+
+	// Deduced from scientific name
 	private final String genus;
 	private final String species;
+
 	private final String commonName;
 	private final String abbrName;
+
+	// Unique identifier for Organisms
 	private final int ncbiTaxId;
 
-	private Integer inparanoidOrgID;
-
-	protected Organism(String genus, String species, int taxId) {
-		this(genus, species, taxId, null);
+	protected Organism(String scientificName, int taxId) {
+		this(scientificName, "", "", taxId);
 	}
 
-	protected Organism(String genus, String species, int taxId, Integer inparanoidOrgID) {
-		//Format genus name to have a capitalized word
-		this.genus = genus.trim().substring(0, 1).toUpperCase() + genus.trim().substring(1).toLowerCase();
+	protected Organism(String scientificName, String mnemonic, String commonName, int taxId) {
+		String[] parts = scientificName.split(" ");
 
-		//Format species name to be in lower case
-		this.species = species.trim().toLowerCase();
+		// Format genus name to have a capitalized word
+		String genus = parts[0];
+		this.genus = genus.substring(0, 1).toUpperCase() + genus.substring(1).toLowerCase();
 
-		this.commonName = this.genus + " " + this.species;
-		this.abbrName = this.genus.substring(0, 1) + "." + this.species;
+		// Format species name to be in lower case
+		String species = parts[1];
+		this.species = (!species.equals("sp.")) ? species.toLowerCase() : "";
 
+		this.simpleScientificName = this.genus + " " + this.species;
+
+		// Format scientific name
+		this.scientificName = scientificName;
+
+		// Abbreviated name
+		this.abbrName =
+			!this.species.equals("") ?
+				this.genus.substring(0, 1) + "." + this.species
+			:
+				this.genus + "." + species;
+
+		// Common name
+		this.commonName = commonName;
+
+		// Mnemonic name
+		this.mnemonic = mnemonic;
+
+		// Identifier
 		this.ncbiTaxId = taxId;
-		this.inparanoidOrgID = inparanoidOrgID;
 	}
 
 	public int getTaxId() {
 		return ncbiTaxId;
 	}
 
-	public Integer getInparanoidOrgID() {
-		return inparanoidOrgID;
+	public String getScientificName() {
+		return scientificName;
+	}
+
+	public String getSimpleScientificName() {
+		return simpleScientificName;
 	}
 
 	public String getAbbrName() {
@@ -44,6 +81,10 @@ public class Organism implements Comparable<Organism>, Serializable {
 
 	public String getCommonName() {
 		return commonName;
+	}
+
+	public String getMnemonic() {
+		return mnemonic;
 	}
 
 	public String getGenus() {
@@ -56,7 +97,7 @@ public class Organism implements Comparable<Organism>, Serializable {
 
 	@Override
 	public String toString() {
-		return this.getCommonName();
+		return this.getScientificName();
 	}
 
 	@Override
@@ -74,6 +115,10 @@ public class Organism implements Comparable<Organism>, Serializable {
 			return false;
 	}
 
+	/**
+	 * Declaring the NCBI Taxonomy identifier as the unique identifier for all Organisms.
+	 * Used in Set, HashSet, HashMap, ... to avoid duplicates.
+	 */
 	@Override
 	public int hashCode() {
 		return ncbiTaxId;

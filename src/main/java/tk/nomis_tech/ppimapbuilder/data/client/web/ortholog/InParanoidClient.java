@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import tk.nomis_tech.ppimapbuilder.data.client.AbstractProteinOrthologClient;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
@@ -145,8 +145,8 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 
 			String nameA = species.get(0).attr("speclong");
 			String nameB = species.get(1).attr("speclong");
-			Organism orgA = OrganismRepository.getInstance().getOrganismByCommonName(nameA);
-			Organism orgB = OrganismRepository.getInstance().getOrganismByCommonName(nameB);
+			Organism orgA = UserOrganismRepository.getInstance().getOrganismBySimpleName(nameA);
+			Organism orgB = UserOrganismRepository.getInstance().getOrganismBySimpleName(nameB);
 
 			if (orgA == null || orgB == null) continue;
 
@@ -164,7 +164,7 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 
 			// For each protein of this species pair get the protein from current organism with best score
 			for (Element proteinElement : speciesPair.select("protein")) {
-				Organism proteinOrg = OrganismRepository.getInstance().getOrganismByCommonName(proteinElement.attr("speclong"));
+				Organism proteinOrg = UserOrganismRepository.getInstance().getOrganismBySimpleName(proteinElement.attr("speclong"));
 
 				if (proteinOrg.equals(currentOrg)) {
 					double score = Double.valueOf(proteinElement.attr("score"));

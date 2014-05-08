@@ -56,7 +56,7 @@ public class ReferenceOrganismSelectionPanel {
 		
 		refOrgCbModel.removeAllElements();
 		for (Organism org : orgs) {
-			refOrgCbModel.addElement(org.getCommonName());
+			refOrgCbModel.addElement(org.getSimpleScientificName());
 		}
 	}
 	

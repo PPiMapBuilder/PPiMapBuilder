@@ -9,7 +9,7 @@ import tk.nomis_tech.ppimapbuilder.data.GeneOntologyCategory;
 import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
 import tk.nomis_tech.ppimapbuilder.data.client.AbstractThreadedClient;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 		// ORGANISM
 		for (Element e : doc.select("organism")) {
-			organism = OrganismRepository.getInstance().getOrganismByTaxId(Integer.valueOf(e.select("dbReference").attr("id")));
+			organism = UserOrganismRepository.getInstance().getOrganismByTaxId(Integer.valueOf(e.select("dbReference").attr("id")));
 			break;
 		}
 

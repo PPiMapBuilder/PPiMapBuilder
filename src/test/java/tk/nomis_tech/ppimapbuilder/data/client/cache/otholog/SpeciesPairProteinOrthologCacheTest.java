@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.organism.OrganismRepository;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
@@ -36,8 +36,8 @@ public class SpeciesPairProteinOrthologCacheTest {
 		testFolderOutput = TestUtils.createTestOutPutFolder();
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 
-		human = OrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = OrganismRepository.getInstance().getOrganismByTaxId(10090);
+		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		P04040 = new Protein("P04040", human);
 		Q06141 = new Protein("Q06141", human);

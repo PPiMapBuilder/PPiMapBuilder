@@ -1,10 +1,11 @@
 package tk.nomis_tech.ppimapbuilder.data.client.cache.otholog;
 
 import tk.nomis_tech.ppimapbuilder.data.client.AbstractProteinOrthologClient;
-import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.util.FileUtil;
 
 import java.io.*;
 import java.util.*;
@@ -51,7 +52,13 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 		try {
 			in = new ObjectInputStream(new FileInputStream(orthologCacheIndexFile));
 
-			index = (HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>) in.readObject();
+			try {
+				index = (HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>) in.readObject();
+			} catch (InvalidClassException e) {
+				// Old cache that is incompatible with the current version
+				//  => emptying old cache
+				return clear();
+			}
 		} catch (IOException e) {
 			throw e;
 		} catch (ClassNotFoundException e) {
@@ -63,13 +70,22 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 	}
 
 	/**
+	 * Clear all ortholog cache files and return an empty cache index.
+	 */
+	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> clear() throws IOException {
+		FileUtil.recursiveDelete(PMBSettings.getInstance().getOrthologCacheFolder());
+		return new HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>();
+	}
+
+
+	/**
 	 * Saves the ortholog cache index in file "ortholog-cache.idx"
 	 *
 	 * @throws IOException
 	 */
 	private synchronized void save() throws IOException {
 		File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
-		if(!orthologCacheFolder.exists())
+		if (!orthologCacheFolder.exists())
 			orthologCacheFolder.mkdirs();
 		if (!orthologCacheIndexFile.exists())
 			orthologCacheIndexFile.createNewFile();
@@ -97,8 +113,8 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 		try {
 			SpeciesPairProteinOrthologCache cache = this.orthologCacheIndex.get(protein.getOrganism()).get(organismB);
 			Protein ortholog = cache.getOrtholog(protein, organismB);
-			if(protein instanceof UniProtEntry) {
-				((UniProtEntry)protein).addOrtholog(ortholog);
+			if (protein instanceof UniProtEntry) {
+				((UniProtEntry) protein).addOrtholog(ortholog);
 			}
 			return ortholog;
 		} catch (NullPointerException e) {
@@ -135,6 +151,7 @@ public class ProteinOrthologCacheClient extends AbstractProteinOrthologClient {
 
 	/**
 	 * Gets the species pair ortholog cache from the ortholog index or create it using a species couple.
+	 *
 	 * @param organismA
 	 * @param organismB
 	 * @return

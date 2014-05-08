@@ -68,7 +68,7 @@ public class PsicquicService {
 		StringBuilder sb = new StringBuilder("PsicquicService{" + "name=" + name + ", soapUrl=" + soapUrl + ", restUrl=" + restUrl + ", active=" + active + ", count=" + count + ", version=" + version + ", organizationUrl=" + organizationUrl + ", restricted=" + restricted + ", tags=");
 
 		sb.append('[');
-		for (Iterator<String> it = tags.iterator(); it.hasNext();) {
+		for (Iterator<String> it = tags.iterator(); it.hasNext(); ) {
 			String t = it.next();
 			sb.append(t);
 			if (it.hasNext()) {
