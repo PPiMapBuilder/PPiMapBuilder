@@ -4,13 +4,19 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
+
 public final class PMBSettings {
 
 	private static PMBSettings _instance;
 
 	// PPiMapBuilder setting file
-	private final File pmbSettingFile;
+	private final File pmbDatabaseSettingFile;
 	private ArrayList<String> databaseList;
+	
+	private final File pmbOrganismSettingFile;
+	private ArrayList<Organism> organismList;
 
 	// Cytoscape configuration folder
 	private final File cytoscapeConfigurationFolder;
@@ -21,9 +27,16 @@ public final class PMBSettings {
 	private File orthologCacheFolder;
 
 	private PMBSettings() {
+		
+
+		System.out.println("#4.1");
+		
 		cytoscapeConfigurationFolder = new File(System.getProperty("user.home"), "CytoscapeConfiguration");
 		ppiMapBuilderConfigurationFolder = new File(cytoscapeConfigurationFolder, "PPiMapBuilder");
 
+
+		System.out.println("#4.2");
+		
 		if (!ppiMapBuilderConfigurationFolder.exists())
 			ppiMapBuilderConfigurationFolder.mkdir();
 
@@ -32,6 +45,9 @@ public final class PMBSettings {
 		if (!orthologCacheFolder.exists())
 			orthologCacheFolder.mkdir();
 
+		
+
+		System.out.println("#4.3");
 		// Default database list
 		databaseList = new ArrayList<String>(Arrays.asList(
 				"BioGrid",
@@ -40,15 +56,31 @@ public final class PMBSettings {
 				"MINT"
 		));
 
-		pmbSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder.settings");
+		pmbDatabaseSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-databases.settings");
+		
 
+		System.out.println("#4.4");
+		// Default organism list
+		
+		//System.out.println(UserOrganismRepository.getDefaultOrganismList());
+		
+		organismList = UserOrganismRepository.getDefaultOrganismList();
+		
+		System.out.println("#4.45");System.out.println(organismList);
+		
+		pmbOrganismSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-organisms.settings");
+
+
+		System.out.println("#4.5");
+		
 		readSettings();
 	}
 
 	public static PMBSettings getInstance() {
-		if (_instance == null)
-			_instance = new
-					PMBSettings();
+
+		if (_instance == null) {
+			_instance = new PMBSettings();
+		}
 		return _instance;
 	}
 
@@ -59,12 +91,35 @@ public final class PMBSettings {
 	public void setDatabaseList(ArrayList<String> databaseList) {
 		this.databaseList = databaseList;
 	}
+	
+	public ArrayList<Organism> getOrganismList() {
+
+		System.out.println("#4.9.2");
+		return organismList;
+	}
+
+	public void setOrganismList(ArrayList<Organism> organismList) {
+		this.organismList = organismList;
+	}
 
 	public void writeSettings() {
 		try {
-			FileOutputStream fileOut = new FileOutputStream(pmbSettingFile);
+			FileOutputStream fileOut = new FileOutputStream(pmbDatabaseSettingFile);
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(databaseList);
+			out.close();
+			fileOut.close();
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			FileOutputStream fileOut = new FileOutputStream(pmbOrganismSettingFile);
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(organismList);
 			out.close();
 			fileOut.close();
 
@@ -76,8 +131,10 @@ public final class PMBSettings {
 	}
 
 	public void readSettings() {
+
+		System.out.println("#4.6");
 		try {
-			FileInputStream fileIn = new FileInputStream(pmbSettingFile);
+			FileInputStream fileIn = new FileInputStream(pmbDatabaseSettingFile);
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			setDatabaseList((ArrayList<String>) in.readObject());
 			in.close();
@@ -89,6 +146,24 @@ public final class PMBSettings {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+
+		System.out.println("#4.7");
+		try {
+			FileInputStream fileIn = new FileInputStream(pmbOrganismSettingFile);
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			setOrganismList((ArrayList<Organism>) in.readObject());
+			in.close();
+			fileIn.close();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// If the setting save file does not exist, we the default organism list
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("#4.8");
 	}
 
 	public File getOrthologCacheFolder() {
