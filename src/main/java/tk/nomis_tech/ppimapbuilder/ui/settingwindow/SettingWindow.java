@@ -3,6 +3,8 @@ package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 import org.cytoscape.work.TaskManager;
 
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
@@ -44,7 +46,7 @@ public class SettingWindow extends JFrame {
 		add(initBottomPanel(), BorderLayout.SOUTH);
 
 		System.out.println("#6.92");
-		getRootPane().setDefaultButton(saveSettings);
+		//getRootPane().setDefaultButton(saveSettings);
 		System.out.println("#7");
 
 		initListeners();
@@ -127,18 +129,21 @@ public class SettingWindow extends JFrame {
 
 
 				System.out.println("#10");
-				// TODO: currently save the three panel at the same time so check if it is a good idea
 				// DATABASE SETTINGS SAVE
 				ArrayList<String> databases = new ArrayList<String>();
 				for (PsicquicService s : databaseSettingPanel.getSelectedDatabases()) {
 					databases.add(s.getName());
 				}
 				PMBSettings.getInstance().setDatabaseList(databases);
-				taskManager.execute(saveSettingFactory.createTaskIterator());
 				
+				// ORGANISM SETTINGS SAVE
+				PMBSettings.getInstance().setOrganismList((ArrayList<Organism>) UserOrganismRepository.getInstance().getOrganisms());
+				
+				// SAVING TASK
+				taskManager.execute(saveSettingFactory.createTaskIterator());
+
 
 				System.out.println("#11");
-				// ORGANISM SETTINGS SAVE
 				
 
 			}
@@ -151,8 +156,15 @@ public class SettingWindow extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+
+				PMBSettings.getInstance().readSettings();
+				UserOrganismRepository.resetUserOrganismRepository();
+				getOrganismSettingPanel().updatePanSourceOrganism();
+				getOrganismSettingPanel().updateSuggestions();
+				
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
+				
 			}
 
 		});
@@ -165,6 +177,10 @@ public class SettingWindow extends JFrame {
 	
 	public void setTaskManager(TaskManager taskManager) {
 		this.taskManager = taskManager;
+	}
+	
+	public OrganismSettingPanel getOrganismSettingPanel() {
+		return organismSettingPanel;
 	}
 
 }

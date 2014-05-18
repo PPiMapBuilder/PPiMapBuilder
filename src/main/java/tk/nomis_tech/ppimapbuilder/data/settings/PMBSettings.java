@@ -162,6 +162,8 @@ public final class PMBSettings {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//UserOrganismRepository.getInstance().setOrganisms(this.organismList);
+		//UserOrganismRepository.getInstance().resetUserOrganismRepository();
 
 		System.out.println("#4.8");
 	}

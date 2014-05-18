@@ -12,7 +12,7 @@ import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 public class UserOrganismRepository {
 
 	private static UserOrganismRepository _instance;
-	private final List<Organism> listOrganism;
+	private static List<Organism> listOrganism;
 
 	public static UserOrganismRepository getInstance() {
 		if (_instance == null)
@@ -43,6 +43,10 @@ public class UserOrganismRepository {
 		System.out.println("#4.9.3");
 	}
 	
+	public static void resetUserOrganismRepository() {
+		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
+	}
+	
 	public static ArrayList<Organism> getDefaultOrganismList() {
 		ArrayList<Organism> organismList = new ArrayList<Organism>();
 		organismList.add(new Organism("Homo sapiens", "HUMAN", "Human", 9606));
@@ -59,6 +63,10 @@ public class UserOrganismRepository {
 
 	public List<Organism> getOrganisms() {
 		return listOrganism;
+	}
+	
+	public void setOrganisms(ArrayList<Organism> listOrganism) {
+		this.listOrganism = listOrganism;
 	}
 
 	public Organism getOrganismByTaxId(int taxId) {

@@ -62,13 +62,8 @@ public class OrganismSettingPanel extends TabContentPanel {
 		searchBox.setMinimumSize(new Dimension(200, 30));
 		searchBox.setPreferredSize(new Dimension(200, 30));
 		searchBox.setMaximumSize(new Dimension(200, 30));
-		ArrayList<String> data = new ArrayList<String>();
-		data = (ArrayList<String>) InParanoidOrganismRepository.getInstance().getOrganismNames();
-		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
-			data.remove(o.getScientificName());
-		}
-		searchBox.setSuggestData(data);
 		
+		updateSuggestions();		
 		
 		searchBox.setSuggestWidth(150);
 		searchBox.setPreferredSuggestSize(new Dimension(150, 50));
@@ -85,6 +80,7 @@ public class OrganismSettingPanel extends TabContentPanel {
 			public void actionPerformed(ActionEvent e) {
 				UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
 				updatePanSourceOrganism();
+				updateSuggestions();
 			}
 			
 		});
@@ -98,5 +94,18 @@ public class OrganismSettingPanel extends TabContentPanel {
 		for (Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
 			panSourceOrganism.add(new JLabel(org.getScientificName()));
 		}
+	}
+	
+	public void updateSuggestions() {
+		ArrayList<String> data = new ArrayList<String>();
+		data = (ArrayList<String>) InParanoidOrganismRepository.getInstance().getOrganismNames();
+		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+			data.remove(o.getScientificName());
+		}
+		searchBox.setSuggestData(data);
+		searchBox.setText("");
+		searchBox.repaint();
+		//addOrganism.requestFocusInWindow();
+		
 	}
 }
