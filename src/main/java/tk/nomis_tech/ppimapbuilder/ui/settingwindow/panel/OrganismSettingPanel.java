@@ -42,7 +42,6 @@ public class OrganismSettingPanel extends TabContentPanel {
 
 		updatePanSourceOrganism();
 		
-		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceOrganisms = new JScrollPane(panSourceOrganism);
 		scrollPaneSourceOrganisms.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
 		add(scrollPaneSourceOrganisms, BorderLayout.CENTER);
@@ -106,6 +105,8 @@ public class OrganismSettingPanel extends TabContentPanel {
 			});
 			
 			JPanel panOrgaName = new JPanel();
+			panOrgaName.setOpaque(false);
+			
 			panOrgaName.setLayout(new BoxLayout(panOrgaName, BoxLayout.LINE_AXIS));
 			panOrgaName.add(nameLabel);
 			panOrgaName.add(Box.createHorizontalGlue());
