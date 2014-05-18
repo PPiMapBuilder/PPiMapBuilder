@@ -3,6 +3,7 @@ package tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import javax.swing.BoxLayout;
@@ -20,6 +21,7 @@ import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
+import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
 import tk.nomis_tech.ppimapbuilder.ui.util.JSearchTextField;
 import tk.nomis_tech.ppimapbuilder.ui.util.LogoIcon;
@@ -31,7 +33,7 @@ public class OrganismSettingPanel extends TabContentPanel {
 	private JButton addOrganism;
 	private JSearchTextField searchBox;
 	
-	public OrganismSettingPanel() {
+	public OrganismSettingPanel(SettingWindow owner) {
 		super(new BorderLayout(), "Organisms");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -56,11 +58,22 @@ public class OrganismSettingPanel extends TabContentPanel {
 
 		panSearchOrganism = new JPanel();
 		
-		searchBox = new JSearchTextField();
+		searchBox = new JSearchTextField(owner);
 		searchBox.setIcon(JSearchTextField.class.getResource("search.png"));
 		searchBox.setMinimumSize(new Dimension(200, 30));
 		searchBox.setPreferredSize(new Dimension(200, 30));
 		searchBox.setMaximumSize(new Dimension(200, 30));
+		ArrayList<String> data = new ArrayList<String>();
+		data.add("pierre");
+		data.add("toto");
+		searchBox.setSuggestData(data);
+		
+		
+		searchBox.setSuggestWidth(150);
+		searchBox.setPreferredSuggestSize(new Dimension(150, 50));
+		searchBox.setMinimumSuggestSize(new Dimension(150, 50));
+		searchBox.setMaximumSuggestSize(new Dimension(150, 50));
+		
 		
 		panSearchOrganism.add(searchBox);
 		

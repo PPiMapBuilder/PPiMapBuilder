@@ -75,7 +75,7 @@ public class SettingWindow extends JFrame {
 		System.out.println("#6.3");
 		
 		databaseSettingPanel = new DatabaseSettingPanel();
-		organismSettingPanel = new OrganismSettingPanel();
+		organismSettingPanel = new OrganismSettingPanel(this);
 		orthologySettingPanel = new OrthologySettingPanel();
 
 

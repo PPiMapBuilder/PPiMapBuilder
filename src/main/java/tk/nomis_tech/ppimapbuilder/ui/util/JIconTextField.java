@@ -64,7 +64,6 @@ public class JIconTextField extends JTextField{
  
     @Override
     protected void paintComponent(Graphics g) {
-    	System.out.println("#paint component 1");
         super.paintComponent(g);
  
         int textX = 2;
