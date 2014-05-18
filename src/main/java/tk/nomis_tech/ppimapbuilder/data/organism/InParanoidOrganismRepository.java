@@ -324,6 +324,15 @@ public class InParanoidOrganismRepository {
 		return names;
 		
 	}
+	
+	public Organism getOrganismByScientificName(String scientificName) {
+		for (Organism o : organisms) {
+			if (o.getScientificName().equals(scientificName)) {
+				return o;
+			}
+		}
+		return null;
+	}
 
 	/**
 	 * Using UniProt taxonomy to search organism data of the InParanoid taxonomy identifier list.

@@ -74,4 +74,15 @@ public class UserOrganismRepository {
 				return org;
 		return null;
 	}
+	
+	public void addOrganism(Organism o) {
+		listOrganism.add(o);
+	}
+	
+	public void addOrganism(String scientificName) {
+		Organism orga = InParanoidOrganismRepository.getInstance().getOrganismByScientificName(scientificName);		
+		if (orga != null) {
+			listOrganism.add(orga);
+		}
+	}
 }

@@ -48,9 +48,7 @@ public class OrganismSettingPanel extends TabContentPanel {
 
 		panSourceOrganism.setLayout(new BoxLayout(panSourceOrganism, BoxLayout.Y_AXIS));
 
-		for (Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-			panSourceOrganism.add(new JLabel(org.getScientificName()));
-		}
+		updatePanSourceOrganism();
 		
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceOrganisms = new JScrollPane(panSourceOrganism);
@@ -85,11 +83,20 @@ public class OrganismSettingPanel extends TabContentPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
+				updatePanSourceOrganism();
 			}
+			
 		});
 		panSearchOrganism.add(addOrganism);
 		
 		add(panSearchOrganism, BorderLayout.SOUTH);
+	}
+	
+	public void updatePanSourceOrganism() {
+		panSourceOrganism.removeAll();
+		for (Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+			panSourceOrganism.add(new JLabel(org.getScientificName()));
+		}
 	}
 }
