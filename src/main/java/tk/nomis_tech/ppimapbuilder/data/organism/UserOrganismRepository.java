@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
 /**
@@ -83,8 +85,19 @@ public class UserOrganismRepository {
 		return null;
 	}
 	
+	public Organism getOrganismByScientificName(String scientificName) {
+		for (Organism org : listOrganism)
+			if (org.getScientificName().equals(scientificName))
+				return org;
+		return null;
+	}
+	
 	public void addOrganism(Organism o) {
 		listOrganism.add(o);
+	}
+	
+	public void removeOrganism(Organism o) {
+		listOrganism.remove(o);
 	}
 	
 	public void addOrganism(String scientificName) {
@@ -93,4 +106,16 @@ public class UserOrganismRepository {
 			listOrganism.add(orga);
 		}
 	}
+	
+	public void removeOrganism(String scientificName) {
+		removeOrganism(getOrganismByScientificName(scientificName));
+	}
+	
+	public void removeOrganismExceptLastOne(String scientificName) {
+		if (listOrganism.size() > 1)
+			removeOrganism(getOrganismByScientificName(scientificName));
+		else 
+			JOptionPane.showMessageDialog(null, "Please keep at least one organism", "Deletion impossible", JOptionPane.INFORMATION_MESSAGE);
+	}
+	
 }

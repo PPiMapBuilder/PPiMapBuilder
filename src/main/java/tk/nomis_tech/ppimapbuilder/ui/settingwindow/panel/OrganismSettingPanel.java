@@ -3,9 +3,14 @@ package tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -91,8 +96,36 @@ public class OrganismSettingPanel extends TabContentPanel {
 	
 	public void updatePanSourceOrganism() {
 		panSourceOrganism.removeAll();
-		for (Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-			panSourceOrganism.add(new JLabel(org.getScientificName()));
+		for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+			
+			ImageIcon icon = new ImageIcon(OrganismSettingPanel.class.getResource("delete.png"));
+			JLabel nameLabel = new JLabel(org.getScientificName());
+			JButton deleteOrga = new JButton(icon);
+			Dimension iconDim = new Dimension(icon.getIconWidth()+2, icon.getIconHeight()+2);
+			deleteOrga.setMinimumSize(iconDim);
+			deleteOrga.setMaximumSize(iconDim);
+			deleteOrga.setPreferredSize(iconDim);
+			deleteOrga.setContentAreaFilled(false);
+			deleteOrga.setBorder(BorderFactory.createEmptyBorder());
+			deleteOrga.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					//System.out.println(org.getScientificName()+" clicked");
+					UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+					updatePanSourceOrganism();
+					updateSuggestions();
+				}
+			});
+			
+			JPanel panOrgaName = new JPanel();
+			panOrgaName.setLayout(new BoxLayout(panOrgaName, BoxLayout.LINE_AXIS));
+			panOrgaName.add(nameLabel);
+			panOrgaName.add(Box.createHorizontalGlue());
+			panOrgaName.add(deleteOrga);
+			
+			
+			panSourceOrganism.add(panOrgaName);
 		}
 	}
 	
