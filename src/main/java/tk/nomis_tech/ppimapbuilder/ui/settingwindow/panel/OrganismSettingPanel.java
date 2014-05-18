@@ -66,6 +66,9 @@ public class OrganismSettingPanel extends TabContentPanel {
 		searchBox.setMaximumSize(new Dimension(200, 30));
 		ArrayList<String> data = new ArrayList<String>();
 		data = (ArrayList<String>) InParanoidOrganismRepository.getInstance().getOrganismNames();
+		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+			data.remove(o.getScientificName());
+		}
 		searchBox.setSuggestData(data);
 		
 		
