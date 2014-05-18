@@ -19,15 +19,12 @@ package tk.nomis_tech.ppimapbuilder.ui.util;
  
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
@@ -94,12 +91,9 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
  
     public JSearchTextField(SettingWindow owner) {
         super();
-    	System.out.println("#JSearch 2");
         this.textWhenNotFocused = "Search...";
         this.addFocusListener(this);
-    	System.out.println("#JSearch 3");
-    	
-    	
+        
     	data = new ArrayList<String>();
 		suggestions = new ArrayList<String>();
 		listeners = new LinkedList<ActionListener>();

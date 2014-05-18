@@ -38,15 +38,11 @@ public class JIconTextField extends JTextField{
  
     public JIconTextField(){
         super();
-    	System.out.println("#JSearch 1");
         this.icon = null;
  
         Border border = UIManager.getBorder("TextField.border");
-    	System.out.println("#JSearch 1.1");
         JTextField dummy = new JTextField();
-    	System.out.println("#JSearch 1.2");
-        this.dummyInsets = new Insets(0, 0, 0, 0);//border.getBorderInsets(dummy);
-    	System.out.println("#JSearch 1.9");
+        this.dummyInsets = new Insets(0, 0, 0, 0);
     }
  
     public void setIcon(Icon icon){
@@ -54,7 +50,6 @@ public class JIconTextField extends JTextField{
     }
     
 	public void setIcon(URL resource) {
-		System.out.print("#url : ");System.out.println(resource);
 		this.icon = new ImageIcon(resource);
 	}
  

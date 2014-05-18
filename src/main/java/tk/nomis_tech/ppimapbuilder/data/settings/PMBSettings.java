@@ -28,14 +28,8 @@ public final class PMBSettings {
 
 	private PMBSettings() {
 		
-
-		System.out.println("#4.1");
-		
 		cytoscapeConfigurationFolder = new File(System.getProperty("user.home"), "CytoscapeConfiguration");
 		ppiMapBuilderConfigurationFolder = new File(cytoscapeConfigurationFolder, "PPiMapBuilder");
-
-
-		System.out.println("#4.2");
 		
 		if (!ppiMapBuilderConfigurationFolder.exists())
 			ppiMapBuilderConfigurationFolder.mkdir();
@@ -45,9 +39,6 @@ public final class PMBSettings {
 		if (!orthologCacheFolder.exists())
 			orthologCacheFolder.mkdir();
 
-		
-
-		System.out.println("#4.3");
 		// Default database list
 		databaseList = new ArrayList<String>(Arrays.asList(
 				"BioGrid",
@@ -58,20 +49,10 @@ public final class PMBSettings {
 
 		pmbDatabaseSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-databases.settings");
 		
-
-		System.out.println("#4.4");
-		// Default organism list
-		
-		//System.out.println(UserOrganismRepository.getDefaultOrganismList());
-		
+		// Default organism list		
 		organismList = UserOrganismRepository.getDefaultOrganismList();
 		
-		System.out.println("#4.45");System.out.println(organismList);
-		
 		pmbOrganismSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-organisms.settings");
-
-
-		System.out.println("#4.5");
 		
 		readSettings();
 	}
@@ -93,8 +74,6 @@ public final class PMBSettings {
 	}
 	
 	public ArrayList<Organism> getOrganismList() {
-
-		System.out.println("#4.9.2");
 		return organismList;
 	}
 
@@ -131,8 +110,6 @@ public final class PMBSettings {
 	}
 
 	public void readSettings() {
-
-		System.out.println("#4.6");
 		try {
 			FileInputStream fileIn = new FileInputStream(pmbDatabaseSettingFile);
 			ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -147,8 +124,6 @@ public final class PMBSettings {
 			e.printStackTrace();
 		}
 		
-
-		System.out.println("#4.7");
 		try {
 			FileInputStream fileIn = new FileInputStream(pmbOrganismSettingFile);
 			ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -162,10 +137,6 @@ public final class PMBSettings {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//UserOrganismRepository.getInstance().setOrganisms(this.organismList);
-		//UserOrganismRepository.getInstance().resetUserOrganismRepository();
-
-		System.out.println("#4.8");
 	}
 
 	public File getOrthologCacheFolder() {

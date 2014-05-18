@@ -23,26 +23,7 @@ public class UserOrganismRepository {
 	}
 
 	private UserOrganismRepository() {
-		
-
-		System.out.println("#4.9.1");
-		
-		// TODO : load from file
 		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
-		/*listOrganism = Arrays.asList(
-				new Organism("Homo sapiens", 9606),
-				new Organism("Arabidopsis thaliana", 3702),
-				new Organism("Caenorhabditis elegans", 6239),
-				new Organism("Drosophila melanogaster", 7227),
-				new Organism("Mus musculus", 10090),
-				new Organism("Saccharomyces cerevisiae", 4932),
-				new Organism("Schizosaccharomyces pombe", 4896),
-				new Organism("Plasmodium falciparum", 5833),
-				new Organism("Gallus gallus", 9031)
-		);*/
-		
-
-		System.out.println("#4.9.3");
 	}
 	
 	public static void resetUserOrganismRepository() {

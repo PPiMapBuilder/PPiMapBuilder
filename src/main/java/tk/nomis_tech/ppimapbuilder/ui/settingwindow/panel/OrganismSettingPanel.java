@@ -3,34 +3,21 @@ package tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
-import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
-import tk.nomis_tech.ppimapbuilder.ui.util.HelpIcon;
 import tk.nomis_tech.ppimapbuilder.ui.util.JSearchTextField;
-import tk.nomis_tech.ppimapbuilder.ui.util.LogoIcon;
 
 public class OrganismSettingPanel extends TabContentPanel {
 
