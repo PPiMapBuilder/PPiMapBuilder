@@ -309,6 +309,21 @@ public class InParanoidOrganismRepository {
 	public List<Organism> getOrganisms() throws IOException {
 		return organisms;
 	}
+	
+	public List<String> getOrganismNames() {
+		ArrayList<String> names = new ArrayList<String>();
+		
+		try {
+			for (Organism o : getOrganisms()) {
+				names.add(o.getScientificName());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return names;
+		
+	}
 
 	/**
 	 * Using UniProt taxonomy to search organism data of the InParanoid taxonomy identifier list.

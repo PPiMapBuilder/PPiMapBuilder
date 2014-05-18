@@ -18,6 +18,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
@@ -64,8 +65,7 @@ public class OrganismSettingPanel extends TabContentPanel {
 		searchBox.setPreferredSize(new Dimension(200, 30));
 		searchBox.setMaximumSize(new Dimension(200, 30));
 		ArrayList<String> data = new ArrayList<String>();
-		data.add("pierre");
-		data.add("toto");
+		data = (ArrayList<String>) InParanoidOrganismRepository.getInstance().getOrganismNames();
 		searchBox.setSuggestData(data);
 		
 		
