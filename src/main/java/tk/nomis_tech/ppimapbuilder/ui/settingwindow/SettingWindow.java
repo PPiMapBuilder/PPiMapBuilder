@@ -1,7 +1,10 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
 import org.cytoscape.work.TaskManager;
+
 import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
+import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
@@ -10,6 +13,7 @@ import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.OrthologySettingPanel;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.TabPanel;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,10 +39,9 @@ public class SettingWindow extends JFrame {
 	public SettingWindow() {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
-
 		add(initMainPanel(), BorderLayout.CENTER);
 		add(initBottomPanel(), BorderLayout.SOUTH);
-		getRootPane().setDefaultButton(saveSettings);
+		//getRootPane().setDefaultButton(saveSettings);
 
 		initListeners();
 		
@@ -47,6 +50,7 @@ public class SettingWindow extends JFrame {
 		setMinimumSize(d);
 		setResizable(true);
 		setLocationRelativeTo(JFrame.getFrames()[0]);
+		
 	}
 	
 	public void updateLists(List<PsicquicService> dbs) {
@@ -54,13 +58,15 @@ public class SettingWindow extends JFrame {
 	}
 
 	private JPanel initMainPanel() {
+
 		JPanel main = new JPanel();
 		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-
+		
 		databaseSettingPanel = new DatabaseSettingPanel();
-		organismSettingPanel = new OrganismSettingPanel();
+		organismSettingPanel = new OrganismSettingPanel(this);
 		orthologySettingPanel = new OrthologySettingPanel();
 
+		
 		TabPanel tabPanel = new TabPanel(
 			databaseSettingPanel,
 			organismSettingPanel,
@@ -77,7 +83,7 @@ public class SettingWindow extends JFrame {
 
 		cancel = new JButton("Cancel");
 		saveSettings = new JButton("Save");
-
+		
 		bottom.add(cancel);
 		bottom.add(saveSettings);
 
@@ -92,22 +98,36 @@ public class SettingWindow extends JFrame {
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
 
+				// DATABASE SETTINGS SAVE
 				ArrayList<String> databases = new ArrayList<String>();
 				for (PsicquicService s : databaseSettingPanel.getSelectedDatabases()) {
 					databases.add(s.getName());
 				}
 				PMBSettings.getInstance().setDatabaseList(databases);
+				
+				// ORGANISM SETTINGS SAVE
+				PMBSettings.getInstance().setOrganismList((ArrayList<Organism>) UserOrganismRepository.getInstance().getOrganisms());
+				
+				// SAVING TASK
 				taskManager.execute(saveSettingFactory.createTaskIterator());
-
+				
 			}
 
 		});
+		
 		cancel.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+
+				PMBSettings.getInstance().readSettings();
+				UserOrganismRepository.resetUserOrganismRepository();
+				getOrganismSettingPanel().updatePanSourceOrganism();
+				getOrganismSettingPanel().updateSuggestions();
+				
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
+				
 			}
 
 		});
@@ -120,6 +140,10 @@ public class SettingWindow extends JFrame {
 	
 	public void setTaskManager(TaskManager taskManager) {
 		this.taskManager = taskManager;
+	}
+	
+	public OrganismSettingPanel getOrganismSettingPanel() {
+		return organismSettingPanel;
 	}
 
 }

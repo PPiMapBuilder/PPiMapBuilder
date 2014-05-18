@@ -30,6 +30,9 @@ public class PMBSettingMenuTask extends AbstractTask {
 				try {
 					PsicquicRegistry reg = PsicquicRegistry.getInstance();
 					sw.updateLists(reg.getServices());
+					
+					sw.getOrganismSettingPanel().updatePanSourceOrganism();
+					sw.getOrganismSettingPanel().updateSuggestions();
 
 					sw.setVisible(true);
 				} catch (IOException e) {
