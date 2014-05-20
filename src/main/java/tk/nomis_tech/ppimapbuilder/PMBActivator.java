@@ -64,7 +64,7 @@ public class PMBActivator extends AbstractCyActivator {
 
 		// QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
-		SettingWindow settingWindow = new SettingWindow();
+		SettingWindow settingWindow = new SettingWindow(openBrowser);
 		CreditFrame creditWindow = new CreditFrame(openBrowser);
 
 		// Will load PMBSettings

@@ -103,6 +103,9 @@
         <!-- PSICQUIC client repository (for external implementation) -->
         <repository>
             <id>nexus</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <name>European Bioinformatics Institute</name>
             <url>http://www.ebi.ac.uk/intact/maven/nexus/content/groups/public</url>
         </repository>
@@ -110,12 +113,22 @@
         <!-- MiCluster repository -->
         <repository>
             <id>ebi-repo</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <name>EBI repository</name>
             <url>http://www.ebi.ac.uk/~maven/m2repo</url>
         </repository>
 
         <!-- <repository> <id>ebi-repo-snapshots</id> <name>EBI snapshots repository</name>
             <url>http://www.ebi.ac.uk/~maven/m2repo_snapshots</url> </repository> -->
+
+        <!-- Local Repository -->
+        <repository>
+            <id>local-repo</id>
+            <name>Local Repository</name>
+            <url>file:${project.basedir}/local-repo</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -259,6 +272,14 @@
             <groupId>stax</groupId>
             <artifactId>stax</artifactId>
             <version>1.2.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.orthoxml</groupId>
+            <artifactId>orthoxml</artifactId>
+            <version>0.1b</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

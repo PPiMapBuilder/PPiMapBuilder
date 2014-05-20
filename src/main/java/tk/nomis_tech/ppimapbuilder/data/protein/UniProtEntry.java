@@ -1,7 +1,7 @@
 package tk.nomis_tech.ppimapbuilder.data.protein;
 
 import com.eclipsesource.json.JsonObject;
-import tk.nomis_tech.ppimapbuilder.data.GeneOntologyModel;
+import tk.nomis_tech.ppimapbuilder.data.gene_ontology.GeneOntologyModel;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 
 import java.util.ArrayList;

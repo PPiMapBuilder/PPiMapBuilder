@@ -1,7 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
+import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskManager;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
@@ -31,18 +32,21 @@ public class SettingWindow extends JFrame {
 
 	private PMBSettingSaveTaskFactory saveSettingFactory;
 	private TaskManager taskManager;
+	private final OpenBrowser openBrowser;
 
-	public SettingWindow() {
+	public SettingWindow(OpenBrowser openBrowser) {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
+
+		this.openBrowser = openBrowser;
 
 		add(initMainPanel(), BorderLayout.CENTER);
 		add(initBottomPanel(), BorderLayout.SOUTH);
 		getRootPane().setDefaultButton(saveSettings);
 
 		initListeners();
-		
-		Dimension d = new Dimension(500, 300);
+
+		Dimension d = new Dimension(500, 320);
 		setBounds(new Rectangle(d));
 		setMinimumSize(d);
 		setResizable(true);
@@ -59,7 +63,7 @@ public class SettingWindow extends JFrame {
 
 		databaseSettingPanel = new DatabaseSettingPanel();
 		organismSettingPanel = new OrganismSettingPanel();
-		orthologySettingPanel = new OrthologySettingPanel();
+		orthologySettingPanel = new OrthologySettingPanel(openBrowser, this);
 
 		TabPanel tabPanel = new TabPanel(
 			databaseSettingPanel,
@@ -122,4 +126,7 @@ public class SettingWindow extends JFrame {
 		this.taskManager = taskManager;
 	}
 
+	public TaskManager getTaskManager() {
+		return taskManager;
+	}
 }

@@ -7,7 +7,7 @@ import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import java.io.Serializable;
 
 /**
- * Simple protein model with only a UniProt id and an Organism
+ * Simple protein model with a unique identifier (UniProt identifier) and an Organism.
  */
 public class Protein implements Serializable {
 
@@ -41,7 +41,7 @@ public class Protein implements Serializable {
 	public String toString() {
 		JsonObject out = new JsonObject();
 		out.add("uniProtId", uniProtId);
-		out.add("organism", organism.toString());
+		out.add("organism", organism.getTaxId());
 		return out.toString();
 	}
 

@@ -5,12 +5,12 @@ import tk.nomis_tech.ppimapbuilder.util.FileUtil;
 import java.io.File;
 
 public class TestUtils {
-	public static void recursiveDelete(File file) {
-		FileUtil.recursiveDelete(file);
-	}
 
-	public static File createTestOutPutFolder(String name, boolean deleteAtShutDown) {
-		final File testFolderOutput = new File(name + "-output-" + System.currentTimeMillis());
+	private static final boolean deleteAtShutDown = false;
+	private static final File baseTestOutputFolder = new File("test-output");
+
+	public static File createTestOutputFolder(String preffix) {
+		final File testFolderOutput = getTestOutputFolder(preffix + "-output-" + System.currentTimeMillis());
 		testFolderOutput.mkdir();
 
 		if(deleteAtShutDown) {
@@ -23,5 +23,13 @@ public class TestUtils {
 		}
 
 		return testFolderOutput;
+	}
+
+	public static File getBaseTestOutputFolder() {
+		return baseTestOutputFolder;
+	}
+
+	public static File getTestOutputFolder(String folderName) {
+		return new File(baseTestOutputFolder, folderName);
 	}
 }

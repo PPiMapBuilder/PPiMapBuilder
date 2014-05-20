@@ -1,6 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel;
 
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 
 import javax.swing.*;

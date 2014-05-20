@@ -20,15 +20,15 @@ public class UserOrganismRepository {
 	private UserOrganismRepository() {
 		// TODO : load from file
 		listOrganism = Arrays.asList(
-				new Organism("Homo sapiens", 9606),
-				new Organism("Arabidopsis thaliana", 3702),
-				new Organism("Caenorhabditis elegans", 6239),
-				new Organism("Drosophila melanogaster", 7227),
-				new Organism("Mus musculus", 10090),
-				new Organism("Saccharomyces cerevisiae", 4932),
-				new Organism("Schizosaccharomyces pombe", 4896),
-				new Organism("Plasmodium falciparum", 5833),
-				new Organism("Gallus gallus", 9031)
+				new Organism("Homo sapiens", "HUMAN", "Human", 9606),
+				new Organism("Arabidopsis thaliana", "ARATH", "Mouse-ear cress", 3702),
+				new Organism("Caenorhabditis elegans", "CAEEL", "", 6239),
+				new Organism("Drosophila melanogaster", "DROME", "Fruit fly", 7227),
+				new Organism("Mus musculus", "MOUSE", "Mouse", 10090),
+				new Organism("Saccharomyces cerevisiae (strain ATCC 204508 / S288c)", "YEAST", "Baker's yeast", 559292),
+				new Organism("Schizosaccharomyces pombe (strain 972 / ATCC 24843)", "SCHPO", "Fission yeast", 284812),
+				new Organism("Plasmodium falciparum (isolate 3D7)", "PLAF7", "", 36329),
+				new Organism("Gallus gallus", "CHICK", "Chicken", 9031)
 		);
 	}
 

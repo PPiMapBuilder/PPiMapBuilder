@@ -12,9 +12,9 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntrySet;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
-import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTaskMonitor;
+import tk.nomis_tech.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
@@ -39,9 +39,9 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final QueryWindow queryWindow;
 
 	// Data collection for network generation
-	private final UniProtEntryCollection proteinOfInterestPool; // not the same as user input
+	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private final UniProtEntryCollection interactorPool;
+	private final UniProtEntrySet interactorPool;
 
 	// Error output
 	private String error_message;
@@ -62,8 +62,8 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.queryWindow = queryWindow;
 
 		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
-		this.interactorPool = new UniProtEntryCollection();
-		this.proteinOfInterestPool = new UniProtEntryCollection();
+		this.interactorPool = new UniProtEntrySet();
+		this.proteinOfInterestPool = new UniProtEntrySet();
 		
 		this.error_message = null;
 	}
@@ -72,7 +72,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
 		return new TaskIterator(
-			new PMBQueryInteractionTaskMonitor(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
+			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
 			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow, startTime)
 		);
 	}

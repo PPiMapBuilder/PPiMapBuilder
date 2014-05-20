@@ -4,12 +4,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+/**
+ * Abstract class providing base element for threaded web service clients.
+ */
 public abstract class AbstractThreadedClient {
-	protected int nThread;
+	protected int maxNumberThread;
 	protected ThreadFactory threadFactory;
 
-	public AbstractThreadedClient(int nThread) {
-		this.nThread = nThread;
+	public AbstractThreadedClient(int maxNumberThread) {
+		this.maxNumberThread = maxNumberThread;
 	}
 
 	public void setThreadFactory(ThreadFactory threadFactory) {
@@ -18,7 +21,7 @@ public abstract class AbstractThreadedClient {
 
 	public ExecutorService newFixedThreadPool() {
 		return threadFactory != null ?
-				Executors.newFixedThreadPool(nThread, threadFactory) :
-				Executors.newFixedThreadPool(nThread);
+				Executors.newFixedThreadPool(maxNumberThread, threadFactory) :
+				Executors.newFixedThreadPool(maxNumberThread);
 	}
 }
