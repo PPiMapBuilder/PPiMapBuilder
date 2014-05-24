@@ -3,7 +3,6 @@ package tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import tk.nomis_tech.ppimapbuilder.TestUtils;
-import tk.nomis_tech.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
@@ -13,12 +12,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class InParanoidCacheLoaderTaskTest {
+public class InParanoidCacheLoaderTaskFactoryTest {
 	private static File testFolderOutput;
 
 	@BeforeClass
 	public static void before() throws IOException {
-		testFolderOutput = TestUtils.createTestOutputFolder(InParanoidCacheLoaderTaskTest.class.getSimpleName());
+		testFolderOutput = TestUtils.createTestOutputFolder(InParanoidCacheLoaderTaskFactoryTest.class.getSimpleName());
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 	}
 
@@ -32,11 +31,10 @@ public class InParanoidCacheLoaderTaskTest {
 				UserOrganismRepository.getInstance().getOrganismByTaxId(36329)
 		);
 
-		List<Organism> organisms1 = InParanoidOrganismRepository.getInstance().getOrganisms();
+		//organisms = UserOrganismRepository.getInstance().getOrganisms();
+		//organisms = InParanoidOrganismRepository.getInstance().getOrganisms().subList(10, 60);
 
-		//InParanoidCacheLoaderTask loader = new InParanoidCacheLoaderTask(UserOrganismRepository.getInstance().getOrganisms());
-		//InParanoidCacheLoaderTask loader = new InParanoidCacheLoaderTask(organisms);
-		InParanoidCacheLoaderTask loader = new InParanoidCacheLoaderTask(organisms1.subList(10, 60));
-		loader.run(null);
+		InParanoidCacheLoaderTaskFactory loader = new InParanoidCacheLoaderTaskFactory(organisms);
+		loader.createTaskIterator().next().run(null);
 	}
 }

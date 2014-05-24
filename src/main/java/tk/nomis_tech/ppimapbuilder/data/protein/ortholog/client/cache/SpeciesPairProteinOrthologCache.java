@@ -13,8 +13,10 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 
 	private static final long serialVersionUID = 2L;
 
-	/** Indicates if this cache have been loaded entirely from InParanoid */
-	private boolean full = false;
+	/**
+	 * Indicates if this cache have been loaded entirely from InParanoid
+	 */
+	private Boolean full = false;
 
 	private final CacheFile cacheDataFile;
 
@@ -107,7 +109,14 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	}
 
 	public boolean isFull() {
-		return full;
+		try {
+			if (cacheDataFile.getFile().exists()) {
+				return full;
+			} else
+				return (full = false);
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	/**

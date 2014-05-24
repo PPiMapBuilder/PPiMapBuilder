@@ -15,18 +15,14 @@
     <artifactId>PPiMapBuilder</artifactId>
     <version>0.8-SNAPSHOT</version>
 
-    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+    <name>PPiMapBuilder</name>
 
     <packaging>bundle</packaging>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
         <plugins>
-            <plugin> <!-- COMPILE -->
+            <!-- COMPILE -->
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.0</version>
@@ -47,7 +43,8 @@
                 <version>2.7.1</version> <configuration> <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration> </plugin> -->
 
-            <plugin> <!-- BUNDLE with OSGI metadata (based on the osgi.bnd file) -->
+            <!-- BUNDLE with OSGI metadata (based on the osgi.bnd file) -->
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.3.7</version>
@@ -59,10 +56,10 @@
 
                         <Private-Package>${bundle.namespace}.*</Private-Package>
                         <Bundle-Activator>${bundle.namespace}.PMBActivator</Bundle-Activator>
-                        <Embed-Dependency>*;scope=compile|runtime;groupId=!org.cytoscape</Embed-Dependency>
+                        <Embed-Dependency>*;scope=compile|runtime;optional=false</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
 
-                        <Export-Package>${bundle.namespace}.*;version="${project.version}"</Export-Package>
+                        <Export-Package>!${bundle.namespace}.*</Export-Package>
                         <Import-Package>*;resolution:=optional</Import-Package>
                     </instructions>
                     <archive>
@@ -267,16 +264,24 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- Stax XML Stream Parser -->
+        <!-- Apache HTTP Client -->
         <dependency>
-            <groupId>stax</groupId>
-            <artifactId>stax</artifactId>
-            <version>1.2.0</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.3</version>
+        </dependency>
+
+        <!-- Stax XML Impl -->
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-lgpl</artifactId>
+            <version>4.0.5</version>
             <scope>compile</scope>
         </dependency>
 
+        <!-- OrthoXML Official Parser -->
         <dependency>
-            <groupId>org.orthoxml</groupId>
+            <groupId>sbc.orthoxml</groupId>
             <artifactId>orthoxml</artifactId>
             <version>0.1b</version>
             <scope>compile</scope>

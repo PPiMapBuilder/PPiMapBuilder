@@ -17,17 +17,18 @@ public class FileUtil {
 	}
 
 	public static String getHumanReadableFileSize(File file) {
-		if(!file.exists())
-			return "-";
-		else
-			return FileUtils.byteCountToDisplaySize(getFileSizeRecursive(file));
+		return FileUtils.byteCountToDisplaySize(
+				file.exists() ?
+						getFileSizeRecursive(file) :
+						0
+		);
 	}
 
 	private static long getFileSizeRecursive(File file) {
-		if(file == null || !file.exists())
+		if (file == null || !file.exists())
 			return 0l;
 		else {
-			if(file.isDirectory()) {
+			if (file.isDirectory()) {
 				long cumul = 0l;
 				for (File f : file.listFiles()) {
 					cumul += getFileSizeRecursive(f);

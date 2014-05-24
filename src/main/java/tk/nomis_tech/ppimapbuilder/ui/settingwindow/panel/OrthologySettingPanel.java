@@ -6,6 +6,7 @@ import org.cytoscape.work.TaskIterator;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.loader.InParanoidCacheLoaderTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.InParanoidLogo;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
@@ -57,6 +58,7 @@ public class OrthologySettingPanel extends TabContentPanel {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					cache.clear();
+					OrthologySettingPanel.this.update();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -66,7 +68,17 @@ public class OrthologySettingPanel extends TabContentPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				List<Organism> organisms = UserOrganismRepository.getInstance().getOrganisms();
-				TaskIterator cacheLoaderTaskIterator = cache.createCacheLoaderTaskIterator(organisms);
+
+				TaskIterator cacheLoaderTaskIterator = new InParanoidCacheLoaderTaskFactory(
+						organisms,
+						new InParanoidCacheLoaderTaskFactory.Listener() {
+							@Override
+							public void done() {
+								settingWindow.toFront();
+								OrthologySettingPanel.this.update();
+							}
+						}
+				).createTaskIterator();
 				settingWindow.getTaskManager().execute(cacheLoaderTaskIterator);
 			}
 		});
@@ -85,7 +97,11 @@ public class OrthologySettingPanel extends TabContentPanel {
 					double percentLoadedFromOrganisms = PMBProteinOrthologCacheClient.getInstance().getPercentLoadedFromOrganisms(
 							UserOrganismRepository.getInstance().getOrganisms()
 					);
-					orthologPercentUserOrg = String.format("%,.2f", percentLoadedFromOrganisms) + " %";
+					orthologPercentUserOrg =
+						(percentLoadedFromOrganisms < 10.0 ?
+									String.format("%,.2f", percentLoadedFromOrganisms) :
+									String.valueOf((int) percentLoadedFromOrganisms))
+						+ " %";
 				} catch (IOException e) {
 					orthologPercentUserOrg = "-";
 				}

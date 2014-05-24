@@ -1,13 +1,11 @@
 package tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache;
 
 import com.google.common.collect.Sets;
-import org.cytoscape.work.TaskIterator;
 import tk.nomis_tech.ppimapbuilder.data.Pair;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.OrganismUtils;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.OrthologGroup;
-import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.loader.InParanoidCacheLoaderTaskFactory;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.util.FileUtil;
 
@@ -168,28 +166,22 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 		return getSpeciesPairProteinOrthologCache(organismA, organismB).isFull();
 	}
 
-	public TaskIterator createCacheLoaderTaskIterator(List<Organism> organisms) {
-		return new InParanoidCacheLoaderTaskFactory(organisms).createTaskIterator();
-	}
-
 	/**
 	 * Calculate the percent of loaded orthologs
 	 */
 	public double getPercentLoadedFromOrganisms(List<Organism> organisms) throws IOException {
-		/*Set<Organism> sOrganisms = new HashSet<Organism>(organisms);
-		Sets.SetView<Organism> intersection = Sets.intersection(sOrganisms, orthologCacheIndex.keySet());
-
-		return  (double) intersection.size() / (double) sOrganisms.size() * 100.0;
-		*/
 		Set<Pair<Organism>> possibleCombinations = OrganismUtils.createCombinations(organisms);
 
 		Set<Pair<Organism>> loadedCombinations = new HashSet<Pair<Organism>>();
-		for (Organism organismA : orthologCacheIndex.keySet()) {
-			for (Organism organismB : orthologCacheIndex.get(organismA).keySet()) {
-				if(getSpeciesPairProteinOrthologCache(organismA, organismB).isFull())
-					loadedCombinations.add(new Pair<Organism>(organismA, organismB));
-			}
+		for (Pair<Organism> combination : possibleCombinations) {
+			Organism organismA = combination.getFirst();
+			Organism organismB = combination.getSecond();
+			if(getSpeciesPairProteinOrthologCache(organismA, organismB).isFull())
+				loadedCombinations.add(combination);
 		}
+
+		System.out.println("possible : "+possibleCombinations.size());
+		System.out.println("loaded : "+loadedCombinations.size());
 
 		Sets.SetView<Pair<Organism>> intersection = Sets.intersection(possibleCombinations, loadedCombinations);
 

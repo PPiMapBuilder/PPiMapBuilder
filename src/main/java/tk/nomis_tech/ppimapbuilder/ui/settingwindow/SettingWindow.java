@@ -1,5 +1,6 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
+import org.codehaus.stax2.XMLInputFactory2;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskManager;
 import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
