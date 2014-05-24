@@ -15,10 +15,10 @@ import org.cytoscape.work.TaskMonitor;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
-import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntrySet;
 import tk.nomis_tech.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicResultTranslator;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.*;
@@ -43,8 +43,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	private final Organism referenceOrganism;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private final UniProtEntryCollection interactorPool;
-	private final UniProtEntryCollection proteinOfInterestPool;
+	private final UniProtEntrySet interactorPool;
+	private final UniProtEntrySet proteinOfInterestPool;
 	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 
 	//Network data
@@ -61,8 +61,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			final CyLayoutAlgorithmManager layoutMan,
 			final VisualMappingManager vmm,
 			final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
-			final UniProtEntryCollection interactorPool,
-			final UniProtEntryCollection proteinOfInterestPool,
+			final UniProtEntrySet interactorPool,
+			final UniProtEntrySet proteinOfInterestPool,
 			final QueryWindow queryWindow,
 			long startTime
 	) {

@@ -1,8 +1,8 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
+import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskManager;
-
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.UserOrganismRepository;
 import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
@@ -13,7 +13,6 @@ import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.OrthologySettingPanel;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.panel.TabPanel;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,7 +22,7 @@ import java.util.List;
 /**
  * PPiMapBuilder setting window
  */
-public class SettingWindow extends JFrame {
+public class SettingWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private JButton saveSettings;
@@ -35,17 +34,19 @@ public class SettingWindow extends JFrame {
 
 	private PMBSettingSaveTaskFactory saveSettingFactory;
 	private TaskManager taskManager;
+	private final OpenBrowser openBrowser;
 
-	public SettingWindow() {
+	public SettingWindow(OpenBrowser openBrowser) {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
+		this.openBrowser = openBrowser;
 		add(initMainPanel(), BorderLayout.CENTER);
 		add(initBottomPanel(), BorderLayout.SOUTH);
 		//getRootPane().setDefaultButton(saveSettings);
 
 		initListeners();
-		
-		Dimension d = new Dimension(500, 300);
+
+		Dimension d = new Dimension(500, 320);
 		setBounds(new Rectangle(d));
 		setMinimumSize(d);
 		setResizable(true);
@@ -64,9 +65,8 @@ public class SettingWindow extends JFrame {
 		
 		databaseSettingPanel = new DatabaseSettingPanel();
 		organismSettingPanel = new OrganismSettingPanel(this);
-		orthologySettingPanel = new OrthologySettingPanel();
+		orthologySettingPanel = new OrthologySettingPanel(openBrowser, this);
 
-		
 		TabPanel tabPanel = new TabPanel(
 			databaseSettingPanel,
 			organismSettingPanel,
@@ -146,4 +146,15 @@ public class SettingWindow extends JFrame {
 		return organismSettingPanel;
 	}
 
+	public TaskManager getTaskManager() {
+		return taskManager;
+	}
+
+	@Override
+	public void setVisible(boolean b) {
+		if(!b)
+			this.dispose();
+		this.setModal(b);
+		super.setVisible(b);
+	}
 }

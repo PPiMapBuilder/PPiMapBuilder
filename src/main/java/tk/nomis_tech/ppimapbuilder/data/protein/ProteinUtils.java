@@ -20,4 +20,27 @@ public class ProteinUtils {
 				add(protein.getUniProtId());
 		}};
 	}
+
+	/**
+	 * @author Kevin Gravouil
+	 */
+	public static class UniProtId {
+
+		/**
+		 * Uniprot ID pattern. According to
+		 * http://www.ebi.ac.uk/miriam/main/export/xml/
+		 */
+		public final static String pattern = "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\.\\d+)?$";
+
+		/**
+		 * Test if a given string matches the Uniprot ID pattern.
+		 *
+		 * @param uniprotId
+		 * @return boolean
+		 */
+		public static boolean isValid(String uniprotId) {
+			return uniprotId.matches(pattern);
+		}
+
+	}
 }

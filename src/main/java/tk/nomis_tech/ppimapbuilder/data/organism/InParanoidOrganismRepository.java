@@ -396,4 +396,11 @@ public class InParanoidOrganismRepository {
 		System.out.println();
 		System.out.println("Failed organisms: " + failed);
 	}
+
+	public Organism getOrganismByTaxId(int taxId) {
+		for (Organism org : organisms)
+			if (org.getTaxId() == taxId)
+				return org;
+		return null;
+	}
 }

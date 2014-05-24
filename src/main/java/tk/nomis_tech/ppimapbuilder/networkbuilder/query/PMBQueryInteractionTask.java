@@ -3,20 +3,23 @@ package tk.nomis_tech.ppimapbuilder.networkbuilder.query;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import tk.nomis_tech.ppimapbuilder.data.client.ProteinOrthologWebCachedClient;
-import tk.nomis_tech.ppimapbuilder.data.client.cache.otholog.ProteinOrthologCacheClient;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.InteractionUtils;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.PsicquicService;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.ThreadedPsicquicSimpleClient;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLExpressionBuilder;
-import tk.nomis_tech.ppimapbuilder.data.client.web.interaction.miql.MiQLParameterBuilder;
-import tk.nomis_tech.ppimapbuilder.data.client.web.ortholog.InParanoidClient;
-import tk.nomis_tech.ppimapbuilder.data.client.web.protein.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.InteractionUtils;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicSimpleClient;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
+import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.protein.Protein;
 import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntry;
-import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntryCollection;
+import tk.nomis_tech.ppimapbuilder.data.protein.UniProtEntrySet;
+import tk.nomis_tech.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
+import tk.nomis_tech.ppimapbuilder.util.SteppedTaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import javax.swing.*;
@@ -30,7 +33,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	final UniProtEntryClient uniProtEntryClient;
 	final ThreadedPsicquicSimpleClient psicquicClient;
 	final InParanoidClient inParanoidClient;
-	final ProteinOrthologWebCachedClient proteinOrthologClient;
+	final ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient> proteinOrthologClient;
 
 	// Data input
 	private final List<String> inputProteinIDs;
@@ -39,24 +42,18 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private final List<PsicquicService> selectedDatabases;
 
 	// Data output
-	private final UniProtEntryCollection proteinOfInterestPool; // not the same as user input
+	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private final UniProtEntryCollection interactorPool;
+	private final UniProtEntrySet interactorPool;
 
 	// Thread list
 	private final List<Thread> slaveThreads;
+	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
-	// Steps
-	private final double NB_STEP;
-	private int currentStep;
-
-	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntryCollection interactorPool, UniProtEntryCollection proteinOfInterestPool, QueryWindow qw) {
+	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntrySet interactorPool, UniProtEntrySet proteinOfInterestPool, QueryWindow qw) {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
-
-		this.NB_STEP = 7.0;
-		this.currentStep = 0;
 
 		// Retrieve user input
 		referenceOrganism = qw.getSelectedRefOrganism();
@@ -87,25 +84,26 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			psicquicClient.setThreadFactory(threadFactory);
 
 			// Hybrid Web/Cache ortholog client
-			proteinOrthologClient = new ProteinOrthologWebCachedClient();
+			ProteinOrthologWebCachedClient webCached;
 			{
+				MINIMUM_ORTHOLOGY_SCORE = 0.85;
+
 				// InParanoid Client
-				inParanoidClient = new InParanoidClient(5, 0.85);
+				inParanoidClient = new InParanoidClient();
 				inParanoidClient.enableCache(true); //XML response cache
-				inParanoidClient.setThreadFactory(threadFactory);
 
 				// PMB ortholog cache client
+				PMBProteinOrthologCacheClient cacheClient = null;
 				try {
-					ProteinOrthologCacheClient proteinOrthologCacheClient = ProteinOrthologCacheClient.getInstance();
-					proteinOrthologCacheClient.setThreadFactory(threadFactory);
-					proteinOrthologClient.setCacheClient(proteinOrthologCacheClient);
+					cacheClient = PMBProteinOrthologCacheClient.getInstance();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 
-				proteinOrthologClient.setWebClient(inParanoidClient);
-				proteinOrthologClient.setThreadFactory(threadFactory);
+				webCached = new ProteinOrthologWebCachedClient(inParanoidClient, cacheClient);
 			}
+			proteinOrthologClient = new ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient>(webCached, 5);
+			proteinOrthologClient.setThreadFactory(threadFactory);
 		}
 	}
 
@@ -113,7 +111,10 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	 * Complex network querying using PSICQUIC and InParanoid
 	 */
 	@Override
-	public void run(TaskMonitor monitor) throws Exception {
+	public void run(TaskMonitor taskMonitor) throws Exception {
+		// 7 steps for the task
+		SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor, 7.0);
+
 		interactionsByOrg.clear();
 		interactorPool.clear();
 
@@ -128,7 +129,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			interactionsByOrg.put(referenceOrganism, new ArrayList<EncoreInteraction>());
 
 			// Search interaction of protein of interest in reference organism
-			changeStep("Retrieving UniProt entries for protein of interest...", monitor);
+			monitor.setStep("Retrieving UniProt entries for protein of interest...");
 			{
 				List<String> queries = new ArrayList<String>();
 
@@ -139,7 +140,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 					if (entry != null && !entry.getOrganism().equals(referenceOrganism)) {
 						try {
-							Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism);
+							Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
 							entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
 						} catch (Exception e) {
 							entry = null;
@@ -162,7 +163,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				//System.out.println(queries);
 
 				// Get all primary interactions in reference organism
-				changeStep("Searching interaction for protein of interest...", monitor);
+				monitor.setStep("Searching interaction for protein of interest...");
 				baseRefInteractions.addAll(psicquicClient.getByQueries(queries));
 				System.out.println("interactions: " + baseRefInteractions.size());
 				InteractionUtils.filterNonUniprotInteractors(baseRefInteractions);
@@ -171,7 +172,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		}
 
 		// Get protein UniProt entries of the interactor pool
-		changeStep("Retrieving UniProt entries of all interaction's interactors...", monitor);
+		monitor.setStep("Retrieving UniProt entries of all interaction's interactors...");
 		{
 			// Get interactors across all interactions
 			Set<String> referenceInteractorsIDs = InteractionUtils.getInteractorsBinary(baseRefInteractions);
@@ -192,8 +193,8 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		 * ------------------------------------------------------------------------------------------ */
 		{
 			// Get orthologs of interactors
-			changeStep("Searching interactors orthologs...", monitor);
-			final Map<Protein, Map<Organism, Protein>> orthologs = new HashMap<Protein, Map<Organism, Protein>>();
+			monitor.setStep("Searching interactors orthologs...");
+			final Map<Protein, Map<Organism, OrthologScoredProtein>> orthologs = new HashMap<Protein, Map<Organism, OrthologScoredProtein>>();
 			{
 				System.out.println("--Search orthologs--");
 				System.out.println("n# protein: " + interactorPool.size());
@@ -204,7 +205,8 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					orthologs.putAll(
 							proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
 									new ArrayList<Protein>(interactorPool),
-									otherOrganisms
+									otherOrganisms,
+									MINIMUM_ORTHOLOGY_SCORE
 							)
 					);
 				} catch (IOException e) {
@@ -220,18 +222,18 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 
 			// Get interactions between orthologs (by organisms)
-			changeStep("Searching orthologs's interactions...", monitor);
+			monitor.setStep("Searching orthologs's interactions...");
 			{
 				class OrthologInteractionResult {
 					final Organism organism;
 					final Collection<EncoreInteraction> interactions;
-					UniProtEntryCollection newProts;
+					UniProtEntrySet newProts;
 
 					public OrthologInteractionResult(Organism organism, Collection<EncoreInteraction> interactions) {
 						super();
 						this.organism = organism;
 						this.interactions = interactions;
-						newProts = new UniProtEntryCollection();
+						newProts = new UniProtEntrySet();
 					}
 
 					public void add(UniProtEntry prot) {
@@ -283,7 +285,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 								{// Secondary interactions
 
 									// Get all orthologs in this organism (from previous ortholog search)
-									for (Map<Organism, Protein> ortho : orthologs.values()) {
+									for (Map<Organism, OrthologScoredProtein> ortho : orthologs.values()) {
 										Protein protein = ortho.get(organism);
 										if (protein != null) orthologsInOrg.add(protein);
 									}
@@ -331,11 +333,11 @@ public class PMBQueryInteractionTask extends AbstractTask {
 								if (!orthologInteractors.isEmpty()) {
 									//System.out.println(orthologInteractors);
 
-									final Map<Protein, Map<Organism, Protein>> orthologsMultipleProtein =
-											proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(orthologInteractors, Arrays.asList(referenceOrganism));
+									final Map<Protein, Map<Organism, OrthologScoredProtein>> orthologsMultipleProtein =
+											proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(orthologInteractors, Arrays.asList(referenceOrganism), MINIMUM_ORTHOLOGY_SCORE);
 
 									// Get UniProtProtein entry from reference organism
-									for (Map<Organism, Protein> vals : orthologsMultipleProtein.values()) {
+									for (Map<Organism, OrthologScoredProtein> vals : orthologsMultipleProtein.values()) {
 										Protein protInRefOrg = vals.get(referenceOrganism);
 										//System.out.print(protInRefOrg+", ");
 
@@ -344,7 +346,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 											result.add(uniProtInRefOrg);
 
 											// Search orthologs of theses new protein in reference organism
-											proteinOrthologClient.getOrthologsMultiOrganism(uniProtInRefOrg, otherOrganisms);
+											proteinOrthologClient.getOrthologsMultiOrganism(uniProtInRefOrg, otherOrganisms, MINIMUM_ORTHOLOGY_SCORE);
 										}
 									}
 									System.out.println();
@@ -377,7 +379,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			InteractionUtils.filterByOrganism(baseRefInteractions, referenceOrganism);
 
 			// Add secondary interactions
-			changeStep("Searching secondary interactions in reference interactions...", monitor);
+			monitor.setStep("Searching secondary interactions in reference interactions...");
 			{
 				baseRefInteractions.addAll(InteractionUtils.getInteractionsInProteinPool(
 						new HashSet<Protein>(interactorPool), referenceOrganism, psicquicClient
@@ -385,7 +387,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			}
 
 			// Remove duplicate interactions
-			changeStep("Clustering interactions in reference organism...", monitor);
+			monitor.setStep("Clustering interactions in reference organism...");
 			interactionsByOrg.get(referenceOrganism).addAll(InteractionUtils.clusterInteraction(baseRefInteractions));
 		}
 
@@ -413,10 +415,4 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		interactorPool.clear();
 		Thread.currentThread().interrupt();
 	}
-
-	private void changeStep(String message, TaskMonitor monitor) {
-		monitor.setStatusMessage(message);
-		monitor.setProgress(++currentStep / NB_STEP);
-	}
-
 }
