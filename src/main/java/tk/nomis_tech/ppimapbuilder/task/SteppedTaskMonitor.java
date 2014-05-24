@@ -1,4 +1,4 @@
-package tk.nomis_tech.ppimapbuilder.util;
+package tk.nomis_tech.ppimapbuilder.task;
 
 import org.cytoscape.work.TaskMonitor;
 

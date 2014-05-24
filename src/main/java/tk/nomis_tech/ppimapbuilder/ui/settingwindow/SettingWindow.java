@@ -1,6 +1,5 @@
 package tk.nomis_tech.ppimapbuilder.ui.settingwindow;
 
-import org.codehaus.stax2.XMLInputFactory2;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskManager;
 import tk.nomis_tech.ppimapbuilder.data.interaction.client.web.PsicquicService;
@@ -21,7 +20,7 @@ import java.util.List;
 /**
  * PPiMapBuilder setting window
  */
-public class SettingWindow extends JFrame {
+public class SettingWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private JButton saveSettings;
@@ -38,6 +37,7 @@ public class SettingWindow extends JFrame {
 	public SettingWindow(OpenBrowser openBrowser) {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
+		setModal(true);
 
 		this.openBrowser = openBrowser;
 

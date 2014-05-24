@@ -11,6 +11,7 @@ import tk.nomis_tech.ppimapbuilder.data.settings.PMBSettings;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.InParanoidLogo;
 import tk.nomis_tech.ppimapbuilder.ui.settingwindow.SettingWindow;
 import tk.nomis_tech.ppimapbuilder.util.FileUtil;
+import tk.nomis_tech.ppimapbuilder.task.TaskListener;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -71,7 +72,7 @@ public class OrthologySettingPanel extends TabContentPanel {
 
 				TaskIterator cacheLoaderTaskIterator = new InParanoidCacheLoaderTaskFactory(
 						organisms,
-						new InParanoidCacheLoaderTaskFactory.Listener() {
+						new TaskListener() {
 							@Override
 							public void done() {
 								settingWindow.toFront();
@@ -79,6 +80,7 @@ public class OrthologySettingPanel extends TabContentPanel {
 							}
 						}
 				).createTaskIterator();
+
 				settingWindow.getTaskManager().execute(cacheLoaderTaskIterator);
 			}
 		});
