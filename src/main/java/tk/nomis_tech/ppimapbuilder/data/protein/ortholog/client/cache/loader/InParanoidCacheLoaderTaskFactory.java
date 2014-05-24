@@ -3,20 +3,19 @@ package tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
-import tk.nomis_tech.ppimapbuilder.task.TaskListener;
 
 import java.util.List;
 
 public class InParanoidCacheLoaderTaskFactory extends AbstractTaskFactory {
 	private final List<Organism> organisms;
 
-	private final TaskListener listener;
+	private final Runnable listener;
 
 	public InParanoidCacheLoaderTaskFactory(List<Organism> organisms) {
 		this(organisms, null);
 	}
 
-	public InParanoidCacheLoaderTaskFactory(List<Organism> organisms, TaskListener listener) {
+	public InParanoidCacheLoaderTaskFactory(List<Organism> organisms, Runnable listener) {
 		this.organisms = organisms;
 		this.listener = listener;
 	}
@@ -30,7 +29,7 @@ public class InParanoidCacheLoaderTaskFactory extends AbstractTaskFactory {
 		return organisms;
 	}
 
-	public TaskListener getListener() {
+	public Runnable getListener() {
 		return listener;
 	}
 }

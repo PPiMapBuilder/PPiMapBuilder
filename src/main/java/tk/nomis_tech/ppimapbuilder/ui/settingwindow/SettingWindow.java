@@ -37,8 +37,6 @@ public class SettingWindow extends JDialog {
 	public SettingWindow(OpenBrowser openBrowser) {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
-		setModal(true);
-
 		this.openBrowser = openBrowser;
 
 		add(initMainPanel(), BorderLayout.CENTER);
@@ -129,5 +127,15 @@ public class SettingWindow extends JDialog {
 
 	public TaskManager getTaskManager() {
 		return taskManager;
+	}
+
+	@Override
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+		if(!b) {
+			this.dispose();
+			this.setModal(false);
+		} else
+			this.setModal(true);
 	}
 }

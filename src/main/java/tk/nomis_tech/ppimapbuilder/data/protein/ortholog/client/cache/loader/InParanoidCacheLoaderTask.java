@@ -14,7 +14,7 @@ import tk.nomis_tech.ppimapbuilder.data.organism.Organism;
 import tk.nomis_tech.ppimapbuilder.data.organism.OrganismUtils;
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
-import tk.nomis_tech.ppimapbuilder.task.SteppedTaskMonitor;
+import tk.nomis_tech.ppimapbuilder.util.SteppedTaskMonitor;
 import tk.nomis_tech.ppimapbuilder.util.ClassLoaderHack;
 
 import java.io.InputStream;
@@ -103,7 +103,7 @@ class InParanoidCacheLoaderTask implements Task {
 
 		monitor.setProgress(1);
 		if (parent.getListener() != null)
-			parent.getListener().done();
+			parent.getListener().run();
 		PMBProteinOrthologCacheClient.getInstance().save();
 	}
 

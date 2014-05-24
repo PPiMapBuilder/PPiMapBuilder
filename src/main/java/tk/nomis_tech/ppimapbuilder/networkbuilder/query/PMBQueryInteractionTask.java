@@ -19,7 +19,7 @@ import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinO
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import tk.nomis_tech.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import tk.nomis_tech.ppimapbuilder.ui.querywindow.QueryWindow;
-import tk.nomis_tech.ppimapbuilder.task.SteppedTaskMonitor;
+import tk.nomis_tech.ppimapbuilder.util.SteppedTaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import javax.swing.*;
