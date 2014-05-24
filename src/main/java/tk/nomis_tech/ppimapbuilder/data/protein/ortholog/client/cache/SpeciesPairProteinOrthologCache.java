@@ -21,9 +21,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	private final CacheFile cacheDataFile;
 
 	protected SpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
-		// Ortholog cache data file for this organism pair
-		String identifier = organismA.getAbbrName() + "-" + organismB.getAbbrName();
-		cacheDataFile = new CacheFile(identifier + ".dat");
+		cacheDataFile = new CacheFile(organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".dat");
 	}
 
 	@Override
@@ -35,7 +33,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		ObjectOutputStream out = null;
 		try {
 			if (!cacheDataFile.exists())
-				out = new ObjectOutputStream(new FileOutputStream(cacheDataFile.getFile()));
+				out = new ObjectOutputStream(new FileOutputStream(cacheDataFile.getOrCreateFile()));
 			else
 				out = new AppendingObjectOutputStream(new FileOutputStream(cacheDataFile.getFile(), true));
 
@@ -72,6 +70,9 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 
 	@Override
 	public synchronized OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
+		if (!cacheDataFile.exists())
+			return null;
+
 		ObjectInputStream in = null;
 		try {
 			in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
@@ -109,14 +110,10 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	}
 
 	public boolean isFull() {
-		try {
-			if (cacheDataFile.getFile().exists()) {
-				return full;
-			} else
-				return (full = false);
-		} catch (IOException e) {
-			return false;
-		}
+		if (cacheDataFile.exists())
+			return full;
+		else
+			return (full = false);
 	}
 
 	/**

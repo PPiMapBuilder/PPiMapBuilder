@@ -18,17 +18,20 @@ class CacheFile implements Serializable {
 		this.name = name;
 	}
 
-	public File getFile() throws IOException {
+	public File getOrCreateFile() throws IOException {
+		if (!getFile().exists())
+			getFile().createNewFile();
+
+		return file;
+	}
+
+	public File getFile() {
 		File baseFolder = PMBSettings.getInstance().getOrthologCacheFolder();
 		if (!baseFolder.exists())
 			baseFolder.mkdirs();
 
 		if (file == null)
 			file = new File(baseFolder, name);
-
-		if (!file.exists())
-			file.createNewFile();
-
 		return file;
 	}
 
@@ -39,6 +42,6 @@ class CacheFile implements Serializable {
 	}
 
 	public boolean exists() {
-		return file != null && file.exists();
+		return getFile().exists();
 	}
 }

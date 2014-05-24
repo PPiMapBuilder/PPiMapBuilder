@@ -23,17 +23,21 @@ import java.util.Set;
 public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheClient {
 
 	private static PMBProteinOrthologCacheClient _instance;
-	private File orthologCacheIndexFile;
+	//private File orthologCacheIndexFile;
+	private CacheFile orthologCacheIndexFile;
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> orthologCacheIndex;
 
 	private PMBProteinOrthologCacheClient() throws IOException {
 		super();
-		orthologCacheIndexFile = new File(PMBSettings.getInstance().getOrthologCacheFolder(), "ortholog-cache.idx");
+
+		orthologCacheIndexFile = new CacheFile("ortholog-cache.idx");
+
+		//orthologCacheIndexFile = new File(PMBSettings.getInstance().getOrthologCacheFolder(), "ortholog-cache.idx");
 
 		if (orthologCacheIndexFile.exists())
 			orthologCacheIndex = load();
 		else {
-			orthologCacheIndex = clear();
+			orthologCacheIndex = empty();
 			save();
 		}
 	}
@@ -52,14 +56,14 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 
 		ObjectInputStream in = null;
 		try {
-			in = new ObjectInputStream(new FileInputStream(orthologCacheIndexFile));
+			in = new ObjectInputStream(new FileInputStream(orthologCacheIndexFile.getFile()));
 
 			try {
 				index = (HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>) in.readObject();
 			} catch (InvalidClassException e) {
 				// Old cache that is incompatible with the current version
-				//  => emptying old cache
-				return clear();
+				//  => emptying old cache, start fresh
+				return empty();
 			}
 		} catch (IOException e) {
 			throw e;
@@ -74,28 +78,21 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	/**
 	 * Clear all ortholog cache files and return an empty cache index.
 	 */
-	public HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> clear() throws IOException {
+	public HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> empty() throws IOException {
 		FileUtil.recursiveDelete(PMBSettings.getInstance().getOrthologCacheFolder());
-		if(orthologCacheIndex != null) {
+		if (orthologCacheIndex != null) {
 			orthologCacheIndex.clear();
 			return orthologCacheIndex;
-		}
-		else return new HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>();
+		} else return new HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>();
 	}
 
 	/**
 	 * Saves the ortholog cache index in file "ortholog-cache.idx"
 	 */
-	private synchronized void save() throws IOException {
-		File orthologCacheFolder = PMBSettings.getInstance().getOrthologCacheFolder();
-		if (!orthologCacheFolder.exists())
-			orthologCacheFolder.mkdirs();
-		if (!orthologCacheIndexFile.exists())
-			orthologCacheIndexFile.createNewFile();
-
+	public synchronized void save() throws IOException {
 		ObjectOutputStream out = null;
 		try {
-			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile));
+			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile.getOrCreateFile()));
 
 			out.writeObject(orthologCacheIndex);
 		} catch (IOException e) {
@@ -176,15 +173,12 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 		for (Pair<Organism> combination : possibleCombinations) {
 			Organism organismA = combination.getFirst();
 			Organism organismB = combination.getSecond();
-			if(getSpeciesPairProteinOrthologCache(organismA, organismB).isFull())
+			if (isFull(organismA, organismB))
 				loadedCombinations.add(combination);
 		}
 
-		System.out.println("possible : "+possibleCombinations.size());
-		System.out.println("loaded : "+loadedCombinations.size());
-
 		Sets.SetView<Pair<Organism>> intersection = Sets.intersection(possibleCombinations, loadedCombinations);
 
-		return  (double) intersection.size() / (double) possibleCombinations.size() * 100.0;
+		return (double) intersection.size() / (double) possibleCombinations.size() * 100.0;
 	}
 }

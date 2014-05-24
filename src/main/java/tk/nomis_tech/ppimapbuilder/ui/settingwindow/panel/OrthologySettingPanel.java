@@ -58,7 +58,7 @@ public class OrthologySettingPanel extends TabContentPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					cache.clear();
+					cache.empty();
 					OrthologySettingPanel.this.update();
 				} catch (IOException e1) {
 					e1.printStackTrace();

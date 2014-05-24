@@ -6,6 +6,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.execchain.RequestAbortedException;
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskMonitor;
 import tk.nomis_tech.ppimapbuilder.data.Pair;
@@ -95,7 +96,7 @@ class InParanoidCacheLoaderTask implements Task {
 				}
 			} catch (InterruptedException e) {
 			} catch (ExecutionException e) {
-				if(!(e.getCause() instanceof InterruptedException))
+				if(!(e.getCause() instanceof RequestAbortedException))
 					e.printStackTrace();
 			}
 		}
@@ -103,6 +104,7 @@ class InParanoidCacheLoaderTask implements Task {
 		monitor.setProgress(1);
 		if (parent.getListener() != null)
 			parent.getListener().done();
+		PMBProteinOrthologCacheClient.getInstance().save();
 	}
 
 	@Override
