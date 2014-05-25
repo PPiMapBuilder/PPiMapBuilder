@@ -4,6 +4,8 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProteinUtils {
 
@@ -30,7 +32,7 @@ public class ProteinUtils {
 		 * Uniprot ID pattern. According to
 		 * http://www.ebi.ac.uk/miriam/main/export/xml/
 		 */
-		public final static String pattern = "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\.\\d+)?$";
+		public final static Pattern pattern = Pattern.compile("([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})(\\-\\d+)?");
 
 		/**
 		 * Test if a given string matches the Uniprot ID pattern.
@@ -39,7 +41,9 @@ public class ProteinUtils {
 		 * @return boolean
 		 */
 		public static boolean isValid(String uniprotId) {
-			return uniprotId.matches(pattern);
+			Matcher matcher = pattern.matcher(uniprotId);
+			boolean matches = matcher.matches();
+			return matches;
 		}
 
 	}

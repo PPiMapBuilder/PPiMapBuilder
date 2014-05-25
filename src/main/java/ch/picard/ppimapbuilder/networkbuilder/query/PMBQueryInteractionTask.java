@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.networkbuilder.query;
 
+import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -199,6 +200,8 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				System.out.println("--Search orthologs--");
 				System.out.println("n# protein: " + interactorPool.size());
 				System.out.println("n# org: " + otherOrganisms.size());
+				System.out.println(interactorPool);
+				System.out.println(otherOrganisms);
 
 				try {
 					// Search protein orthologs of interactors in the pool
@@ -292,6 +295,9 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 									//Remove POIs in orthologs list for interaction research
 									orthologsInOrg.removeAll(proteinOfInterestsOrthologs);
+									Set<String> currentInteractors = InteractionUtils.getInteractorsBinary(orthologsInteractions);
+									Collection<Protein> translatedInteractors = ProteinUtils.newProteins(currentInteractors, organism);
+									orthologsInOrg.addAll(translatedInteractors);
 
 									// Search secondary interactions for orthologs found in this organism (without POI's orthologs)
 									orthologsInteractions.addAll(
@@ -307,7 +313,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 							InteractionUtils.filterByOrganism(orthologsInteractions, organism);
 
 							//Cluster orthologs's interactions
-							final List<EncoreInteraction> interactionBetweenOrthologs = new ArrayList(InteractionUtils.clusterInteraction(orthologsInteractions));
+							final List<EncoreInteraction> interactionBetweenOrthologs = new ArrayList<EncoreInteraction>(InteractionUtils.clusterInteraction(orthologsInteractions));
 
 							// Store interactions found for this organism
 							result = new OrthologInteractionResult(organism, interactionBetweenOrthologs);

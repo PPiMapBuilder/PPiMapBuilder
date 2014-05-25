@@ -188,8 +188,9 @@ public class InteractionUtils {
 	 */
 	public static Set<String> getInteractorsBinary(List<BinaryInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
+		List<BinaryInteraction> copyInteractions = new ArrayList<BinaryInteraction>(interactions);
 
-		filterNonUniprotInteractors(interactions);
+		filterNonUniprotInteractors(copyInteractions);
 		for (BinaryInteraction interaction : interactions) {
 			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier());
 			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
@@ -220,10 +221,13 @@ public class InteractionUtils {
 				CrossReference uniprot = null;
 				boolean hasUniprot = false;
 				for (CrossReference ref : ids) {
-					final boolean isUniprot = ref.getDatabase().equals("uniprotkb") && ProteinUtils.UniProtId.isValid(ref.getIdentifier());
-					if (!hasUniprot)
+					final boolean isUniprot = ref.getDatabase().equals("uniprotkb");
+					final boolean idValid = ProteinUtils.UniProtId.isValid(ref.getIdentifier());
+					hasUniprot = hasUniprot || (isUniprot && idValid);
+					if(hasUniprot) {
 						uniprot = ref;
-					hasUniprot = hasUniprot || isUniprot;
+						break;
+					}
 				}
 
 				if (!hasUniprot) {
