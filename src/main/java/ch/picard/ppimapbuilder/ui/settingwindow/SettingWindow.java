@@ -26,7 +26,7 @@ public class SettingWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private JButton saveSettings;
-	private JButton cancel;
+	private JButton close;
 
 	private DatabaseSettingPanel databaseSettingPanel;
 	private OrganismSettingPanel organismSettingPanel;
@@ -81,10 +81,10 @@ public class SettingWindow extends JDialog {
 	private JPanel initBottomPanel() {
 		JPanel bottom = new JPanel(new GridLayout(1, 1));
 
-		cancel = new JButton("Cancel");
+		close = new JButton("Close");
 		saveSettings = new JButton("Save");
 		
-		bottom.add(cancel);
+		bottom.add(close);
 		bottom.add(saveSettings);
 
 		return bottom;
@@ -95,8 +95,8 @@ public class SettingWindow extends JDialog {
 
 			public void actionPerformed(ActionEvent e) {
 
-				SettingWindow.this.setVisible(false);
-				SettingWindow.this.dispose();
+				//SettingWindow.this.setVisible(false);
+				//SettingWindow.this.dispose();
 
 				// DATABASE SETTINGS SAVE
 				ArrayList<String> databases = new ArrayList<String>();
@@ -115,15 +115,15 @@ public class SettingWindow extends JDialog {
 
 		});
 		
-		cancel.addActionListener(new ActionListener() {
+		close.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 
-				PMBSettings.getInstance().readSettings();
+				/*PMBSettings.getInstance().readSettings();
 				UserOrganismRepository.resetUserOrganismRepository();
 				getOrganismSettingPanel().updatePanSourceOrganism();
-				getOrganismSettingPanel().updateSuggestions();
+				getOrganismSettingPanel().updateSuggestions();*/
 				
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
