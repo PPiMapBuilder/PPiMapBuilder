@@ -7,7 +7,8 @@
 	<artifactId>PPiMapBuilder</artifactId>
 	<version>0.9-SNAPSHOT</version>
 	<name>PPiMapBuilder</name>
-	<description>Cytoscape 3 app for protein-protein interaction network generation and protein-protein interaction prediction via the Phylogenetic profiling method as described by Echeverría et al. (2011).</description>
+	<description>Cytoscape 3 app for protein-protein interaction network generation and
+		prediction as described by Echeverría et al. (2011).</description>
 	<packaging>bundle</packaging>
 	<url>http://github.com/PPiMapBuilder</url>
 
@@ -52,6 +53,8 @@
 			<roles>
 				<role>developer</role>
 			</roles>
+			<organization>Génie Physiologique et Informatique - Université de Poitiers</organization>
+			<organizationUrl>http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86</organizationUrl>
 		</developer>
 
 		<developer>
@@ -70,6 +73,8 @@
 			<roles>
 				<role>developer</role>
 			</roles>
+			<organization>Génie Physiologique et Informatique - Université de Poitiers</organization>
+			<organizationUrl>http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86</organizationUrl>
 		</developer>
 
 		<developer>
@@ -78,13 +83,15 @@
 			<roles>
 				<role>developer</role>
 			</roles>
+			<organization>Génie Physiologique et Informatique - Université de Poitiers</organization>
+			<organizationUrl>http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86</organizationUrl>
 		</developer>
 	</developers>
 
 	<!-- Contributor informations -->
 	<contributors>
 		<contributor>
-			<name>Pablo Echeverria</name>
+			<name>Pablo Echeverría</name>
 			<organization>Picard lab</organization>
 			<organizationUrl>http://www.picard.ch/</organizationUrl>
 			<roles>
@@ -99,6 +106,8 @@
 			<roles>
 				<role>brainstormer</role>
 			</roles>
+			<organization>Génie Physiologique et Informatique - Université de Poitiers</organization>
+			<organizationUrl>http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86</organizationUrl>
 		</contributor>
 	</contributors>
 
