@@ -7,6 +7,7 @@
     <artifactId>PPiMapBuilder</artifactId>
     <version>0.9-SNAPSHOT</version>
     <name>PPiMapBuilder</name>
+    <description>Cytoscape 3 app for protein-protein interaction network generation and protein-protein interaction prediction via the Phylogenetic profiling method as described by Echeverría et al. (2011).</description>
     <packaging>bundle</packaging>
     <url>http://github.com/PPiMapBuilder</url>
 	
@@ -29,7 +30,7 @@
 		<system>GitHub Issues</system>
 	</issueManagement>
 
-	<!-- Versionning control -->
+	<!-- Versioning control -->
 	<scm>
 		<url>https://github.com/PPiMapBuilder/PPiMapBuilder</url>
 		<connection>scm:git:git://github.com/PPiMapBuilder/PPiMapBuilder.git</connection>
