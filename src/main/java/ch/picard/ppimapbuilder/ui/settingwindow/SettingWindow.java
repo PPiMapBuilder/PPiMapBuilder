@@ -120,10 +120,10 @@ public class SettingWindow extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 
-				/*PMBSettings.getInstance().readSettings();
+				PMBSettings.getInstance().readSettings();
 				UserOrganismRepository.resetUserOrganismRepository();
 				getOrganismSettingPanel().updatePanSourceOrganism();
-				getOrganismSettingPanel().updateSuggestions();*/
+				getOrganismSettingPanel().updateSuggestions();
 				
 				SettingWindow.this.setVisible(false);
 				SettingWindow.this.dispose();
