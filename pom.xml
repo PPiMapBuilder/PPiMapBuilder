@@ -2,23 +2,110 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <bundle.symbolicName>ch.picard.ppimapbuilder</bundle.symbolicName>
-        <bundle.namespace>ch.picard.ppimapbuilder</bundle.namespace>
-
-        <cytoscape.version>3.0.0</cytoscape.version>
-    </properties>
-
-    <groupId>tk.nomis_tech</groupId>
+	<!-- Project identifiers -->
+	<groupId>tk.nomis_tech</groupId>
     <artifactId>PPiMapBuilder</artifactId>
     <version>0.9-SNAPSHOT</version>
-
     <name>PPiMapBuilder</name>
-
     <packaging>bundle</packaging>
+    <url>http://github.com/PPiMapBuilder</url>
+	
+	<!-- Project properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bundle.symbolicName>ch.picard.ppimapbuilder</bundle.symbolicName>
+        <bundle.namespace>ch.picard.ppimapbuilder</bundle.namespace>
+        <cytoscape.version>3.0.0</cytoscape.version>
+    </properties>
+    
+    <!-- Licence -->
+    <licenses>
+		<!-- No licence selected for now -->
+	</licenses>
+    
+    <!-- Issue management -->
+    <issueManagement>
+		<url>https://github.com/PPiMapBuilder/PPiMapBuilder/issues</url>
+		<system>GitHub Issues</system>
+	</issueManagement>
 
+	<!-- Versionning control -->
+	<scm>
+		<url>https://github.com/PPiMapBuilder/PPiMapBuilder</url>
+		<connection>scm:git:git://github.com/PPiMapBuilder/PPiMapBuilder.git</connection>
+		<developerConnection>scm:git:git@github.com:PPiMapBuilder/PPiMapBuilder.git</developerConnection>
+	</scm>
+    
+    <!-- Organization informations -->
+	<organization>
+		<name>Picard Lab</name>
+		<url>http://www.picard.ch/</url>
+	</organization>
+
+    <!-- Developer informations -->
+	<developers>
+		<developer>
+			<id>gcornut</id>
+			<name>Guillaume Cornut</name>
+			<email>gcornut@gmail.com</email>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+
+		<developer>
+			<id>pidupuis</id>
+			<name>Pierre Dupuis</name>
+			<email>pmj.dupuis@gmail.com</email>
+			<roles>
+				<role>project leader</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+
+		<developer>
+			<id>keuv-gravouil</id>
+			<name>Kevin Gravouil</name>
+			<email>k.gravouil@gmail.com</email>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+
+		<developer>
+			<id>arkieffer</id>
+			<name>Armelle Kieffer</name>
+			<email>armelle.kieffer@gmail.com</email>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<!-- Contributor informations -->
+	<contributors>
+		<contributor>
+			<name>Pablo Echeverria</name>
+			<email>pablo.echeverria@unige.ch</email>
+			<organization>Picard lab</organization>
+			<organizationUrl>http://www.picard.ch/</organizationUrl>
+			<roles>
+				<role>product owner</role>
+				<role>tester</role>
+			</roles>
+			<timezone>Switzerland/Geneva</timezone>
+		</contributor>
+
+		<contributor>
+			<name>Pierre Cressant</name>
+			<email>pierre.cressant@gmail.com</email>
+			<roles>
+				<role>brainstormer</role>
+			</roles>
+		</contributor>
+	</contributors>
+
+	<!-- Build specifications -->
     <build>
         <plugins>
             <!-- COMPILE -->
@@ -74,6 +161,7 @@
         </plugins>
     </build>
 
+	<!-- Repository specifications -->
     <repositories>
         <!-- Cytoscape repositories -->
         <repository>
@@ -128,6 +216,7 @@
         </repository>
     </repositories>
 
+	<!-- Dependency specifications -->
     <dependencies>
         <!-- jUnit -->
         <dependency>
