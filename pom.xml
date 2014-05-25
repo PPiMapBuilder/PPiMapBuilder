@@ -5,15 +5,15 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <bundle.symbolicName>tk.nomis_tech.ppimapbuilder</bundle.symbolicName>
-        <bundle.namespace>tk.nomis_tech.ppimapbuilder</bundle.namespace>
+        <bundle.symbolicName>ch.picard.ppimapbuilder</bundle.symbolicName>
+        <bundle.namespace>ch.picard.ppimapbuilder</bundle.namespace>
 
         <cytoscape.version>3.0.0</cytoscape.version>
     </properties>
 
     <groupId>tk.nomis_tech</groupId>
     <artifactId>PPiMapBuilder</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.9-SNAPSHOT</version>
 
     <name>PPiMapBuilder</name>
 
