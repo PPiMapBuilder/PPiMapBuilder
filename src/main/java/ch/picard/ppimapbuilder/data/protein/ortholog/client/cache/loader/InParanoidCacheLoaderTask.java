@@ -107,7 +107,7 @@ class InParanoidCacheLoaderTask implements Task {
 					e.printStackTrace();
 			}
 		}
-		if (j == i) {
+		if (i == 0) {
 			new Thread() {
 				@Override
 				public void run() {
