@@ -267,6 +267,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 							// Search interactions of orthologs of protein of interest
 							final Set<Protein> orthologsInOrg = new HashSet<Protein>();
 							List<BinaryInteraction> orthologsInteractions;
+							Set<Protein> newInteractors;
 							{
 
 								{// Primary interaction
@@ -293,11 +294,13 @@ public class PMBQueryInteractionTask extends AbstractTask {
 										if (protein != null) orthologsInOrg.add(protein);
 									}
 
+									// Add new interactors
+									newInteractors = new HashSet(ProteinUtils.newProteins(InteractionUtils.getInteractorsBinary(orthologsInteractions), organism));
+									newInteractors.removeAll(proteinOfInterestsOrthologs);
+									orthologsInOrg.addAll(newInteractors);
+
 									//Remove POIs in orthologs list for interaction research
 									orthologsInOrg.removeAll(proteinOfInterestsOrthologs);
-									Set<String> currentInteractors = InteractionUtils.getInteractorsBinary(orthologsInteractions);
-									Collection<Protein> translatedInteractors = ProteinUtils.newProteins(currentInteractors, organism);
-									orthologsInOrg.addAll(translatedInteractors);
 
 									// Search secondary interactions for orthologs found in this organism (without POI's orthologs)
 									orthologsInteractions.addAll(
@@ -322,25 +325,16 @@ public class PMBQueryInteractionTask extends AbstractTask {
 							//TODO Validate this part:
 							// Get new interactors => not seen in reference organism
 							{
-								// Get all interactors
-								List<Protein> orthologInteractors = new ArrayList<Protein>();
-								for (String ID : InteractionUtils.getInteractorsEncore(interactionBetweenOrthologs)) {
-									final Protein protein = new Protein(ID, organism);
-									// Add only unknown orthologs
-									if (!orthologsInOrg.contains(protein) && !proteinOfInterestsOrthologs.contains(protein))
-										orthologInteractors.add(new Protein(ID, organism));
-								}
-
 								System.out.println(
 										"ORG:" + organism + " -> " + orthologsInOrg.size() + " proteins found" +
-												" -> " + orthologInteractors.size() + " new protein found\n"
+												" -> " + newInteractors.size() + " new protein found\n"
 								);
 
-								if (!orthologInteractors.isEmpty()) {
+								if (!newInteractors.isEmpty()) {
 									//System.out.println(orthologInteractors);
 
 									final Map<Protein, Map<Organism, OrthologScoredProtein>> orthologsMultipleProtein =
-											proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(orthologInteractors, Arrays.asList(referenceOrganism), MINIMUM_ORTHOLOGY_SCORE);
+											proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(newInteractors, Arrays.asList(referenceOrganism), MINIMUM_ORTHOLOGY_SCORE);
 
 									// Get UniProtProtein entry from reference organism
 									for (Map<Organism, OrthologScoredProtein> vals : orthologsMultipleProtein.values()) {

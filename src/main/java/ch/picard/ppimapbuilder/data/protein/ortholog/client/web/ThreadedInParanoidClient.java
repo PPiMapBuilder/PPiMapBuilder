@@ -5,10 +5,10 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 public class ThreadedInParanoidClient extends AbstractThreadedClient implements ThreadedProteinOrthologClient {
@@ -23,7 +23,7 @@ public class ThreadedInParanoidClient extends AbstractThreadedClient implements 
 	}
 
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final List<Protein> proteins, final List<Organism> organisms, final Double score) throws Exception {
+	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		boolean cacheEnabled = inParanoidClient.cacheEnabled();
 
 		if (!cacheEnabled) inParanoidClient.enableCache(true);
@@ -34,7 +34,7 @@ public class ThreadedInParanoidClient extends AbstractThreadedClient implements 
 	}
 
 	@Override
-	public Map<Organism, OrthologScoredProtein> getOrthologsMultiOrganism(final Protein protein, final List<Organism> organisms, final Double score) throws Exception {
+	public Map<Organism, OrthologScoredProtein> getOrthologsMultiOrganism(final Protein protein, final Collection<Organism> organisms, final Double score) throws Exception {
 		boolean cacheEnabled = inParanoidClient.cacheEnabled();
 
 		if (!cacheEnabled) inParanoidClient.enableCache(true);

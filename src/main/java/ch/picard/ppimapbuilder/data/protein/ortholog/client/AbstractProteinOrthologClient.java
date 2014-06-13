@@ -10,23 +10,31 @@ public abstract class AbstractProteinOrthologClient implements ProteinOrthologCl
 
 	@Override
 	public OrthologScoredProtein getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
-		OrthologGroup group =  getOrthologGroup(protein, organism);
+		OrthologGroup group = getOrthologGroup(protein, organism);
 
-		if(group == null)
-			return null;
+		if (group == null) {
+			if (!protein.getUniProtId().contains("-"))
+				return null;
+			else {
+				String id = protein.getUniProtId().split("-")[0];
+				group = getOrthologGroup(new Protein(id, protein.getOrganism()), organism);
+
+				if (group == null)
+					return null;
+			}
+		}
 
 		OrthologScoredProtein ortholog = group.getBestOrthologInOrganism(organism);
 
-		if(ortholog == null)
+		if (ortholog == null)
 			return null;
 
-		if(ortholog.getScore() >= score) {
+		if (ortholog.getScore() >= score) {
 			if (protein instanceof UniProtEntry) {
 				((UniProtEntry) protein).addOrtholog(ortholog);
 			}
 			return ortholog;
-		}
-		else
+		} else
 			return null;
 	}
 

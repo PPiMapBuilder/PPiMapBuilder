@@ -6,10 +6,7 @@ import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -53,7 +50,7 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 	 * @return @code{Map} of ortholog proteins indexed by organism
 	 */
 	@Override
-	public Map<Organism, OrthologScoredProtein> getOrthologsMultiOrganism(final Protein protein, final List<Organism> organisms, final Double score) throws Exception {
+	public Map<Organism, OrthologScoredProtein> getOrthologsMultiOrganism(final Protein protein, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrtholog()} for each given organism
 		 */
@@ -96,10 +93,12 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 	 * @return @code{Map} of ortholog proteins indexed by organism indexed by source protein
 	 */
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final List<Protein> proteins, final List<Organism> organisms, final Double score) throws Exception {
+	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrthologsMultiOrganism()} for each given source protein
 		 */
+
+		List<Protein> proteinList = new ArrayList<Protein>(proteins);
 
 		//Temporally change the thread limit to be sure not to exceed it once
 		int oriNThread = maxNumberThread;
@@ -107,7 +106,7 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 		List<Future<Map<Organism, OrthologScoredProtein>>> requests = new ArrayList<Future<Map<Organism, OrthologScoredProtein>>>();
 		CompletionService<Map<Organism, OrthologScoredProtein>> completionService = new ExecutorCompletionService<Map<Organism, OrthologScoredProtein>>(newFixedThreadPool());
 
-		for (final Protein protein : proteins) {
+		for (final Protein protein : proteinList) {
 			requests.add(completionService.submit(new Callable<Map<Organism, OrthologScoredProtein>>() {
 				@Override
 				public Map<Organism, OrthologScoredProtein> call() throws Exception {
@@ -124,7 +123,7 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 				request = completionService.take();
 				orthologs = request.get();
 				if (orthologs != null) {
-					out.put(proteins.get(requests.indexOf(request)), orthologs);
+					out.put(proteinList.get(requests.indexOf(request)), orthologs);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

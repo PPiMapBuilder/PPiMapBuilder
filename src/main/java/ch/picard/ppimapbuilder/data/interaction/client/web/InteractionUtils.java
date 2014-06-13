@@ -28,6 +28,9 @@ public class InteractionUtils {
 	 */
 	public static List<BinaryInteraction> getInteractionsInProteinPool(Set<Protein> proteins, Organism sourceOrganism,
 	                                                            ThreadedPsicquicSimpleClient psicquicClient) throws Exception {
+		if(proteins.size() <= 1)
+			return new ArrayList<BinaryInteraction>();
+
 		List<Protein> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
 		baseQuery.setRoot(true);

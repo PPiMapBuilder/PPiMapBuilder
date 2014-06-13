@@ -7,6 +7,8 @@ import ch.picard.ppimapbuilder.data.protein.Protein;
  */
 public class OrthologScoredProtein extends Protein {
 
+	private static final long serialVersionUID = 1L;
+
 	private final Double score;
 
 	public OrthologScoredProtein(Protein protein, Double score) {
