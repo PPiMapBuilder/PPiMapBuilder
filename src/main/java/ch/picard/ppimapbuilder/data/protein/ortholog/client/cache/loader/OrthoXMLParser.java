@@ -1,12 +1,12 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 
-import sbc.orthoxml.*;
-import sbc.orthoxml.io.OrthoXMLReader;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
+import sbc.orthoxml.*;
+import sbc.orthoxml.io.OrthoXMLReader;
 
 import javax.management.modelmbean.XMLParseException;
 import javax.xml.stream.XMLStreamException;
@@ -36,15 +36,14 @@ class OrthoXMLParser {
 		List<OrthologGroup> orthologs = new ArrayList<OrthologGroup>();
 
 		Map<String, ScoreDefinition> scoreDefinitions = orthoXMLReader.getScoreDefinitions();
-		Map<Integer, Organism> organismMap = new HashMap<Integer, Organism>() {{
-			for (Species species : orthoXMLReader.getSpecies()) {
-				int tax = species.getNcbiTaxId();
-				put(tax, InParanoidOrganismRepository.getInstance().getOrganismByTaxId(tax));
-			}
-		}};
+		Map<Integer, Organism> organismMap = new HashMap<Integer, Organism>();
+		for (Species species : orthoXMLReader.getSpecies()) {
+			int tax = species.getNcbiTaxId();
+			organismMap.put(tax, InParanoidOrganismRepository.getInstance().getOrganismByTaxId(tax));
+		}
 
 		Group group;
-		while((group = orthoXMLReader.next()) != null) {
+		while ((group = orthoXMLReader.next()) != null) {
 			OrthologGroup orthologGroup = new OrthologGroup();
 
 			for (Membership membership : group.getMembers()) {

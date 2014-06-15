@@ -20,12 +20,17 @@ import java.util.concurrent.*;
 /**
  * Simple Java client for UniProt entry service
  */
+//TODO : rewrite client with Stax XML Parser
 public class UniProtEntryClient extends AbstractThreadedClient {
 
 	private static final String UNIPROT_URL = "http://www.uniprot.org/uniprot/";
 
-	public UniProtEntryClient(int nThread) {
-		super(nThread);
+	public UniProtEntryClient() {
+		super();
+	}
+
+	public UniProtEntryClient(int nbThread) {
+		super(nbThread);
 	}
 
 	/**

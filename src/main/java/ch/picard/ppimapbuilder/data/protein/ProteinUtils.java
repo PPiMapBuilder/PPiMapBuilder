@@ -2,25 +2,26 @@ package ch.picard.ppimapbuilder.data.protein;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ProteinUtils {
 
-	public static Collection<Protein> newProteins(final Collection<String> identifiers, final Organism organism) {
-		return new ArrayList<Protein>(){{
-			for(String id : identifiers)
-				add(new Protein(id, organism));
-		}};
+	public static Set<Protein> newProteins(final Set<String> identifiers, final Organism organism) {
+		final Set<Protein> out = new HashSet<Protein>();
+		for(String id : identifiers)
+			out.add(new Protein(id, organism));
+		return out;
 	}
 
-	public static Collection<String> asIdentifiers(final Collection<Protein> proteins) {
-		return new ArrayList<String>() {{
-			for(Protein protein: proteins)
-				add(protein.getUniProtId());
-		}};
+	public static Collection<String> asIdentifiers(final Set<Protein> proteins) {
+		final Set<String> out = new HashSet<String>();
+		for(Protein protein: proteins)
+			out.add(protein.getUniProtId());
+		return out;
 	}
 
 	/**

@@ -93,7 +93,7 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 	 * @return @code{Map} of ortholog proteins indexed by organism indexed by source protein
 	 */
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
+	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrthologsMultiOrganism()} for each given source protein
 		 */

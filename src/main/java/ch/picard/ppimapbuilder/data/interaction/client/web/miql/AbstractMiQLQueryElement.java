@@ -29,7 +29,7 @@ public class AbstractMiQLQueryElement {
 		else exprs.add(elem);
 		cache = null;
 	}
-	
+
 	public void addAll(List<String> elements) {
 		for (String elem : elements) {
 			add(elem);

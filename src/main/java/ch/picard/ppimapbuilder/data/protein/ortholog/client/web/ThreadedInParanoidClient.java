@@ -23,7 +23,7 @@ public class ThreadedInParanoidClient extends AbstractThreadedClient implements 
 	}
 
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
+	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		boolean cacheEnabled = inParanoidClient.cacheEnabled();
 
 		if (!cacheEnabled) inParanoidClient.enableCache(true);

@@ -23,10 +23,17 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 	/**
 	 * Constructs a new ThreadedPsicquicSimpleClient
 	 * @param services list of PSICQUIC services that will be use during query
-	 * @param nThread number of parallel request that need to be sent
 	 */
-	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, int nThread) {
-		super(nThread);
+	public ThreadedPsicquicSimpleClient(List<PsicquicService> services) {
+		this(services, null);
+	}
+
+	/**
+	 * Constructs a new ThreadedPsicquicSimpleClient
+	 * @param services list of PSICQUIC services that will be use during query
+	 */
+	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, Integer nbThread) {
+		super(nbThread);
 		this.services = services;
 	}
 
