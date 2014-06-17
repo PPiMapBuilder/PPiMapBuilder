@@ -163,7 +163,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			interactorPool.addAll(newInteractors);
 		}
 
-		//Interaction search in protein pool
+		//Interaction search in protein pool for all organisms
 		monitor.setStep("Fetch interactions in all organisms...");
 		{
 			new ConcurrentExecutor<SecondaryInteractionQuery>(executorServices.get(this), allOrganisms.size()) {

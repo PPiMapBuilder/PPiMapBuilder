@@ -17,10 +17,14 @@ public class PMBQueryInteractionTaskTest {
 	HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
 	UniProtEntrySet interactorPool = new UniProtEntrySet();
 	UniProtEntrySet proteinOfInterestPool = new UniProtEntrySet();
+
+	Organism human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
+	Organism mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+
 	QueryWindow qw = new QueryWindow() {
 		@Override
 		public Organism getSelectedRefOrganism() {
-			return UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
+			return human;
 		}
 
 		@Override
@@ -37,7 +41,7 @@ public class PMBQueryInteractionTaskTest {
 
 		@Override
 		public List<Organism> getSelectedOrganisms() {
-			return Arrays.asList(UserOrganismRepository.getInstance().getOrganismByTaxId(10090));
+			return Arrays.asList(mouse);
 		}
 	};
 
@@ -46,8 +50,7 @@ public class PMBQueryInteractionTaskTest {
 		Task t = new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, qw);
 		t.run(null);
 
-		System.out.println();
-		System.out.println();
+		System.out.println("\n");
 
 		for (Organism organism : interactionsByOrg.keySet()) {
 			System.out.println("ORG: "+organism+"  -> "+ interactionsByOrg.get(organism).size() + " interactions");

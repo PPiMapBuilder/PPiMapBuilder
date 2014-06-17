@@ -5,6 +5,7 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicSimpl
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
@@ -69,22 +70,34 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 		//Search new interactors
 		if (!interactors.isEmpty()) {
-			Map<Protein, Map<Organism, OrthologScoredProtein>> orthologs =
-					proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(interactors, Arrays.asList(refOrganism), MINIMUM_ORTHOLOGY_SCORE);
 
-			for (Protein interactor : interactors) {
-				final Map<Organism, OrthologScoredProtein> map = orthologs.get(interactor);
-				if (map == null)
-					continue;
+			if (organism.equals(refOrganism)) {
+				newInteractors.addAll(
+					uniProtEntryClient.retrieveProteinsData(
+							ProteinUtils.asIdentifiers(interactors)
+					).values()
+				);
+			} else {
 
-				final Protein protInRefOrg = map.get(refOrganism);
-				if (protInRefOrg == null)
-					continue;
+				Map<Protein, Map<Organism, OrthologScoredProtein>> orthologs =
+						proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(interactors, Arrays.asList(refOrganism), MINIMUM_ORTHOLOGY_SCORE);
 
-				if (!proteinPool.contains(protInRefOrg)) {
-					newInteractors.add(
-							uniProtEntryClient.retrieveProteinData(protInRefOrg.getUniProtId())
-					);
+				for (Protein interactor : interactors) {
+					final Map<Organism, OrthologScoredProtein> map = orthologs.get(interactor);
+					if (map == null)
+						continue;
+
+					final Protein protInRefOrg = map.get(refOrganism);
+					if (protInRefOrg == null)
+						continue;
+
+					if (!proteinPool.contains(protInRefOrg)) {
+						UniProtEntry proteinEntry = uniProtEntryClient.retrieveProteinData(protInRefOrg.getUniProtId());
+
+						proteinEntry.addOrtholog(interactor);
+
+						newInteractors.add(proteinEntry);
+					}
 				}
 			}
 		}
