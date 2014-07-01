@@ -1,16 +1,15 @@
 package ch.picard.ppimapbuilder.data.protein.client.web;
 
+import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import ch.picard.ppimapbuilder.data.gene_ontology.GeneOntologyCategory;
-import ch.picard.ppimapbuilder.data.gene_ontology.GeneOntologyModel;
-import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -111,30 +110,22 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 		for (Element e : doc.select("dbReference")) {
 			if (e.attr("type").equals("GO")) {
 				String id = e.attr("id");
-				GeneOntologyCategory category = null;
-				String term = null;
+
 				for (Element f : e.select("property")) {
 					if (f.attr("type").equals("term")) {
-						String value = f.attr("value");
-						String[] values = value.split(":");
-						if (values[0].equals("C")) {
-							category = GeneOntologyCategory.CELLULAR_COMPONENT;
-						} else if (values[0].equals("F")) {
-							category = GeneOntologyCategory.MOLECULAR_FUNCTION;
-						} else if (values[0].equals("P")) {
-							category = GeneOntologyCategory.BIOLOGICAL_PROCESS;
+						String[] values = f.attr("value").split(":");
+
+						GeneOntologyTerm go = new GeneOntologyTerm(id, values[1], values[0].charAt(0));
+						switch (go.getCategory()) {
+							case CELLULAR_COMPONENT : protein.addCellularComponent(go);
+								break;
+							case BIOLOGICAL_PROCESS : protein.addBiologicalProcess(go);
+								break;
+							case MOLECULAR_FUNCTION : protein.addMolecularFunction(go);
+								break;
 						}
-						term = values[1];
 						break;
 					}
-				}
-				GeneOntologyModel go = new GeneOntologyModel(id, term, category);
-				if (category == GeneOntologyCategory.CELLULAR_COMPONENT) {
-					protein.addCellularComponent(go);
-				} else if (category == GeneOntologyCategory.BIOLOGICAL_PROCESS) {
-					protein.addBiologicalProcess(go);
-				} else if (category == GeneOntologyCategory.MOLECULAR_FUNCTION) {
-					protein.addMolecularFunction(go);
 				}
 			}
 		}

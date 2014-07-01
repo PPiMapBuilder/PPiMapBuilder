@@ -1,7 +1,7 @@
 package ch.picard.ppimapbuilder.data.protein;
 
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import com.eclipsesource.json.JsonObject;
-import ch.picard.ppimapbuilder.data.gene_ontology.GeneOntologyModel;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 
 import java.util.ArrayList;
@@ -15,9 +15,9 @@ public class UniProtEntry extends Protein {
 	transient private String proteinName;
 	transient private String ecNumber;
 	transient private boolean reviewed;
-	transient private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
-	transient private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
-	transient private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
+	transient private List<GeneOntologyTerm> cellularComponents = new ArrayList<GeneOntologyTerm>();
+	transient private List<GeneOntologyTerm> biologicalProcesses = new ArrayList<GeneOntologyTerm>();
+	transient private List<GeneOntologyTerm> molecularFunctions = new ArrayList<GeneOntologyTerm>();
 	transient private final HashMap<Organism, Protein> orthologs = new HashMap<Organism, Protein>();
 
 	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Organism organism, String proteinName, boolean reviewed) {
@@ -28,13 +28,13 @@ public class UniProtEntry extends Protein {
 		this.reviewed = reviewed;
 	}
 
-	public List<GeneOntologyModel> getCellularComponents() {
+	public List<GeneOntologyTerm> getCellularComponents() {
 		return cellularComponents;
 	}
 
 	public ArrayList<String> getCellularComponentsAsStringList() {
 		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.cellularComponents) {
+		for (GeneOntologyTerm go : this.cellularComponents) {
 			list.add(go.toString());
 		}
 		return list;
@@ -59,58 +59,58 @@ public class UniProtEntry extends Protein {
 		return orthologs.put(prot.getOrganism(), prot);
 	}
 
-	public void setCellularComponents(ArrayList<GeneOntologyModel> cellularComponents) {
+	public void setCellularComponents(ArrayList<GeneOntologyTerm> cellularComponents) {
 		this.cellularComponents = cellularComponents;
 	}
 
-	public void addCellularComponent(GeneOntologyModel go) {
+	public void addCellularComponent(GeneOntologyTerm go) {
 		this.cellularComponents.add(go);
 	}
 
-	public List<GeneOntologyModel> getBiologicalProcesses() {
+	public List<GeneOntologyTerm> getBiologicalProcesses() {
 		return biologicalProcesses;
 	}
 
 	public ArrayList<String> getBiologicalProcessesAsStringList() {
 
 		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.biologicalProcesses) {
+		for (GeneOntologyTerm go : this.biologicalProcesses) {
 			list.add(go.toString());
 		}
 		return list;
 	}
 
-	public void setBiologicalProcesses(ArrayList<GeneOntologyModel> biologicalProcesses) {
+	public void setBiologicalProcesses(ArrayList<GeneOntologyTerm> biologicalProcesses) {
 		this.biologicalProcesses = biologicalProcesses;
 	}
 
-	public void addBiologicalProcess(GeneOntologyModel go) {
+	public void addBiologicalProcess(GeneOntologyTerm go) {
 		this.biologicalProcesses.add(go);
 	}
 
-	public List<GeneOntologyModel> getMolecularFunctions() {
+	public List<GeneOntologyTerm> getMolecularFunctions() {
 		return molecularFunctions;
 	}
 
 	public ArrayList<String> getMolecularFunctionsAsStringList() {
 		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.molecularFunctions) {
+		for (GeneOntologyTerm go : this.molecularFunctions) {
 			list.add(go.toString());
 		}
 		return list;
 	}
 
-	public void setMolecularFunctions(ArrayList<GeneOntologyModel> molecularFunctions) {
+	public void setMolecularFunctions(ArrayList<GeneOntologyTerm> molecularFunctions) {
 		this.molecularFunctions = molecularFunctions;
 	}
 
-	public void addMolecularFunction(GeneOntologyModel go) {
+	public void addMolecularFunction(GeneOntologyTerm go) {
 		this.molecularFunctions.add(go);
 	}
 
 	public String molecularFunctionsToString() {
 		String text = "";
-		for (GeneOntologyModel go : this.molecularFunctions) {
+		for (GeneOntologyTerm go : this.molecularFunctions) {
 			text += go.toString();
 			text += ",";
 		}

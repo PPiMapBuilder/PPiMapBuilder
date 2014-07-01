@@ -70,9 +70,7 @@ class InParanoidCacheLoaderTask implements Task {
 								.append(".orthoXML")
 								.toString(),
 
-						cache,
-
-						this
+						cache
 				);
 				requests.add(completionService.submit(request));
 			}
@@ -135,21 +133,19 @@ class InParanoidCacheLoaderTask implements Task {
 		private final Organism organismB;
 		private final String url;
 		private final SpeciesPairProteinOrthologCache cache;
-		private final InParanoidCacheLoaderTask task;
 		private boolean skipped = false;
 		private boolean canceled = false;
 
-		CacheLoadRequest(Organism organismA, Organism organismB, String url, SpeciesPairProteinOrthologCache cache, InParanoidCacheLoaderTask task) {
+		CacheLoadRequest(Organism organismA, Organism organismB, String url, SpeciesPairProteinOrthologCache cache) {
 			this.organismA = organismA;
 			this.organismB = organismB;
 			this.url = url;
 			this.cache = cache;
-			this.task = task;
 		}
 
 		@Override
 		public CacheLoadRequest call() throws Exception {
-			if (!task.cancelled) {
+			if (!InParanoidCacheLoaderTask.this.cancelled) {
 				HttpRequestBase req = null;
 				CloseableHttpResponse res = null;
 
