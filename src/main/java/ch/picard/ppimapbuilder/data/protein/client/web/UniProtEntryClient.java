@@ -104,7 +104,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 		// PROTEIN CREATION
 		protein = new UniProtEntry(uniprotId, geneName, ec_number, organism, proteinName, reviewed);
-		protein.setSynonymGeneNames(synonymGeneNames);
+		protein.addAllSynonymGeneNames(synonymGeneNames);
 
 		// GENE ONTOLOGIES
 		for (Element e : doc.select("dbReference")) {

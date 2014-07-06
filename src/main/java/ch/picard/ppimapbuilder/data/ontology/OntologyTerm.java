@@ -1,6 +1,6 @@
 package ch.picard.ppimapbuilder.data.ontology;
 
-public class OntologyTerm {
+class OntologyTerm {
 
 	private final String identifier;
 	public OntologyTerm(String identifier) {

@@ -1,17 +1,19 @@
 package ch.picard.ppimapbuilder.data.protein;
 
-import com.eclipsesource.json.JsonObject;
+import ch.picard.ppimapbuilder.data.JSONable;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
+import com.eclipsesource.json.JsonObject;
 
 import java.io.Serializable;
 
 /**
  * Simple protein model with a unique identifier (UniProt identifier) and an Organism.
  */
-public class Protein implements Serializable {
+public class Protein implements Serializable, JSONable{
 
 	private static final long serialVersionUID = 1L;
+	public static final int ID_LENGTH = 10; //MAX length of UniProt identifier
 
 	protected final String uniProtId;
 	protected final Organism organism;
@@ -39,10 +41,7 @@ public class Protein implements Serializable {
 
 	@Override
 	public String toString() {
-		JsonObject out = new JsonObject();
-		out.add("uniProtId", uniProtId);
-		out.add("organism", organism.getTaxId());
-		return out.toString();
+		return uniProtId;
 	}
 
 	@Override
@@ -50,12 +49,20 @@ public class Protein implements Serializable {
 		try {
 			return uniProtId.equals(((Protein) o).getUniProtId());
 		} catch (Exception e) {
-			return false;
+			return o instanceof String && uniProtId.equals((String) o);
 		}
 	}
 
 	@Override
 	public int hashCode() {
 		return uniProtId.hashCode();
+	}
+
+	@Override
+	public String toJSON() {
+		JsonObject out = new JsonObject();
+		out.add("uniProtId", uniProtId);
+		out.add("organism", organism.getTaxId());
+		return out.toString();
 	}
 }

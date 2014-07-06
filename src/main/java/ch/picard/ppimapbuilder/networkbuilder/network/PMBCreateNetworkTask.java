@@ -1,6 +1,12 @@
 package ch.picard.ppimapbuilder.networkbuilder.network;
 
-import com.eclipsesource.json.JsonObject;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
+import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
@@ -12,16 +18,10 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -39,7 +39,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	// For the visual style
 	private final VisualMappingManager vizMapManager;
-	
+
 
 	private final Organism referenceOrganism;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
@@ -67,7 +67,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			long startTime
 	) {
 		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
-		
+
 		// For the network
 		this.networkManager = netMgr;
 		this.networkFactory = cnf;
@@ -87,9 +87,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.referenceOrganism = queryWindow.getSelectedRefOrganism();
-		
+
 		this.nodeNameMap = new HashMap<String, CyNode>();
-		
+
 		this.startTime = startTime;
 	}
 
@@ -100,13 +100,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		monitor.setStatusMessage("Building Cytoscape network...");
 		monitor.setProgress(1.0);
-		
+
 		if (!interactionsByOrg.get(referenceOrganism).isEmpty() && !interactionsByOrg.isEmpty()) {
-			
+
 			// Create an empty network
 			CyNetwork network = networkFactory.createNetwork();
 			network.getRow(network).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
-			
+
 			CyTable networkTable = network.getDefaultNetworkTable();
 			networkTable.createColumn("created by", String.class, true);
 			networkTable.createColumn("build time (seconds)", Integer.class, true);
@@ -127,10 +127,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			// Visual Style
 			applyVisualStyle(view);
 
-			network.getRow(network).set("build time (seconds)", (((int)(System.currentTimeMillis()- startTime))/1000));
+			network.getRow(network).set("build time (seconds)", (((int) (System.currentTimeMillis() - startTime)) / 1000));
 		}
 	}
-	
+
 	private void createNodes(CyNetwork network) {
 
 		// Node attributes
@@ -150,12 +150,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("biological_processes", String.class, false);
 		nodeTable.createListColumn("molecular_functions", String.class, false);
 		nodeTable.createColumn("queried", String.class, false);
-				
+
 		for (UniProtEntry protein : interactorPool) {
 			if (!nodeNameMap.containsKey(protein.getUniProtId())) {
 				CyNode node = network.addNode();
 				nodeNameMap.put(protein.getUniProtId(), node);
-				
+
 				CyRow nodeAttr = network.getRow(node);
 				nodeAttr.set("name", protein.getUniProtId());
 				nodeAttr.set("uniprot_id", protein.getUniProtId());
@@ -165,44 +165,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("protein_name", protein.getProteinName());
 				nodeAttr.set("tax_id", String.valueOf(protein.getOrganism().getTaxId()));
 				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
-				nodeAttr.set("cellular_components_hidden", protein.getCellularComponentsAsStringList());
-				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsStringList());
-				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsStringList());
-				nodeAttr.set("orthologs", protein.getOrthologsAsStringList());
+				nodeAttr.set("cellular_components_hidden", protein.getCellularComponentsAsJSONList());
+				nodeAttr.set("cellular_components", protein.getCellularComponentsAsSringList());
+				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsJSONList());
+				nodeAttr.set("biological_processes", protein.getBiologicalProcessesAsStringList());
+				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsJSONList());
+				nodeAttr.set("molecular_functions", protein.getMolecularFunctionsAsStringList());
+				nodeAttr.set("orthologs", protein.getOrthologsAsJSONList());
 				nodeAttr.set("queried", String.valueOf(proteinOfInterestPool.contains(protein)));
-				
-				{
-					List<String> cellularComponent = protein.getCellularComponentsAsStringList();
-					List<String> cellularComponentReadable = new ArrayList<String>();
-					if (cellularComponent != null && !cellularComponent.isEmpty())
-						for (String s : cellularComponent) {
-							JsonObject obj = JsonObject.readFrom(s);
-							cellularComponentReadable.add(obj.get("term").asString());
-						}
-					nodeAttr.set("cellular_components", cellularComponentReadable);
-					
-					List<String> biologicalProcess = protein.getBiologicalProcessesAsStringList();
-					List<String> biologicalProcessReadable = new ArrayList<String>();
-					if (biologicalProcess != null && !biologicalProcess.isEmpty())
-						for (String s : biologicalProcess) {
-							JsonObject obj = JsonObject.readFrom(s);
-							biologicalProcessReadable.add(obj.get("term").asString());
-						}
-					nodeAttr.set("biological_processes", biologicalProcessReadable);
-					
-					List<String> molecularFunction = protein.getMolecularFunctionsAsStringList();
-					List<String> molecularFunctionReadable = new ArrayList<String>();
-					if (molecularFunction != null && !molecularFunction.isEmpty())
-						for (String s : molecularFunction) {
-							JsonObject obj = JsonObject.readFrom(s);
-							molecularFunctionReadable.add(obj.get("term").asString());
-						}
-					nodeAttr.set("molecular_functions", molecularFunctionReadable);
-					
-				}
-				
-				
-				
 			}
 		}
 	}
@@ -224,41 +194,40 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		edgeTable.createListColumn("confidence", String.class, false);
 		edgeTable.createColumn("tax_id", String.class, false);
 		edgeTable.createColumn("interolog", String.class, false);
-		
-		for(Organism organism: interactionsByOrg.keySet()) {
+
+		for (Organism organism : interactionsByOrg.keySet()) {
 			boolean inRefOrg = (organism.equals(referenceOrganism));
-			for(EncoreInteraction interaction: interactionsByOrg.get(organism)) {
+			for (EncoreInteraction interaction : interactionsByOrg.get(organism)) {
 				String nodeAName = "", nodeBName = "";
 				CyNode nodeA = null, nodeB = null;
-				if(inRefOrg) {
+				if (inRefOrg) {
 					nodeAName = interaction.getInteractorA("uniprotkb");
 					nodeBName = interaction.getInteractorB("uniprotkb");
 					nodeA = nodeNameMap.get(nodeAName);
-					nodeB = nodeNameMap.get(nodeBName);					
-				}
-				else {
-					for(UniProtEntry prot: interactorPool) {
+					nodeB = nodeNameMap.get(nodeBName);
+				} else {
+					for (UniProtEntry prot : interactorPool) {
 						Protein ortho = prot.getOrtholog(organism);
-						if(ortho != null) {
-							if(interaction.getInteractorA().equals(ortho.getUniProtId())) {
+						if (ortho != null) {
+							if (interaction.getInteractorA().equals(ortho.getUniProtId())) {
 								nodeAName = prot.getUniProtId();
 								nodeA = nodeNameMap.get(nodeAName);
 							}
-							if(interaction.getInteractorB().equals(ortho.getUniProtId())) {
+							if (interaction.getInteractorB().equals(ortho.getUniProtId())) {
 								nodeBName = prot.getUniProtId();
 								nodeB = nodeNameMap.get(nodeBName);
 							}
 						}
-						
-						if(nodeA != null && nodeB != null) break;
+
+						if (nodeA != null && nodeB != null) break;
 					}
 				}
-				
-				if(nodeA != null && nodeB != null) {				
+
+				if (nodeA != null && nodeB != null) {
 					CyEdge myEdge = network.addEdge(nodeA, nodeB, true);
-					
+
 					CyTable nodeTable = network.getDefaultNodeTable();
-					
+
 					String geneNameA = "", geneNameB = "";
 					String protNameA = "", protNameB = "";
 					for (CyRow r : nodeTable.getAllRows()) {
@@ -271,8 +240,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 							protNameB = r.get("protein_name", String.class);
 						}
 					}
-					
-					
+
+
 					CyRow edgeAttr = network.getRow(myEdge);
 					edgeAttr.set("Interactor_A", nodeAName);
 					edgeAttr.set("Interactor_B", nodeBName);
@@ -331,10 +300,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				break;
 			}
 		}
-		
+
 		view.updateView();
 	}
-	
+
 	public PMBInteractionNetworkBuildTaskFactory getPmbInteractionNetworkBuildTaskFactory() {
 		return pmbInteractionNetworkBuildTaskFactory;
 	}
