@@ -6,25 +6,34 @@
   PPiMapBuilder uses PSICQUIC services to retrieve interaction data, InParanoid 8 for protein orthology and UniProt for protein data.
   
   This project was initiated by Pablo Echeverría from <a href="http://www.picard.ch/"><img src="http://www.picard.ch/Hsp90Int/img/logo.png" alt="picardLab" width="93" height="20" style="margin-top:-10px"/></a> as a bio-informatic master student project.
+  
+  To get more details about this Cytoscape 3 app, you can check the [wiki](https://github.com/PPiMapBuilder/PPiMapBuilder/wiki).
 
 ## Installation
 ### From release
 1. Download the [lastest PPiMapBuilder release](https://github.com/PPiMapBuilder/PPiMapBuilder/releases)
 2. Install `PPiMapBuilder-X.X.jar`
-  * In Cytoscape go to `Apps>App Manager` then `Install from file` and select the PPiMapBuilder jar
+  * Within Cytoscape:
+    - Go to `Apps>App Manager` 
+    - Click `Install from file`
+    - Select the PPiMapBuilder jar file
 
   OR
-  * Move the PPiMapBuilder jar to `USER_DIRECTORY/CytoscapeConfiguration/3/apps/installed/`
+  * Manually:
+    - Move the PPiMapBuilder jar file to `<USER_DIRECTORY>/CytoscapeConfiguration/3/apps/installed/`
 
 ### From source code
 1. Clone this git repository or download source
-
-2. Run maven install
-3. Install `target/PPiMapBuilder-X.X.jar`
-  * In Cytoscape go to `Apps>App Manager` then `Install from file` and select the PPiMapBuilder jar
+2. Run `mvn install` in the PPiMapBuilder folder
+3. Install `./target/PPiMapBuilder-X.X.jar`
+  * Within Cytoscape:
+    - Go to `Apps>App Manager` 
+    - Click `Install from file`
+    - Select the PPiMapBuilder jar file
 
   OR
-  * Move the PPiMapBuilder jar to `USER_DIRECTORY/CytoscapeConfiguration/3/apps/installed/`
+  * Manually:
+    - Move the PPiMapBuilder jar file to `<USER_DIRECTORY>/CytoscapeConfiguration/3/apps/installed/`
 
 ## Reference webservices used
 <center>

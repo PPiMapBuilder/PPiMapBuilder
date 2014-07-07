@@ -315,6 +315,12 @@
 			<version>${cytoscape.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>core-task-api</artifactId>
+			<version>${cytoscape.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<!-- MigLayout Swing -->
 		<dependency>

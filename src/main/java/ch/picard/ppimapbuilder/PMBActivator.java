@@ -11,8 +11,10 @@ import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.events.RowsSetListener;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
+import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.util.swing.OpenBrowser;
+import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
@@ -27,9 +29,14 @@ import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TunableSetter;
+import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
+
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
+import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTask;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
@@ -103,7 +110,17 @@ public class PMBActivator extends AbstractCyActivator {
 
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
+			{
 
+				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef, cyNetworkManagerServiceRef);
+				Properties applyCustomLayoutProperties = new Properties();
+				applyCustomLayoutProperties.setProperty("preferredMenu", "Layout");
+				applyCustomLayoutProperties.setProperty("title", "PMB Layout");
+				registerService(bc, applyLayoutTaskFactory, NetworkViewTaskFactory.class, applyCustomLayoutProperties);
+
+			}
+			
+			
 			// Visual Style services
 			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
 			VisualMappingFunctionFactory vmfFactoryD = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)");
@@ -176,6 +193,8 @@ public class PMBActivator extends AbstractCyActivator {
 			registerService(bc, creditMenuFactory, TaskFactory.class, new Properties());
 
 		}
+		
+		
 
 		// Query window menu
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);
