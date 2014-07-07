@@ -59,7 +59,7 @@ public class PsicquicRegistry {
 		for (PsicquicService service : services) {
 			if (caseSensitive && name.equals(service.getName()))
 				return service;
-			else if(!caseSensitive && name.toLowerCase().equals(service.getName().toLowerCase()))
+			else if(!caseSensitive && name.equalsIgnoreCase(service.getName()))
 				return service;
 		}
 		return null;
