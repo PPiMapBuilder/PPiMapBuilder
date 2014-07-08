@@ -1,5 +1,6 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
 
+import ch.picard.ppimapbuilder.ui.settingwindow.component.InParanoidLogo;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskIterator;
@@ -8,7 +9,6 @@ import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader.InParanoidCacheLoaderTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
-import ch.picard.ppimapbuilder.ui.settingwindow.InParanoidLogo;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.util.FileUtil;
 
@@ -18,7 +18,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.List;
 
-public class OrthologySettingPanel extends TabContentPanel {
+public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 	private final JLabel lblCacheSize;
 	private final JLabel lblCachePercent;
 

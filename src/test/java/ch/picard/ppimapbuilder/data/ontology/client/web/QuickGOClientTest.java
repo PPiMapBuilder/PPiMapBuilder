@@ -37,8 +37,7 @@ public class QuickGOClientTest {
 
 	@Test
 	public void testGetSlimmedTermList() throws Exception {
-		QuickGOClient client = new QuickGOClient();
-
+		QuickGOClient.GOSlimClient client = new QuickGOClient.GOSlimClient();
 
 		HashMap<Protein, Set<GeneOntologyTerm>> expected = new HashMap<Protein, Set<GeneOntologyTerm>>() {{
 			put(Q12018, new HashSet<GeneOntologyTerm>() {{
@@ -55,7 +54,7 @@ public class QuickGOClientTest {
 			}});
 		}};
 
-		HashMap<Protein, Set<GeneOntologyTerm>> actual = client.getSlimmedTermList(terms, proteins);
+		HashMap<Protein, Set<GeneOntologyTerm>> actual = client.searchProteinGOSlim(terms, proteins);
 
 		Assert.assertEquals(expected, actual);
 	}
@@ -79,7 +78,7 @@ public class QuickGOClientTest {
 			for (int j = 0; j < numberOfProteins; j++)
 				proteins.add(new Protein("P" + j, saccharomyces));
 
-			for (URI uri : QuickGOClient.generateRequests(new ArrayList<GeneOntologyTerm>(terms), new ArrayList<Protein>(proteins))) {
+			for (URI uri : QuickGOClient.GOSlimClient.generateRequests(new ArrayList<GeneOntologyTerm>(terms), new ArrayList<Protein>(proteins))) {
 				int length = uri.toString().length();
 
 				//System.out.println(length);

@@ -1,7 +1,8 @@
 package ch.picard.ppimapbuilder.ui.querywindow.panel;
 
-import net.miginfocom.swing.MigLayout;
 import ch.picard.ppimapbuilder.ui.util.HelpIcon;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -49,7 +50,7 @@ public class UniprotSelection extends JPanel {
 
 		// Scroll pane around the text area
 		JScrollPane scrollPane = new JScrollPane(identifiers);
-		scrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPane.setViewportBorder(PMBUIStyle.emptyBorder);
 		scrollPane.setBorder(fancyBorder);
 		this.add(scrollPane, "cell 0 1 2 1,grow");
 

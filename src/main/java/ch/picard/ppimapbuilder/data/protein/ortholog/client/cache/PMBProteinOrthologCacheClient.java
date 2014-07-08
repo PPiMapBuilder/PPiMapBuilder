@@ -85,6 +85,16 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 		} else return new HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>>();
 	}
 
+	public void emptyCacheLinkedToOrganism(Organism organism) {
+		for(SpeciesPairProteinOrthologCache cache : orthologCacheIndex.get(organism).values()) {
+			try {
+				cache.clear();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/**
 	 * Saves the ortholog cache index in file "ortholog-cache.idx"
 	 */

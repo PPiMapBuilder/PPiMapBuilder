@@ -1,5 +1,14 @@
 package ch.picard.ppimapbuilder;
 
+import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
+import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
+import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
+import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
+import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
+import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
+import ch.picard.ppimapbuilder.ui.resultpanel.listener.ResultPanelAction;
+import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -14,7 +23,6 @@ import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.util.swing.OpenBrowser;
-import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
@@ -29,22 +37,9 @@ import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
-import org.cytoscape.work.TunableSetter;
-import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
 
-import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
-import ch.picard.ppimapbuilder.data.settings.PMBSettings;
-import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
-import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTask;
-import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
-import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
-import ch.picard.ppimapbuilder.ui.resultpanel.listener.ResultPanelAction;
-import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
-
-import java.awt.Color;
+import java.awt.*;
 import java.util.Properties;
 
 /**
@@ -111,13 +106,11 @@ public class PMBActivator extends AbstractCyActivator {
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
 			{
-
-				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef, cyNetworkManagerServiceRef);
+				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef);
 				Properties applyCustomLayoutProperties = new Properties();
 				applyCustomLayoutProperties.setProperty("preferredMenu", "Layout");
 				applyCustomLayoutProperties.setProperty("title", "PMB Layout");
 				registerService(bc, applyLayoutTaskFactory, NetworkViewTaskFactory.class, applyCustomLayoutProperties);
-
 			}
 			
 			

@@ -16,37 +16,35 @@ package ch.picard.ppimapbuilder.ui.util;
  * limitations under the License.
  * under the License.
  */
- 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import javax.swing.JDialog;
-import javax.swing.JList;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
- 
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+
 /**
- *
- *@authorGeorgios Migdos <cyberpython@gmail.com>
+ * @authorGeorgios Migdos <cyberpython@gmail.com>
  */
 public class JSearchTextField extends JIconTextField implements FocusListener {
- 
-    private String textWhenNotFocused;
-    
-    /** Dialog used as the drop-down list. */
+
+	private String textWhenNotFocused;
+
+	/**
+	 * Dialog used as the drop-down list.
+	 */
 	private JDialog d;
 
-	/** Location of said drop-down list. */
+	/**
+	 * Location of said drop-down list.
+	 */
 	private Point location;
 
-	/** List contained in the drop-down dialog. */
+	/**
+	 * List contained in the drop-down dialog.
+	 */
 	private JList list;
 
 	/**
@@ -67,13 +65,15 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	 */
 	private Font busy, regular;
 
-	/** Needed for the new narrowing search, so we know when to reset the list */
+	/**
+	 * Needed for the new narrowing search, so we know when to reset the list
+	 */
 	private String lastWord = "";
 
 	/**
 	 * The last chosen variable which exists. Needed if user
 	 * continued to type but didn't press the enter key
-	 * */
+	 */
 	private String lastChosenExistingVariable;
 
 	/**
@@ -81,26 +81,26 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	 */
 	private String hint;
 
-	/** Listeners, fire event when a selection as occured */
+	/**
+	 * Listeners, fire event when a selection as occured
+	 */
 	private LinkedList<ActionListener> listeners;
 
 	private SuggestMatcher suggestMatcher = new ContainsMatcher();
 
 	private boolean caseSensitive = false;
-    
- 
-    public JSearchTextField(SettingWindow owner) {
-        super();
-        this.textWhenNotFocused = "Search...";
-        this.addFocusListener(this);
-        
-    	data = new ArrayList<String>();
+
+
+	public JSearchTextField(SettingWindow owner) {
+		super();
+		this.textWhenNotFocused = "Search...";
+		this.addFocusListener(this);
+
+		data = new ArrayList<String>();
 		suggestions = new ArrayList<String>();
 		listeners = new LinkedList<ActionListener>();
-    	
-    	
-    	
-    	owner.addComponentListener(new ComponentListener() {
+
+		owner.addComponentListener(new ComponentListener() {
 			@Override
 			public void componentShown(ComponentEvent e) {
 				relocate();
@@ -121,22 +121,12 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 				relocate();
 			}
 		});
-    	owner.addWindowListener(new WindowListener() {
-			@Override
-			public void windowOpened(WindowEvent e) {
-			}
+
+		owner.addWindowListener(new WindowListener() {
 
 			@Override
 			public void windowIconified(WindowEvent e) {
 				d.setVisible(false);
-			}
-
-			@Override
-			public void windowDeiconified(WindowEvent e) {
-			}
-
-			@Override
-			public void windowDeactivated(WindowEvent e) {
 			}
 
 			@Override
@@ -150,11 +140,16 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			}
 
 			@Override
-			public void windowActivated(WindowEvent e) {
-			}
+			public void windowActivated(WindowEvent e) {}
+			@Override
+			public void windowDeiconified(WindowEvent e) {}
+			@Override
+			public void windowDeactivated(WindowEvent e) {}
+			@Override
+			public void windowOpened(WindowEvent e) {}
 		});
-    	
-    	addFocusListener(new FocusListener() {
+
+		addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {
 				d.setVisible(false);
@@ -174,27 +169,22 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 					setText("");
 				}
 
-				if (getText().length() >=3)
+				if (getText().length() >= 3)
 					showSuggest();
 				else
 					hideSuggest();
 			}
 		});
-    	
-    	
-    	d = new JDialog(owner);
+
+
+		d = new JDialog(owner);
 		d.setUndecorated(true);
 		d.setFocusableWindowState(false);
 		d.setFocusable(false);
 		list = new JList();
-        list.setOpaque(false);
-    	
-        list.addMouseListener(new MouseListener() {
+		list.setOpaque(false);
+		list.addMouseListener(new MouseListener() {
 			private int selected;
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -209,25 +199,22 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			}
 
 			@Override
-			public void mouseExited(MouseEvent e) {
-			}
-
+			public void mousePressed(MouseEvent e) {}
 			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
-
+			public void mouseExited(MouseEvent e) {}
 			@Override
-			public void mouseClicked(MouseEvent e) {
-			}
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseClicked(MouseEvent e) {}
 		});
-        JScrollPane scrollPane = new JScrollPane(list, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-		JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		list.setBorder(PMBUIStyle.emptyBorder);
+		JScrollPane scrollPane = new JScrollPane(list, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setViewportBorder(PMBUIStyle.emptyBorder);
+		scrollPane.setBorder(PMBUIStyle.defaultComponentBorder);
 		d.add(scrollPane);
 		d.pack();
 		addKeyListener(new KeyListener() {
-			@Override
-			public void keyTyped(KeyEvent e) {
-			}
 
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -245,7 +232,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 						list.ensureIndexIsVisible(list.getSelectedIndex() + 1);
 						return;
 					} else {
-						if (getText().length() >=3)
+						if (getText().length() >= 3)
 							showSuggest();
 						else
 							hideSuggest();
@@ -258,36 +245,35 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 					fireEnterPressed();
 					return;
 				}
-				if (getText().length() >=3)
+				if (getText().length() >= 3)
 					showSuggest();
 				else
 					hideSuggest();
 			}
 
-
+			@Override
+			public void keyTyped(KeyEvent e) {}
 		});
 		regular = getFont();
 		busy = new Font(getFont().getName(), Font.ITALIC, getFont().getSize());
-		
+
 		try {
 			location = getLocationOnScreen();
 			location.y += 30;
 			d.setLocation(location);
-		} catch (IllegalComponentStateException e) {
+		} catch (IllegalComponentStateException e) {}
+	}
+
+	public void fireEnterPressed() {
+		if (list.getSelectedValue() != null) {
+			setText((String) list.getSelectedValue());
+			lastChosenExistingVariable = list.getSelectedValue().toString();
 		}
-    	
-    }
-    
-    public void fireEnterPressed() {
-        if(list.getSelectedValue() != null) {
-            setText((String) list.getSelectedValue());
-            lastChosenExistingVariable = list.getSelectedValue().toString();
-        }
-        fireActionEvent();
-        d.setVisible(false);
-    }
-    
-    /**
+		fireActionEvent();
+		d.setVisible(false);
+	}
+
+	/**
 	 * Use ActionListener to notify on changes
 	 * so we don't have to create an extra event
 	 */
@@ -297,27 +283,25 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			listener.actionPerformed(event);
 		}
 	}
-	
+
 	/**
 	 * Set preferred size for the drop-down that will appear.
 	 *
-	 * @param size
-	 *            Preferred size of the drop-down list
+	 * @param size Preferred size of the drop-down list
 	 */
 	public void setPreferredSuggestSize(Dimension size) {
 		d.setPreferredSize(size);
 	}
-        
-    public void setSuggestWidth(int width) {
+
+	public void setSuggestWidth(int width) {
 		d.setPreferredSize(new Dimension(width, d.getHeight()));
-                d.setMinimumSize(new Dimension(width, d.getHeight()));
+		d.setMinimumSize(new Dimension(width, d.getHeight()));
 	}
 
 	/**
 	 * Set minimum size for the drop-down that will appear.
 	 *
-	 * @param size
-	 *            Minimum size of the drop-down list
+	 * @param size Minimum size of the drop-down list
 	 */
 	public void setMinimumSuggestSize(Dimension size) {
 		d.setMinimumSize(size);
@@ -326,18 +310,16 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	/**
 	 * Set maximum size for the drop-down that will appear.
 	 *
-	 * @param size
-	 *            Maximum size of the drop-down list
+	 * @param size Maximum size of the drop-down list
 	 */
 	public void setMaximumSuggestSize(Dimension size) {
 		d.setMaximumSize(size);
 	}
-	
+
 	/**
 	 * Sets new data used to suggest similar words.
 	 *
-	 * @param data
-	 *            Vector containing available words
+	 * @param data Vector containing available words
 	 * @return success, true unless the data-vector was null
 	 */
 	public boolean setSuggestData(List<String> data) {
@@ -349,51 +331,51 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		list.setListData(data.toArray());
 		return true;
 	}
- 
-    public String getTextWhenNotFocused() {
-        return this.textWhenNotFocused;
-    }
- 
-    public void setTextWhenNotFocused(String newText) {
-        this.textWhenNotFocused = newText;
-    }
- 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
- 
-        if (!this.hasFocus() && this.getText().equals("")) {
-            int width = this.getWidth();
-            int height = this.getHeight();
-            Font prev = g.getFont();
-            Font italic = prev.deriveFont(Font.ITALIC);
-            Color prevColor = g.getColor();
-            g.setFont(italic);
-            g.setColor(UIManager.getColor("textInactiveText"));
-            int h = g.getFontMetrics().getHeight();
-            int textBottom = (height - h) / 2 + h - 4;
-            int x = this.getInsets().left;
-            Graphics2D g2d = (Graphics2D) g;
-            RenderingHints hints = g2d.getRenderingHints();
-            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            g2d.drawString(textWhenNotFocused, x, textBottom);
-            g2d.setRenderingHints(hints);
-            g.setFont(prev);
-            g.setColor(prevColor);
-        }
- 
-    }
- 
-    //FocusListener implementation:
-    public void focusGained(FocusEvent e) {
-        this.repaint();
-    }
- 
-    public void focusLost(FocusEvent e) {
-        this.repaint();
-    }
-    
-    /**
+
+	public String getTextWhenNotFocused() {
+		return this.textWhenNotFocused;
+	}
+
+	public void setTextWhenNotFocused(String newText) {
+		this.textWhenNotFocused = newText;
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
+		if (!this.hasFocus() && this.getText().equals("")) {
+			int width = this.getWidth();
+			int height = this.getHeight();
+			Font prev = g.getFont();
+			Font italic = prev.deriveFont(Font.ITALIC);
+			Color prevColor = g.getColor();
+			g.setFont(italic);
+			g.setColor(UIManager.getColor("textInactiveText"));
+			int h = g.getFontMetrics().getHeight();
+			int textBottom = (height - h) / 2 + h - 4;
+			int x = this.getInsets().left;
+			Graphics2D g2d = (Graphics2D) g;
+			RenderingHints hints = g2d.getRenderingHints();
+			g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			g2d.drawString(textWhenNotFocused, x, textBottom);
+			g2d.setRenderingHints(hints);
+			g.setFont(prev);
+			g.setColor(prevColor);
+		}
+
+	}
+
+	//FocusListener implementation:
+	public void focusGained(FocusEvent e) {
+		this.repaint();
+	}
+
+	public void focusLost(FocusEvent e) {
+		this.repaint();
+	}
+
+	/**
 	 * Force the suggestions to be displayed (Useful for buttons
 	 * e.g. for using JSuggestionField like a ComboBox)
 	 */
@@ -422,8 +404,8 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		d.setVisible(false);
 	}
 
-    
-    /**
+
+	/**
 	 * Place the suggestion window under the JTextField.
 	 */
 	private void relocate() {
@@ -435,15 +417,18 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		}
 	}
 
-    
-    // MATCHER CLASSES
+
+	// MATCHER CLASSES
+
 	/**
 	 * Inner class providing the independent matcher-thread. This thread can be
 	 * interrupted, so it won't process older requests while there's already a
 	 * new one.
 	 */
 	private class InterruptableMatcher extends Thread {
-		/** flag used to stop the thread */
+		/**
+		 * flag used to stop the thread
+		 */
 		private volatile boolean stop;
 
 		/**
@@ -484,10 +469,10 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			}
 		}
 	}
-	
-    public interface SuggestMatcher {
-    	public boolean matches(String dataWord, String searchWord);
-    }
+
+	public interface SuggestMatcher {
+		public boolean matches(String dataWord, String searchWord);
+	}
 
 	public class ContainsMatcher implements SuggestMatcher {
 		@Override

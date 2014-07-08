@@ -1,11 +1,12 @@
 package ch.picard.ppimapbuilder.data.organism;
 
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+
+import javax.swing.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.JOptionPane;
-
-import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 /**
  * Class that keeps a register of organisms in PMB
@@ -78,6 +79,11 @@ public class UserOrganismRepository {
 	
 	public void removeOrganism(Organism o) {
 		listOrganism.remove(o);
+		try {
+			PMBProteinOrthologCacheClient.getInstance().emptyCacheLinkedToOrganism(o);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void addOrganism(String scientificName) {

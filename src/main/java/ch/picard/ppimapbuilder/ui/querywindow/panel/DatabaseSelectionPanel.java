@@ -1,12 +1,12 @@
 package ch.picard.ppimapbuilder.ui.querywindow.panel;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.util.HelpIcon;
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,33 +35,17 @@ public class DatabaseSelectionPanel {
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		JScrollPane scrollPaneSourceDatabases = new JScrollPane();
 		scrollPaneSourceDatabases.setBorder(fancyBorder);
-		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneSourceDatabases.setViewportBorder(PMBUIStyle.emptyBorder);
 		parent.add(scrollPaneSourceDatabases, "cell 0 5 2 1,grow");
 
 		// Source databases panel that will contain checkbox at display
 		panSourceDatabases = new JPanel();
 		panSourceDatabases.setBackground(Color.white);
-		panSourceDatabases.setBorder(new EmptyBorder(0, 0, 0, 0));
+		panSourceDatabases.setBorder(PMBUIStyle.emptyBorder);
 		scrollPaneSourceDatabases.setViewportView(panSourceDatabases);
 		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
 		
 		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
-		/*setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		final JLabel lblSourceDatabases = new JLabel("Source databases:");
-		add(lblSourceDatabases, BorderLayout.NORTH);
-
-		panSourceDatabases = new JPanel();
-		panSourceDatabases.setBackground(Color.white);
-		panSourceDatabases.setBorder(new EmptyBorder(0, 0, 0, 0));
-
-		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
-
-		// Source databases scrollpane containing a panel that will contain checkbox at display
-		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceDatabases);
-		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
-		add(scrollPaneSourceDatabases, BorderLayout.CENTER);*/
 	}
 
 	/**

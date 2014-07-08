@@ -1,19 +1,19 @@
 package ch.picard.ppimapbuilder.ui.querywindow;
 
-import net.miginfocom.swing.MigLayout;
-import org.cytoscape.work.TaskManager;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.DatabaseSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.OtherOrganismSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.ReferenceOrganismSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.UniprotSelection;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import net.miginfocom.swing.MigLayout;
+import org.cytoscape.work.TaskManager;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
@@ -47,8 +47,7 @@ public class QueryWindow extends JFrame {
 	// Fancy design element
 	private Color darkForeground;
 	private CompoundBorder panelBorder;
-	private CompoundBorder fancyBorder;
-	
+
 	private JButton startQuery;
 	private JButton cancel;
 
@@ -86,26 +85,19 @@ public class QueryWindow extends JFrame {
 		float hsbVals[] = Color.RGBtoHSB(darkForeground.getRed(), darkForeground.getGreen(), darkForeground.getBlue(), null);
 		darkForeground = Color.getHSBColor(hsbVals[0], hsbVals[1], 0.9f * hsbVals[2]);
 
-		// Simple border around panel and text area
-		fancyBorder = new CompoundBorder(
-			// Outside border 1px bottom light color
-			new MatteBorder(0, 0, 1, 0, new Color(255, 255, 255)),
-			// Border all around panel 1px dark grey 
-			new LineBorder(new Color(154, 154, 154), 1)
-		);
 		// Border for left and right panel
 		panelBorder = new CompoundBorder(
 			// Dark margin around panel
 			new MatteBorder(5, 0, 0, 0, darkForeground),
 			new CompoundBorder(
-				fancyBorder,
+				PMBUIStyle.fancyPanelBorder,
 				new EmptyBorder(5, 5, 5, 5)
 		));
 		
 		// Split panel
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setDividerSize(5);
-		splitPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+		splitPane.setBorder(PMBUIStyle.emptyBorder);
 		splitPane.setContinuousLayout(true);
 		this.getContentPane().add(splitPane, BorderLayout.CENTER);
 		// $hide>>$
@@ -138,7 +130,7 @@ public class QueryWindow extends JFrame {
 		// $hide<<$
 		
 		// Left part
-		uus = new UniprotSelection(darkForeground, panelBorder, fancyBorder);
+		uus = new UniprotSelection(darkForeground, panelBorder, PMBUIStyle.fancyPanelBorder);
 		splitPane.setLeftComponent(uus);
 
 		// Right part
@@ -173,9 +165,9 @@ public class QueryWindow extends JFrame {
 
 		org = new ReferenceOrganismSelectionPanel(this, panMainForm);
 		
-		ogs = new OtherOrganismSelectionPanel(panMainForm, darkForeground, panelBorder, fancyBorder);
+		ogs = new OtherOrganismSelectionPanel(panMainForm, darkForeground, panelBorder, PMBUIStyle.fancyPanelBorder);
 		
-		dsp = new DatabaseSelectionPanel(panMainForm, darkForeground, panelBorder, fancyBorder);
+		dsp = new DatabaseSelectionPanel(panMainForm, darkForeground, panelBorder, PMBUIStyle.fancyPanelBorder);
 
 		return panMainForm;
 	}
@@ -199,7 +191,7 @@ public class QueryWindow extends JFrame {
 		//Bottom Panel
 		panBottomForm.setBackground(darkForeground);
 		panBottomForm.setPreferredSize(new Dimension(0, 42));
-		panBottomForm.setBorder(new EmptyBorder(0, 0, 0, 0));
+		panBottomForm.setBorder(PMBUIStyle.emptyBorder);
 
 		//Cancel Button
 		cancel = new JButton("Cancel");
@@ -212,9 +204,6 @@ public class QueryWindow extends JFrame {
 		startQuery = new JButton("Submit");
 		//Add submit to panel
 		panBottomForm.add(startQuery, "cell 3 0,alignx center,aligny center");
-
-		//Set submit as default button
-		this.getRootPane().setDefaultButton(startQuery);
 
 		return panBottomForm;
 	}
@@ -272,4 +261,13 @@ public class QueryWindow extends JFrame {
 		return ogs;
 	}
 
+	@Override
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+		if(b) {
+			startQuery.grabFocus();
+			this.getRootPane().setDefaultButton(startQuery);
+			repaint();
+		}
+	}
 }

@@ -1,28 +1,19 @@
 package ch.picard.ppimapbuilder.layout;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.task.NetworkViewTaskFactory;
-import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.TunableSetter;
 
-import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
-import ch.picard.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
+import java.util.ArrayList;
 
 public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 	private CyLayoutAlgorithmManager layoutManager;
 
-	public PMBGOSlimLayoutTaskFactory(CyLayoutAlgorithmManager layoutManager, CyNetworkManager cyNetworkManagerServiceRef) {
+	public PMBGOSlimLayoutTaskFactory(CyLayoutAlgorithmManager layoutManager) {
 		this.layoutManager = layoutManager;
 	}
 
@@ -32,7 +23,6 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		
 		CyNetwork network = view.getModel();
 		CyTable nodeTable = network.getDefaultNodeTable();
-		
 		
 		if (nodeTable.getColumn("go_slim") == null) {
 			nodeTable.createListColumn("go_slim", String.class, false);
@@ -46,6 +36,7 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		
 		
 		return new TaskIterator(
+			new PMBGOSlimQueryTask(network),
 			new PMBGOSlimLayoutTask(view, layoutManager)
 		);
 	}

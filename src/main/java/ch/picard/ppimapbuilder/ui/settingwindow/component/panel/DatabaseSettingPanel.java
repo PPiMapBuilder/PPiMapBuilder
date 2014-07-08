@@ -1,41 +1,54 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class DatabaseSettingPanel extends TabContentPanel {
+public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
-	public DatabaseSettingPanel() {
+	private final ActionListener checkBoxClicked;
+
+	public DatabaseSettingPanel(final SettingWindow settingWindow) {
 		super(new BorderLayout(), "PSICQUIC Databases");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
-		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
+		this.databases = new LinkedHashMap<PsicquicService, JCheckBox>();
 
 		final JLabel lblSourceDatabases = new JLabel("Preferred databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
 
-		panSourceDatabases = new JPanel();
-		panSourceDatabases.setBackground(Color.white);
-		panSourceDatabases.setBorder(new EmptyBorder(0, 0, 0, 0));
-
-		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
+		this.panSourceDatabases = new JPanel();
+		this.panSourceDatabases.setBackground(Color.white);
+		this.panSourceDatabases.setBorder(PMBUIStyle.emptyBorder);
+		this.panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
 
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceDatabases);
-		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneSourceDatabases.setViewportBorder(PMBUIStyle.emptyBorder);
+		scrollPaneSourceDatabases.setBorder(PMBUIStyle.fancyPanelBorder);
 		add(scrollPaneSourceDatabases, BorderLayout.CENTER);
+
+		this.checkBoxClicked = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				settingWindow.newModificationMade();
+			}
+		};
 	}
 
 	/**
@@ -52,6 +65,7 @@ public class DatabaseSettingPanel extends TabContentPanel {
 			JCheckBox j = new JCheckBox(db.getName(), true);
 			j.setEnabled(true);
 			j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
+			j.addActionListener(checkBoxClicked);
 			databases.put(db, j);
 
 			panSourceDatabases.add(j);

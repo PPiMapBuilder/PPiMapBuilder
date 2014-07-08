@@ -1,11 +1,11 @@
 package ch.picard.ppimapbuilder.ui.querywindow.panel;
 
-import ch.picard.ppimapbuilder.ui.util.HelpIcon;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.ui.util.HelpIcon;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,13 +33,13 @@ public class OtherOrganismSelectionPanel {
 
 		// Other organisms scrollpane containing a panel that will contain checkbox at display
 		JScrollPane scrollPaneOtherOrganisms = new JScrollPane();
-		scrollPaneOtherOrganisms.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneOtherOrganisms.setViewportBorder(PMBUIStyle.emptyBorder);
 		scrollPaneOtherOrganisms.setBorder(fancyBorder);
 		parent.add(scrollPaneOtherOrganisms, "cell 0 3 2 1,grow");
 
 		// Other organisms panel that will contain checkbox at display
 		panSourceOtherOrganisms = new JPanel();
-		panSourceOtherOrganisms.setBorder(new EmptyBorder(0, 0, 0, 0));
+		panSourceOtherOrganisms.setBorder(PMBUIStyle.emptyBorder);
 		panSourceOtherOrganisms.setBackground(Color.WHITE);
 		scrollPaneOtherOrganisms.setViewportView(panSourceOtherOrganisms);
 		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms,BoxLayout.Y_AXIS));
@@ -54,13 +54,13 @@ public class OtherOrganismSelectionPanel {
 
 		panSourceOtherOrganisms = new JPanel();
 		panSourceOtherOrganisms.setBackground(Color.white);
-		panSourceOtherOrganisms.setBorder(new EmptyBorder(0, 0, 0, 0));
+		panSourceOtherOrganisms.setBorder(PMBUIStyle.emptyBorder);
 
 		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms, BoxLayout.Y_AXIS));
 
 		// Source databases scrollpane containing a panel that will contain checkbox at display
 		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceOtherOrganisms);
-		scrollPaneSourceDatabases.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
+		scrollPaneSourceDatabases.setViewportBorder(PMBUIStyle.emptyBorder);
 		add(scrollPaneSourceDatabases, BorderLayout.CENTER);*/
 	}
 

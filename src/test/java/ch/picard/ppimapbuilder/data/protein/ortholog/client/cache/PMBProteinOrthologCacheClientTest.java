@@ -35,7 +35,7 @@ public class PMBProteinOrthologCacheClientTest {
 	private static File testFolderOutput;
 
 	private static PMBProteinOrthologCacheClient cache;
-	private static ThreadedProteinOrthologClientDecorator threadedCache;
+	private static ThreadedProteinOrthologClientDecorator<PMBProteinOrthologCacheClient> threadedCache;
 
 	@BeforeClass
 	public static void before() throws IOException {
@@ -76,7 +76,7 @@ public class PMBProteinOrthologCacheClientTest {
 				)
 		);
 
-		threadedCache = new ThreadedProteinOrthologClientDecorator(cache);
+		threadedCache = new ThreadedProteinOrthologClientDecorator<PMBProteinOrthologCacheClient>(cache);
 	}
 
 	@Test

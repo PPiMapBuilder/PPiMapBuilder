@@ -101,8 +101,9 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		return null;
 	}
 
-	private synchronized void clear() throws IOException {
+	protected synchronized void clear() throws IOException {
 		cacheDataFile.clear();
+		full = false;
 	}
 
 	public Loader newLoader() {
