@@ -177,7 +177,6 @@ public class QueryWindow extends JFrame {
 	public void updateLists(List<PsicquicService> dbs, List<Organism> orgs) {
 		dsp.updateList(dbs);
 		ogs.updateList(orgs);
-
 		org.updateList(orgs);
 	}
 	

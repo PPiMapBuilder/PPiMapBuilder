@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
@@ -10,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
 	private final JPanel panSourceDatabases;
 
 	private final ActionListener checkBoxClicked;
+	private boolean beenUpdated;
 
 	public DatabaseSettingPanel(final SettingWindow settingWindow) {
 		super(new BorderLayout(), "PSICQUIC Databases");
@@ -49,45 +52,70 @@ public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
 				settingWindow.newModificationMade();
 			}
 		};
-	}
-
-	/**
-	 * Updates the database list with an list of String
-	 *
-	 * @param dbs
-	 */
-	public void updateList(List<PsicquicService> dbs) {
-		// Creation of the database list
-		databases.clear();
-		panSourceDatabases.removeAll();
-		
-		for (PsicquicService db : dbs) {
-			JCheckBox j = new JCheckBox(db.getName(), true);
-			j.setEnabled(true);
-			j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
-			j.addActionListener(checkBoxClicked);
-			databases.put(db, j);
-
-			panSourceDatabases.add(j);
-		}
+		this.beenUpdated = false;
 	}
 
 	/**
 	 * Get the list of selected databases
-	 *
-	 * @return list of database values
 	 */
 	public List<PsicquicService> getSelectedDatabases() {
 		ArrayList<PsicquicService> databaseList = new ArrayList<PsicquicService>();
 
 		// For each entry of the database linkedHashmap
 		for (Entry<PsicquicService, JCheckBox> entry : databases.entrySet()) {
-			if (entry.getValue().isSelected()) // If the checkbox is selected
-			{
+			if (entry.getValue().isSelected()) { // If the checkbox is selected
 				databaseList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
 		}
 		return databaseList;
 	}
 
+	@Override
+	public void setVisible(boolean opening) {
+		super.setVisible(opening);
+		if (opening) {
+			resetUI();
+		}
+	}
+
+	/**
+	 * Update the database list asynchronously
+	 */
+	@Override
+	public synchronized void resetUI() {
+		if (!beenUpdated) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					PsicquicRegistry reg = PsicquicRegistry.getInstance();
+
+					try {
+						// Creation of the database list
+						databases.clear();
+						panSourceDatabases.removeAll();
+						try {
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+
+						for (PsicquicService db : reg.getServices()) {
+							JCheckBox j = new JCheckBox(db.getName(), true);
+							j.setEnabled(true);
+							j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
+							j.addActionListener(checkBoxClicked);
+							databases.put(db, j);
+
+							panSourceDatabases.add(j);
+						}
+						beenUpdated = true;
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
+					}
+
+					repaint();
+				}
+			});
+		}
+	}
 }

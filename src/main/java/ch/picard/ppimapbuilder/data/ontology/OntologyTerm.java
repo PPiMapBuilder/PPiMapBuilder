@@ -1,6 +1,10 @@
 package ch.picard.ppimapbuilder.data.ontology;
 
-class OntologyTerm {
+import java.io.Serializable;
+
+class OntologyTerm implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String identifier;
 	public OntologyTerm(String identifier) {

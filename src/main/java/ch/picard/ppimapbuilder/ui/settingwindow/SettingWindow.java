@@ -1,7 +1,6 @@
 package ch.picard.ppimapbuilder.ui.settingwindow;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
-import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
@@ -14,7 +13,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * PPiMapBuilder setting window
@@ -22,13 +20,14 @@ import java.util.List;
 public class SettingWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private JButton saveSettings;
-	private JButton close;
 
-	private DatabaseSettingPanel databaseSettingPanel;
-	private OrganismSettingPanel organismSettingPanel;
-	private OrthologySettingPanel orthologySettingPanel;
-	private GOSlimSettingPanel goSlimSettingPanel;
+	private final DatabaseSettingPanel databaseSettingPanel;
+	private final OrganismSettingPanel organismSettingPanel;
+	private final OrthologySettingPanel orthologySettingPanel;
+	private final GOSlimSettingPanel goSlimSettingPanel;
+
+	private final JButton saveSettings;
+	private final JButton close;
 
 	private PMBSettingSaveTaskFactory saveSettingFactory;
 	private TaskManager taskManager;
@@ -42,8 +41,50 @@ public class SettingWindow extends JDialog {
 
 		this.openBrowser = openBrowser;
 
-		add(initMainPanel(), BorderLayout.CENTER);
-		add(initBottomPanel(), BorderLayout.SOUTH);
+		{// Main panel
+			JPanel main = new JPanel();
+			main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+
+			main.add(new TabPanel(
+					databaseSettingPanel = new DatabaseSettingPanel(this),
+					organismSettingPanel = new OrganismSettingPanel(this),
+					orthologySettingPanel = new OrthologySettingPanel(openBrowser, this),
+					goSlimSettingPanel = new GOSlimSettingPanel()
+			));
+			add(main, BorderLayout.CENTER);
+		}
+
+		{// Bottom panel
+			JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+			bottom.add(close = new JButton("Close"));
+			Dimension size = new Dimension(
+					(int) close.getPreferredSize().getWidth() + 50,
+					(int) close.getPreferredSize().getHeight()
+			);
+			close.setPreferredSize(size);
+			close.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					setVisible(false);
+				}
+
+			});
+
+			bottom.add(saveSettings = new JButton("Save"));
+			saveSettings.setPreferredSize(size);
+			saveSettings.addActionListener(new ActionListener() {
+
+				public void actionPerformed(ActionEvent e) {
+					saveSettings();
+				}
+
+			});
+
+			add(bottom, BorderLayout.SOUTH);
+		}
+
 		//getRootPane().setDefaultButton(saveSettings);
 
 		setModificationMade(false);
@@ -55,63 +96,8 @@ public class SettingWindow extends JDialog {
 		setLocationRelativeTo(null);
 	}
 
-	public void updateLists(List<PsicquicService> dbs) {
-		databaseSettingPanel.updateList(dbs);
-	}
-
-	private JPanel initMainPanel() {
-
-		JPanel main = new JPanel();
-		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-
-		databaseSettingPanel = new DatabaseSettingPanel(this);
-		organismSettingPanel = new OrganismSettingPanel(this);
-		orthologySettingPanel = new OrthologySettingPanel(openBrowser, this);
-		goSlimSettingPanel = new GOSlimSettingPanel();
-
-		main.add(new TabPanel(
-				databaseSettingPanel,
-				organismSettingPanel,
-				orthologySettingPanel,
-				goSlimSettingPanel
-		));
-
-		return main;
-	}
-
 	public void newModificationMade() {
 		setModificationMade(true);
-	}
-
-	private JPanel initBottomPanel() {
-		JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-		bottom.add(close = new JButton("Close"));
-		Dimension size = new Dimension(
-				(int) close.getPreferredSize().getWidth() + 50,
-				(int) close.getPreferredSize().getHeight()
-		);
-		close.setPreferredSize(size);
-		close.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				setVisible(false);
-			}
-
-		});
-
-		bottom.add(saveSettings = new JButton("Save"));
-		saveSettings.setPreferredSize(size);
-		saveSettings.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				saveSettings();
-			}
-
-		});
-
-		return bottom;
 	}
 
 	private void setModificationMade(boolean modificationMade) {
@@ -129,7 +115,7 @@ public class SettingWindow extends JDialog {
 		PMBSettings.getInstance().setDatabaseList(databases);
 
 		// ORGANISM SETTINGS SAVE
-		PMBSettings.getInstance().setOrganismList((ArrayList<Organism>) UserOrganismRepository.getInstance().getOrganisms());
+		PMBSettings.getInstance().setOrganismList(UserOrganismRepository.getInstance().getOrganisms());
 
 		// SAVING TASK
 		taskManager.execute(saveSettingFactory.createTaskIterator());
@@ -146,19 +132,15 @@ public class SettingWindow extends JDialog {
 		this.taskManager = taskManager;
 	}
 
-	public OrganismSettingPanel getOrganismSettingPanel() {
-		return organismSettingPanel;
-	}
-
 	public TaskManager getTaskManager() {
 		return taskManager;
 	}
 
 	@Override
-	public void setVisible(boolean visible) {
+	public void setVisible(boolean opening) {
 		//closing
-		if (!visible) {
-			if(modificationMade) {
+		if (!opening) {
+			if (modificationMade) {
 				int res = JOptionPane.showOptionDialog(
 						this,
 						"Are you sure you want to close the settings window without saving?",
@@ -169,20 +151,18 @@ public class SettingWindow extends JDialog {
 						new String[]{"Save and close", "Close", "Cancel"},
 						"Save and close"
 				);
-				if(res == 0) saveSettings();
-				else if(res == 2) return;
+				if (res == 0) saveSettings();
+				else if (res == 2) return;
 			}
 			setModificationMade(false);
 
-			PMBSettings.getInstance().readSettings();
+			//PMBSettings.load();
 			UserOrganismRepository.resetUserOrganismRepository();
-			getOrganismSettingPanel().updatePanSourceOrganism();
-			getOrganismSettingPanel().updateSuggestions();
 
-			this.dispose();
+			//this.dispose();
 		}
 
-		this.setModal(visible);
-		super.setVisible(visible);
+		this.setModal(opening);
+		super.setVisible(opening);
 	}
 }

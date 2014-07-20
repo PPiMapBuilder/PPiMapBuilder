@@ -1,142 +1,68 @@
 package ch.picard.ppimapbuilder.data.settings;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public final class PMBSettings {
 
-	private static PMBSettings _instance;
-
-	// PPiMapBuilder setting file
-	private final File pmbDatabaseSettingFile;
-	private ArrayList<String> databaseList;
-	
-	private final File pmbOrganismSettingFile;
-	private ArrayList<Organism> organismList;
-
-	// Cytoscape configuration folder
-	private final File cytoscapeConfigurationFolder;
-
-	// PPiMapBuilder configuration folder
-	private final File ppiMapBuilderConfigurationFolder;
-
 	private File orthologCacheFolder;
+	private List<String> databaseList;
+	private List<Organism> organismList;
+	private List<GeneOntologySet> goSlimList;
 
-	private PMBSettings() {
-		
-		cytoscapeConfigurationFolder = new File(System.getProperty("user.home"), "CytoscapeConfiguration");
-		ppiMapBuilderConfigurationFolder = new File(cytoscapeConfigurationFolder, "PPiMapBuilder");
-		
-		if (!ppiMapBuilderConfigurationFolder.exists())
-			ppiMapBuilderConfigurationFolder.mkdir();
-
-		orthologCacheFolder = new File(ppiMapBuilderConfigurationFolder, "ortholog-cache");
-
+	private PMBSettings(
+			List<String> databaseList,
+			List<Organism> organismList,
+			List<GeneOntologySet> goSlimList
+	) {
+		this.orthologCacheFolder = new File(pmbSettingsHandler.ppiMapBuilderConfigurationFolder, "ortholog-cache");
 		if (!orthologCacheFolder.exists())
 			orthologCacheFolder.mkdir();
 
-		// Default database list
-		databaseList = new ArrayList<String>(Arrays.asList(
-				"BioGrid",
-				"DIP",
-				"IntAct",
-				"MINT"
-		));
+		this.databaseList = databaseList == null ?
+				// Default database list
+				new ArrayList<String>(Arrays.asList(
+						"BioGrid",
+						"DIP",
+						"IntAct",
+						"MINT"
+				)) :
+				// Existing database list
+				databaseList;
 
-		pmbDatabaseSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-databases.settings");
-		
-		// Default organism list		
-		organismList = UserOrganismRepository.getDefaultOrganismList();
-		
-		pmbOrganismSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-organisms.settings");
-		
-		readSettings();
+		this.organismList = organismList == null ?
+				// Default organism list
+				UserOrganismRepository.getDefaultOrganismList() :
+				// Existing organism list
+				organismList;
+
+		this.goSlimList = goSlimList == null ?
+				// Default GO slim list
+				Arrays.asList(GeneOntologySet.getDefaultGOslim()) :
+				// Existing GO slim list
+				goSlimList;
 	}
 
-	public static PMBSettings getInstance() {
-
-		if (_instance == null) {
-			_instance = new PMBSettings();
-		}
-		return _instance;
-	}
-
-	public ArrayList<String> getDatabaseList() {
+	public List<String> getDatabaseList() {
 		return databaseList;
 	}
 
-	public void setDatabaseList(ArrayList<String> databaseList) {
+	public void setDatabaseList(List<String> databaseList) {
 		this.databaseList = databaseList;
 	}
-	
-	public ArrayList<Organism> getOrganismList() {
+
+	public List<Organism> getOrganismList() {
 		return organismList;
 	}
 
-	public void setOrganismList(ArrayList<Organism> organismList) {
+	public void setOrganismList(List<Organism> organismList) {
 		this.organismList = organismList;
-	}
-
-	public void writeSettings() {
-		try {
-			FileOutputStream fileOut = new FileOutputStream(pmbDatabaseSettingFile);
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(databaseList);
-			out.close();
-			fileOut.close();
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			FileOutputStream fileOut = new FileOutputStream(pmbOrganismSettingFile);
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(organismList);
-			out.close();
-			fileOut.close();
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void readSettings() {
-		try {
-			FileInputStream fileIn = new FileInputStream(pmbDatabaseSettingFile);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			setDatabaseList((ArrayList<String>) in.readObject());
-			in.close();
-			fileIn.close();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// If the setting save file does not exist, we the default database list
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			FileInputStream fileIn = new FileInputStream(pmbOrganismSettingFile);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			setOrganismList((ArrayList<Organism>) in.readObject());
-			in.close();
-			fileIn.close();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// If the setting save file does not exist, we the default organism list
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public File getOrthologCacheFolder() {
@@ -146,5 +72,169 @@ public final class PMBSettings {
 	//For test purpose only
 	public void setOrthologCacheFolder(File orthologCacheFolder) throws IOException {
 		this.orthologCacheFolder = orthologCacheFolder;
+	}
+
+	public List<GeneOntologySet> getGoSlimList() {
+		return goSlimList;
+	}
+
+	public void setGoSlimList(List<GeneOntologySet> goSlimList) {
+		this.goSlimList = goSlimList;
+	}
+
+	private static final PMBSettingsHandler pmbSettingsHandler;
+
+	static {
+		File cytoscapeConfigurationFolder = new File(System.getProperty("user.home"), "CytoscapeConfiguration");
+		pmbSettingsHandler = new PMBSettingsHandler(
+				new File(System.getProperty("user.home"), "CytoscapeConfiguration"),
+				new File(cytoscapeConfigurationFolder, "PPiMapBuilder")
+		);
+	}
+
+	private static PMBSettings _instance;
+
+	public static PMBSettings getInstance() {
+		if (_instance == null)
+			load();
+		return _instance;
+	}
+
+	public static void save() {
+		pmbSettingsHandler.saveSettings(_instance);
+	}
+
+	public static void load() {
+		_instance = pmbSettingsHandler.loadSettings();
+	}
+
+	private static class PMBSettingsHandler {
+
+		private final File cytoscapeConfigurationFolder;
+		private final File ppiMapBuilderConfigurationFolder;
+		private final File pmbSettingFile;
+
+		private PMBSettingsHandler(File cytoscapeConfigurationFolder, File ppiMapBuilderConfigurationFolder) {
+			this.cytoscapeConfigurationFolder = cytoscapeConfigurationFolder;
+			this.ppiMapBuilderConfigurationFolder = ppiMapBuilderConfigurationFolder;
+			this.pmbSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder.settings");
+		}
+
+		PMBSettings saveSettings(PMBSettings settings) {
+			ObjectOutputStream fileOut = null;
+			try {
+				fileOut = new ObjectOutputStream(new FileOutputStream(pmbSettingFile));
+				fileOut.writeObject(settings.databaseList);
+				fileOut.writeObject(settings.organismList);
+				fileOut.writeObject(settings.goSlimList);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				if (fileOut != null)
+					try {
+						fileOut.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				return settings;
+			}
+		}
+
+		PMBSettings newSettings() {
+			return new PMBSettings(
+					null,
+					null,
+					null
+			);
+		}
+
+		PMBSettings loadSettings() {
+			if (!ppiMapBuilderConfigurationFolder.exists()) {
+				ppiMapBuilderConfigurationFolder.mkdir();
+			} else {
+				if (!pmbSettingFile.exists()) {
+					File pmbDatabaseSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-databases.settings");
+					File pmbOrganismSettingFile = new File(ppiMapBuilderConfigurationFolder, "ppimapbuilder-organisms.settings");
+
+					if (pmbDatabaseSettingFile.exists() && pmbOrganismSettingFile.exists()) {
+						final PMBSettings settings = loadV09Settings(pmbDatabaseSettingFile, pmbOrganismSettingFile);
+						pmbDatabaseSettingFile.delete();
+						pmbOrganismSettingFile.delete();
+						return saveSettings(settings);
+					}
+				} else
+					return loadV010Settings();
+			}
+			return saveSettings(newSettings());
+		}
+
+		PMBSettings loadV010Settings() {
+			List<String> databaseList = null;
+			List<Organism> organismList = null;
+			List<GeneOntologySet> goSlimList = null;
+
+			ObjectInputStream fileIn = null;
+			try {
+				fileIn = new ObjectInputStream(new FileInputStream(pmbSettingFile));
+				databaseList = (List<String>) fileIn.readObject();
+				organismList = (List<Organism>) fileIn.readObject();
+				goSlimList = (List<GeneOntologySet>) fileIn.readObject();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return saveSettings(newSettings());
+			} finally {
+				if (fileIn != null)
+					try {
+						fileIn.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+			}
+
+			return new PMBSettings(
+					databaseList,
+					organismList,
+					goSlimList
+			);
+		}
+
+		PMBSettings loadV09Settings(File pmbDatabaseSettingFile, File pmbOrganismSettingFile) {
+			ObjectInputStream fileIn = null;
+			ArrayList<String> databaseList = null;
+			try {
+				fileIn = new ObjectInputStream(new FileInputStream(pmbDatabaseSettingFile));
+				databaseList = (ArrayList<String>) fileIn.readObject();
+			} catch (Exception e) {
+				databaseList = null;
+			} finally {
+				if (fileIn != null)
+					try {
+						fileIn.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+			}
+			fileIn = null;
+
+			ArrayList<Organism> organismList = null;
+			try {
+				fileIn = new ObjectInputStream(new FileInputStream(pmbOrganismSettingFile));
+				organismList = (ArrayList<Organism>) fileIn.readObject();
+			} catch (Exception e) {
+				organismList = null;
+			} finally {
+				if (fileIn != null)
+					try {
+						fileIn.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+			}
+			return new PMBSettings(
+					databaseList,
+					organismList,
+					null
+			);
+		}
 	}
 }

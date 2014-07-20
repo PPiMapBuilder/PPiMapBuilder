@@ -58,7 +58,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					cache.empty();
-					OrthologySettingPanel.this.update();
+					resetUI();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -74,7 +74,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 						new Runnable() {
 							@Override
 							public void run() {
-								OrthologySettingPanel.this.update();
+								resetUI();
 							}
 						}
 				).createTaskIterator();
@@ -84,8 +84,17 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 		});
 	}
 
-	private void update() {
-		new Thread() {
+	@Override
+	public void setVisible(boolean opening) {
+		super.setVisible(opening);
+		if (opening)
+			resetUI();
+	}
+
+	@Override
+	public synchronized void resetUI() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				String orthologCacheSize = FileUtil.getHumanReadableFileSize(
 						PMBSettings.getInstance().getOrthologCacheFolder()
@@ -98,21 +107,16 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 							UserOrganismRepository.getInstance().getOrganisms()
 					);
 					orthologPercentUserOrg =
-						(percentLoadedFromOrganisms < 10.0 ?
+							(percentLoadedFromOrganisms < 10.0 ?
 									String.format("%,.2f", percentLoadedFromOrganisms) :
 									String.valueOf((int) percentLoadedFromOrganisms))
-						+ " %";
+									+ " %";
 				} catch (IOException e) {
 					orthologPercentUserOrg = "-";
 				}
 				lblCachePercent.setText(orthologPercentUserOrg);
+				repaint();
 			}
-		}.start();
-	}
-
-	@Override
-	public void setVisible(boolean aFlag) {
-		super.setVisible(aFlag);
-		if (aFlag) update();
+		});
 	}
 }

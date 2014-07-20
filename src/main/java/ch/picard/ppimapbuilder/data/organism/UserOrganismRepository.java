@@ -14,7 +14,7 @@ import java.util.List;
 public class UserOrganismRepository {
 
 	private static UserOrganismRepository _instance;
-	private static List<Organism> listOrganism;
+	private final List<Organism> listOrganism;
 
 	public static UserOrganismRepository getInstance() {
 		if (_instance == null)
@@ -22,12 +22,15 @@ public class UserOrganismRepository {
 		return _instance;
 	}
 
+	private UserOrganismRepository(List<Organism> organismList) {
+		listOrganism = organismList;
+	}
 	private UserOrganismRepository() {
-		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
+		this(PMBSettings.getInstance().getOrganismList());
 	}
 	
 	public static void resetUserOrganismRepository() {
-		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
+		_instance = new UserOrganismRepository(PMBSettings.getInstance().getOrganismList());
 	}
 	
 	public static ArrayList<Organism> getDefaultOrganismList() {
@@ -48,10 +51,6 @@ public class UserOrganismRepository {
 		return listOrganism;
 	}
 	
-	public void setOrganisms(ArrayList<Organism> listOrganism) {
-		this.listOrganism = listOrganism;
-	}
-
 	public Organism getOrganismByTaxId(int taxId) {
 		for (Organism org : listOrganism)
 			if (org.getTaxId() == taxId)

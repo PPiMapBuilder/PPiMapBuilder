@@ -33,7 +33,6 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 		this.owner = owner;
 		this.panSourceOrganism = new ListDeletableItem();
 		add(panSourceOrganism.getComponent());
-		updatePanSourceOrganism();
 
 		this.panSearchOrganism = new JPanel();
 		{
@@ -43,7 +42,6 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 			this.searchBox.setPreferredSize(new Dimension(200, 30));
 			this.searchBox.setMaximumSize(new Dimension(200, 30));
 			this.searchBox.setBorder(PMBUIStyle.fancyPanelBorder);
-			updateSuggestions();
 
 			this.searchBox.setSuggestWidth(150);
 			this.searchBox.setPreferredSuggestSize(new Dimension(150, 50));
@@ -59,8 +57,7 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 				public void actionPerformed(ActionEvent e) {
 					UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
 					owner.newModificationMade();
-					updatePanSourceOrganism();
-					updateSuggestions();
+					resetUI();
 				}
 
 			});
@@ -70,35 +67,45 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 		add(panSearchOrganism, BorderLayout.SOUTH);
 	}
 
-	public void updatePanSourceOrganism() {
-		panSourceOrganism.removeAllRow();
-		for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-			panSourceOrganism.addRow(new ListDeletableItem.ListRow(
-							org.getScientificName(),
-							new ActionListener() {
+	@Override
+	public synchronized void resetUI() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				panSourceOrganism.removeAllRow();
+				for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+					panSourceOrganism.addRow(new ListDeletableItem.ListRow(
+									org.getScientificName(),
+									new ActionListener() {
 
-								@Override
-								public void actionPerformed(ActionEvent e) {
-									//System.out.println(org.getScientificName()+" clicked");
-									UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-									updatePanSourceOrganism();
-									updateSuggestions();
-									owner.newModificationMade();
-								}
-							})
-			);
-		}
-		panSourceOrganism.repaint();
+										@Override
+										public void actionPerformed(ActionEvent e) {
+											//System.out.println(org.getScientificName()+" clicked");
+											UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+											resetUI();
+											owner.newModificationMade();
+										}
+									})
+					);
+				}
+
+				ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
+				for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+					data.remove(o.getScientificName());
+				}
+				searchBox.setSuggestData(data);
+				searchBox.setText("");
+
+				repaint();
+			}
+		});
 	}
 
-	public void updateSuggestions() {
-		ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
-		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
-			data.remove(o.getScientificName());
+	@Override
+	public void setVisible(boolean opening) {
+		super.setVisible(opening);
+		if(opening) {
+			resetUI();
 		}
-		searchBox.setSuggestData(data);
-		searchBox.setText("");
-		searchBox.repaint();
-		//addOrganism.requestFocusInWindow();
 	}
 }

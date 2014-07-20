@@ -1,6 +1,8 @@
 package ch.picard.ppimapbuilder.data.ontology;
 
-public enum GeneOntologyCategory {
+import java.io.Serializable;
+
+public enum GeneOntologyCategory implements Serializable {
 
 	MOLECULAR_FUNCTION,
 	BIOLOGICAL_PROCESS,

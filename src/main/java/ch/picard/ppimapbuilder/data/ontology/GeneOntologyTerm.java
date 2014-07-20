@@ -3,11 +3,19 @@ package ch.picard.ppimapbuilder.data.ontology;
 import ch.picard.ppimapbuilder.data.JSONable;
 import com.eclipsesource.json.JsonObject;
 
-public class GeneOntologyTerm extends OntologyTerm implements JSONable {
+import java.io.Serializable;
+
+public class GeneOntologyTerm extends OntologyTerm implements JSONable, Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String term;
 	private final GeneOntologyCategory category;
 	public static final int TERM_LENGTH = 10;
+
+	public GeneOntologyTerm(String identifier) {
+		this(identifier, "", null);
+	}
 
 	public GeneOntologyTerm(String identifier, String term, char category) {
 		this(identifier, term, GeneOntologyCategory.getByLetter(category));

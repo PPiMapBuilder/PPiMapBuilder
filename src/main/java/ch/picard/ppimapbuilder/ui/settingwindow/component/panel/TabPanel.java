@@ -14,7 +14,7 @@ public class TabPanel extends JTabbedPane {
 			add(panel, panel.getName());
 	}
 
-	public static class TabContentPanel extends JPanel {
+	public static abstract class TabContentPanel extends JPanel {
 
 		private static final long serialVersionUID = 1L;
 
@@ -42,5 +42,7 @@ public class TabPanel extends JTabbedPane {
 			if(comp instanceof JComponent) ((JComponent) comp).setOpaque(false);
 			super.add(comp, constraints, index);
 		}
+
+		public abstract void resetUI();
 	}
 }
