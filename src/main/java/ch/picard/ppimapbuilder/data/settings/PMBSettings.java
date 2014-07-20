@@ -181,7 +181,7 @@ public final class PMBSettings {
 				goSlimList = (List<GeneOntologySet>) fileIn.readObject();
 			} catch (Exception e) {
 				e.printStackTrace();
-				return saveSettings(newSettings());
+				//return saveSettings(newSettings());
 			} finally {
 				if (fileIn != null)
 					try {
