@@ -5,6 +5,8 @@ import java.util.HashSet;
 
 public class GeneOntologySet extends HashSet<GeneOntologyTerm> {
 
+	private static final long serialVersionUID = 1635830245599971406L;
+
 	private final String name;
 
 	public GeneOntologySet(String name) {

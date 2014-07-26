@@ -203,6 +203,7 @@ public class QuickGOClient {
 									.addParameter("format", "tsv")
 									.addParameter("col", "proteinID,goID,goName,aspect")
 									.addParameter("termUse", "slim")
+									.addParameter("limit", "-1")
 									.addParameter("goid", StringUtils.join(subListOfGOTerms.get(i), ","))
 									.addParameter("protein", StringUtils.join(subListOfProtein.get(j), ","))
 									.build()

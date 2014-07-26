@@ -130,22 +130,19 @@ public final class PMBSettings {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
-				if (fileOut != null)
+				if (fileOut != null) {
 					try {
 						fileOut.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				return settings;
+				}
 			}
+			return settings;
 		}
 
 		PMBSettings newSettings() {
-			return new PMBSettings(
-					null,
-					null,
-					null
-			);
+			return new PMBSettings(null, null, null);
 		}
 
 		PMBSettings loadSettings() {
