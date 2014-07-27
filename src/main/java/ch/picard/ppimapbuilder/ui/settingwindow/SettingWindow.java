@@ -157,7 +157,7 @@ public class SettingWindow extends JDialog {
 			setModificationMade(false);
 
 			//PMBSettings.load();
-			UserOrganismRepository.resetUserOrganismRepository();
+			UserOrganismRepository.resetToSettings();
 
 			//this.dispose();
 		}

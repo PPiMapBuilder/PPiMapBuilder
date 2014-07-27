@@ -1,10 +1,7 @@
 package ch.picard.ppimapbuilder.layout;
 
-import java.util.ArrayList;
-
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -32,6 +29,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		CyTable nodeTable = view.getModel().getDefaultNodeTable();
 		
 		for (CyNode n : network.getNodeList()) {
+			System.out.print(network.getRow(n).get("uniprot_id", String.class)+ " -> ");
 			for (String s : network.getRow(n).getList("go_slim", String.class)) {
 				System.out.print(s+",");
 			}

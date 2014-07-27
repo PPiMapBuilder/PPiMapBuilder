@@ -29,8 +29,8 @@ public class UserOrganismRepository {
 		this(PMBSettings.getInstance().getOrganismList());
 	}
 	
-	public static void resetUserOrganismRepository() {
-		_instance = new UserOrganismRepository(PMBSettings.getInstance().getOrganismList());
+	public static void resetToSettings() {
+		_instance = new UserOrganismRepository();
 	}
 	
 	public static ArrayList<Organism> getDefaultOrganismList() {
