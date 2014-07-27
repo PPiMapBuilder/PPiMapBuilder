@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
@@ -41,16 +41,19 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel  {
 			public void run() {
 				goSlimListPanel.removeAllRow();
 				for (final GeneOntologySet set : PMBSettings.getInstance().getGoSlimList()) {
-					goSlimListPanel.addRow(new ListDeletableItem.ListRow(set.getName(), new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							ArrayList<GeneOntologySet> list =
-									new ArrayList<GeneOntologySet>(PMBSettings.getInstance().getGoSlimList());
-							list.remove(set);
-							PMBSettings.getInstance().setGoSlimList(list);
-							resetUI();
-						}
-					}));
+					goSlimListPanel.addRow(
+						new ListDeletableItem.ListRow(set.getName())
+							.addDeleteButton( new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									ArrayList<GeneOntologySet> list =
+											new ArrayList<GeneOntologySet>(PMBSettings.getInstance().getGoSlimList());
+									list.remove(set);
+									PMBSettings.getInstance().setGoSlimList(list);
+									resetUI();
+								}
+							})
+					);
 				}
 				repaint();
 			}

@@ -37,9 +37,22 @@ public class ListDeletableItem {
 	}
 
 	public static class ListRow extends JPanel {
-		public ListRow(String text, ActionListener deleteListener) {
-			ImageIcon icon = new ImageIcon(ListDeletableItem.class.getResource("delete.png"));
+		public ListRow(String text) {
+			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+			setOpaque(false);
+			setBorder(new EmptyBorder(1, 5, 1, 5));
 
+			add(new JLabel(text));
+			add(Box.createHorizontalGlue());
+		}
+
+		public ListRow addButton(JButton button) {
+			add(button);
+			return this;
+		}
+
+		public ListRow addDeleteButton(ActionListener deleteListener) {
+			ImageIcon icon = new ImageIcon(ListDeletableItem.class.getResource("delete.png"));
 			JButton deleteOrga = new JButton(icon);
 			Dimension iconDim = new Dimension(icon.getIconWidth()+2, icon.getIconHeight()+2);
 			deleteOrga.setMinimumSize(iconDim);
@@ -49,13 +62,9 @@ public class ListDeletableItem {
 			deleteOrga.setBorder(BorderFactory.createEmptyBorder());
 			deleteOrga.addActionListener(deleteListener);
 
-			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-			setOpaque(false);
-			setBorder(new EmptyBorder(1, 5, 1, 5));
-
-			add(new JLabel(text));
-			add(Box.createHorizontalGlue());
-			add(deleteOrga);
+			return addButton(deleteOrga);
 		}
+
+
 	}
 }

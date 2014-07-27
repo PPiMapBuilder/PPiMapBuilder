@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
 import javax.swing.*;
 import java.awt.*;

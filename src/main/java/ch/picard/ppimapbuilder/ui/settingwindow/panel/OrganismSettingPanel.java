@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
@@ -74,18 +74,18 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 			public void run() {
 				panSourceOrganism.removeAllRow();
 				for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-					panSourceOrganism.addRow(new ListDeletableItem.ListRow(
-									org.getScientificName(),
-									new ActionListener() {
+					panSourceOrganism.addRow(
+						new ListDeletableItem.ListRow(org.getScientificName())
+							.addDeleteButton(new ActionListener() {
 
-										@Override
-										public void actionPerformed(ActionEvent e) {
-											//System.out.println(org.getScientificName()+" clicked");
-											UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-											resetUI();
-											owner.newModificationMade();
-										}
-									})
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									//System.out.println(org.getScientificName()+" clicked");
+									UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+									resetUI();
+									owner.newModificationMade();
+								}
+							})
 					);
 				}
 

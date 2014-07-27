@@ -1,6 +1,6 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.ui.settingwindow.component.InParanoidLogo;
+import ch.picard.ppimapbuilder.ui.util.InParanoidLogo;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskIterator;

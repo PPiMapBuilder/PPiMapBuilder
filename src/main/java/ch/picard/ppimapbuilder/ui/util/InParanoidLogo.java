@@ -1,7 +1,6 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component;
+package ch.picard.ppimapbuilder.ui.util;
 
 import org.cytoscape.util.swing.OpenBrowser;
-import ch.picard.ppimapbuilder.ui.util.JHyperlinkLabel;
 
 import javax.swing.*;
 import java.net.URI;

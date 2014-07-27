@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.settingwindow.component.panel;
+package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
