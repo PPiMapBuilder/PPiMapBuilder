@@ -17,4 +17,13 @@ public enum GeneOntologyCategory implements Serializable {
 		}
 	}
 
+	@Override
+	public String toString() {
+		switch (this) {
+			case MOLECULAR_FUNCTION: return "Molecular function";
+			case BIOLOGICAL_PROCESS: return "Biological process";
+			case CELLULAR_COMPONENT: return "Cellular component";
+		}
+		return null;
+	}
 }

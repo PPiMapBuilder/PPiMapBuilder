@@ -43,4 +43,5 @@ public class GOSlimRepository {
 	public void resetToSettings() {
 		_instance = new GOSlimRepository();
 	}
+
 }

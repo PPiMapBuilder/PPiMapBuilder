@@ -67,6 +67,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 		btnLoad.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				settingWindow.setVisible(false);
 				List<Organism> organisms = UserOrganismRepository.getInstance().getOrganisms();
 
 				TaskIterator cacheLoaderTaskIterator = new InParanoidCacheLoaderTaskFactory(

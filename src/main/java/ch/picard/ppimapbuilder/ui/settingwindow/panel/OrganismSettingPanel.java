@@ -96,7 +96,7 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 				searchBox.setSuggestData(data);
 				searchBox.setText("");
 
-				repaint();
+				panSourceOrganism.repaint();
 			}
 		});
 	}
