@@ -1,18 +1,23 @@
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.data.ontology.GOSlimRepository;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
-import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimLoaderTaskFactory;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
+import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.ListDeletableItem;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.TaskMonitor;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 
@@ -21,10 +26,13 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 	private final JPanel listPanel;
 
 	private final ListDeletableItem goSlimListPanel;
+	private final SettingWindow settingWindow;
 
-	public GOSlimSettingPanel() {
+	public GOSlimSettingPanel(final SettingWindow settingWindow) {
 		super(new BorderLayout(), "GO slim");
 		setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		this.settingWindow = settingWindow;
 
 		add(listPanel = new JPanel(new BorderLayout()), BorderLayout.CENTER);
 		{
@@ -42,6 +50,35 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 
 			JButton addGOSlimButton = new JButton("Add from OBO file");
 			bottomPanel.add(addGOSlimButton);
+
+			final GOSlimLoaderTaskFactory goSlimLoaderTaskFactory = new GOSlimLoaderTaskFactory();
+			goSlimLoaderTaskFactory.setCallback(new AbstractTask() {
+				@Override
+				public void run(TaskMonitor monitor) throws Exception {
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							if (goSlimLoaderTaskFactory.getError() == null) {
+								settingWindow.newModificationMade();
+								resetUI();
+							} else {
+								JOptionPane.showMessageDialog(settingWindow, goSlimLoaderTaskFactory.getError(), "Add OBO GO slim error", JOptionPane.ERROR_MESSAGE);
+							}
+							settingWindow.setVisible(true);
+						}
+					});
+				}
+			});
+
+			addGOSlimButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					settingWindow.closeSilently();
+					settingWindow.getTaskManager().execute(
+							goSlimLoaderTaskFactory.createTaskIterator()
+					);
+				}
+			});
 		}
 	}
 
@@ -52,18 +89,29 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 			public void run() {
 				switchPanel(null);
 				goSlimListPanel.removeAllRow();
-				for (final GeneOntologySet set : PMBSettings.getInstance().getGoSlimList()) {
+
+				List<GeneOntologySet> goSlims = GOSlimRepository.getInstance().getGOSlims();
+				Collections.sort(goSlims, new Comparator<GeneOntologySet>() {
+					@Override
+					public int compare(GeneOntologySet o1, GeneOntologySet o2) {
+						return o1.getName().equals(GeneOntologySet.DEFAULT) ?
+								-1 :
+									o2.getName().equals(GeneOntologySet.DEFAULT) ?
+									1 :
+									0;
+					}
+				});
+
+				for (final GeneOntologySet set : goSlims) {
 					ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
 							.addButton(newViewButton(set.getName()));
 
-					if(!set.getName().equals(GeneOntologySet.DEFAULT)){
-						listRow .addDeleteButton(new ActionListener() {
+					if (!set.getName().equals(GeneOntologySet.DEFAULT)) {
+						listRow.addDeleteButton(new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								ArrayList<GeneOntologySet> list =
-										new ArrayList<GeneOntologySet>(PMBSettings.getInstance().getGoSlimList());
-								list.remove(set);
-								PMBSettings.getInstance().setGoSlimList(list);
+								GOSlimRepository.getInstance().remove(set.getName());
+								settingWindow.newModificationMade();
 								resetUI();
 							}
 						});

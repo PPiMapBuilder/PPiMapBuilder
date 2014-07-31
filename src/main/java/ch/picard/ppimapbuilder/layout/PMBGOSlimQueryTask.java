@@ -1,6 +1,6 @@
 package ch.picard.ppimapbuilder.layout;
 
-import ch.picard.ppimapbuilder.data.ontology.GOSlimRepository;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.ontology.client.web.QuickGOClient;
 import ch.picard.ppimapbuilder.data.protein.Protein;

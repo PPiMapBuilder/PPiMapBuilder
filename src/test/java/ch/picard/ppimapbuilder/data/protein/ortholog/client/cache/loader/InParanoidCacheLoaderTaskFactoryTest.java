@@ -34,7 +34,8 @@ public class InParanoidCacheLoaderTaskFactoryTest {
 		//organisms = UserOrganismRepository.getInstance().getOrganisms();
 		//organisms = InParanoidOrganismRepository.getInstance().getOrganisms().subList(10, 60);
 
-		InParanoidCacheLoaderTaskFactory loader = new InParanoidCacheLoaderTaskFactory(organisms);
+		InParanoidCacheLoaderTaskFactory loader = new InParanoidCacheLoaderTaskFactory();
+		loader.setOrganisms(organisms);
 		loader.createTaskIterator().next().run(null);
 	}
 }

@@ -1,5 +1,12 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 
+import ch.picard.ppimapbuilder.data.Pair;
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
+import ch.picard.ppimapbuilder.util.SteppedTaskMonitor;
 import com.ctc.wstx.stax.WstxInputFactory;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -9,15 +16,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.execchain.RequestAbortedException;
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskMonitor;
-import ch.picard.ppimapbuilder.data.Pair;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
-import ch.picard.ppimapbuilder.util.SteppedTaskMonitor;
 
-import javax.swing.*;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,18 +105,11 @@ class InParanoidCacheLoaderTask implements Task {
 			}
 		}
 		if (i == 0) {
-			new Thread() {
-				@Override
-				public void run() {
-					JOptionPane.showMessageDialog(null, "Orthology cache fully loaded from InParanoid", "Orthology cache loading", JOptionPane.INFORMATION_MESSAGE);
-				}
-			}.start();
+			parent.setMessage("Orthology cache fully loaded from InParanoid");
+			return;
 		}
 
 		monitor.setProgress(1);
-
-		if (parent.getListener() != null)
-			parent.getListener().run();
 
 		PMBProteinOrthologCacheClient.getInstance().save();
 	}
@@ -126,6 +118,9 @@ class InParanoidCacheLoaderTask implements Task {
 	public void cancel() {
 		cancelled = true;
 		executorService.shutdownNow();
+		try {
+			parent.getCallback().run(null);
+		} catch (Exception e) {}
 	}
 
 	class CacheLoadRequest implements Callable<CacheLoadRequest> {

@@ -1,16 +1,17 @@
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.ui.util.InParanoidLogo;
-import net.miginfocom.swing.MigLayout;
-import org.cytoscape.util.swing.OpenBrowser;
-import org.cytoscape.work.TaskIterator;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader.InParanoidCacheLoaderTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
+import ch.picard.ppimapbuilder.ui.util.InParanoidLogo;
 import ch.picard.ppimapbuilder.util.FileUtil;
+import net.miginfocom.swing.MigLayout;
+import org.cytoscape.util.swing.OpenBrowser;
+import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.TaskMonitor;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -26,6 +27,8 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 	private final JButton btnLoad;
 	private final SettingWindow settingWindow;
 	private PMBProteinOrthologCacheClient cache;
+
+	private final InParanoidCacheLoaderTaskFactory inParanoidCacheLoaderTaskFactory;
 
 	public OrthologySettingPanel(OpenBrowser openBrowser, SettingWindow settingWindow) {
 		super(new MigLayout("ins 5", "[grow, right]10[grow, left]", ""), "Orthology");
@@ -49,6 +52,8 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 		add(new JLabel("Protein orthology data provided by :"), "center, sx 2, wrap");
 		add(new InParanoidLogo(openBrowser), "center, sx 2");
 
+		inParanoidCacheLoaderTaskFactory = new InParanoidCacheLoaderTaskFactory();
+
 		initListeners();
 	}
 
@@ -67,20 +72,41 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 		btnLoad.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				settingWindow.setVisible(false);
+				settingWindow.closeSilently();
 				List<Organism> organisms = UserOrganismRepository.getInstance().getOrganisms();
 
-				TaskIterator cacheLoaderTaskIterator = new InParanoidCacheLoaderTaskFactory(
-						organisms,
-						new Runnable() {
+				inParanoidCacheLoaderTaskFactory.setOrganisms(organisms);
+				inParanoidCacheLoaderTaskFactory.setCallback(
+						new AbstractTask() {
 							@Override
-							public void run() {
-								resetUI();
+							public void run(TaskMonitor monitor) {
+								SwingUtilities.invokeLater(new Runnable() {
+									@Override
+									public void run() {
+										if (inParanoidCacheLoaderTaskFactory.getMessage() != null) {
+											JOptionPane.showMessageDialog(
+													null,
+													inParanoidCacheLoaderTaskFactory.getMessage(),
+													"Orthology cache loading",
+													JOptionPane.INFORMATION_MESSAGE
+											);
+										} else if (inParanoidCacheLoaderTaskFactory.getError() != null) {
+											JOptionPane.showMessageDialog(
+													null,
+													inParanoidCacheLoaderTaskFactory.getError(),
+													"Orthology cache loading error",
+													JOptionPane.ERROR_MESSAGE
+											);
+										}
+										resetUI();
+										settingWindow.setVisible(true);
+									}
+								});
 							}
 						}
-				).createTaskIterator();
+				);
 
-				settingWindow.getTaskManager().execute(cacheLoaderTaskIterator);
+				settingWindow.getTaskManager().execute(inParanoidCacheLoaderTaskFactory.createTaskIterator());
 			}
 		});
 	}

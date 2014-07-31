@@ -1,5 +1,6 @@
-package ch.picard.ppimapbuilder.data.ontology;
+package ch.picard.ppimapbuilder.data.ontology.goslim;
 
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 import java.util.ArrayList;
@@ -40,8 +41,15 @@ public class GOSlimRepository {
 		return new ArrayList<String>(goSlims.keySet());
 	}
 
-	public void resetToSettings() {
+	public static void resetToSettings() {
 		_instance = new GOSlimRepository();
 	}
 
+	public List<GeneOntologySet> getGOSlims() {
+		return new ArrayList<GeneOntologySet>(goSlims.values());
+	}
+
+	public void remove(String name) {
+		goSlims.remove(name);
+	}
 }

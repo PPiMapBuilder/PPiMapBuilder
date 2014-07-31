@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.ui.settingwindow;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
@@ -21,6 +22,7 @@ public class SettingWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
+	private final TabPanel tabPanel;
 	private final DatabaseSettingPanel databaseSettingPanel;
 	private final OrganismSettingPanel organismSettingPanel;
 	private final OrthologySettingPanel orthologySettingPanel;
@@ -45,11 +47,11 @@ public class SettingWindow extends JDialog {
 			JPanel main = new JPanel();
 			main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-			main.add(new TabPanel(
+			main.add(tabPanel = new TabPanel(
 					databaseSettingPanel = new DatabaseSettingPanel(this),
 					organismSettingPanel = new OrganismSettingPanel(this),
 					orthologySettingPanel = new OrthologySettingPanel(openBrowser, this),
-					goSlimSettingPanel = new GOSlimSettingPanel()
+					goSlimSettingPanel = new GOSlimSettingPanel(this)
 			));
 			add(main, BorderLayout.CENTER);
 		}
@@ -89,7 +91,7 @@ public class SettingWindow extends JDialog {
 
 		setModificationMade(false);
 
-		Dimension d = new Dimension(450, 320);
+		Dimension d = new Dimension(550, 420);
 		setBounds(new Rectangle(d));
 		setMinimumSize(d);
 		setResizable(true);
@@ -117,6 +119,9 @@ public class SettingWindow extends JDialog {
 		// ORGANISM SETTINGS SAVE
 		PMBSettings.getInstance().setOrganismList(UserOrganismRepository.getInstance().getOrganisms());
 
+		// GO slim settings save
+		PMBSettings.getInstance().setGoSlimList(GOSlimRepository.getInstance().getGOSlims());
+
 		// SAVING TASK
 		taskManager.execute(saveSettingFactory.createTaskIterator());
 
@@ -136,33 +141,46 @@ public class SettingWindow extends JDialog {
 		return taskManager;
 	}
 
+
+	private boolean silent = false;
+
+	public void closeSilently() {
+		silent = true;
+		setVisible(false);
+	}
+
 	@Override
 	public void setVisible(boolean opening) {
-		//closing
-		if (!opening) {
-			if (modificationMade) {
-				int res = JOptionPane.showOptionDialog(
-						this,
-						"Are you sure you want to close the settings window without saving?",
-						"Unsaved settings",
-						JOptionPane.YES_NO_CANCEL_OPTION,
-						JOptionPane.WARNING_MESSAGE,
-						null,
-						new String[]{"Save and close", "Close", "Cancel"},
-						"Save and close"
-				);
-				if (res == 0) saveSettings();
-				else if (res == 2) return;
-			}
-			setModificationMade(false);
+		if (opening) {
+			((TabPanel.TabContentPanel) tabPanel.getSelectedComponent()).resetUI();
+			this.toFront();
+			this.requestFocus();
+			this.setModal(opening);
+		} else {
+			if (!silent) {
+				if (modificationMade) {
+					int res = JOptionPane.showOptionDialog(
+							this,
+							"Are you sure you want to close the settings window without saving?",
+							"Unsaved settings",
+							JOptionPane.YES_NO_CANCEL_OPTION,
+							JOptionPane.WARNING_MESSAGE,
+							null,
+							new String[]{"Save and close", "Close", "Cancel"},
+							"Save and close"
+					);
+					if (res == 0) saveSettings();
+					else if (res == 2) return;
+				}
+				setModificationMade(false);
 
-			//PMBSettings.load();
-			UserOrganismRepository.resetToSettings();
+				//PMBSettings.load();
+				UserOrganismRepository.resetToSettings();
 
-			//this.dispose();
+				GOSlimRepository.resetToSettings();
+				//this.dispose();
+			} else silent = false;
 		}
-
-		this.setModal(opening);
 		super.setVisible(opening);
 	}
 }

@@ -31,6 +31,8 @@ public final class PMBSettings {
 						"BioGrid",
 						"DIP",
 						"IntAct",
+						"BIND",
+						"UniProt",
 						"MINT"
 				)) :
 				// Existing database list

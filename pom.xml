@@ -172,16 +172,16 @@
 	<!-- Repository specifications -->
 	<repositories>
 		<!-- Cytoscape repositories -->
-		<repository>
+		<!-- <repository>
 			<id>cytoscape_snapshots</id>
 			<snapshots>
 			</snapshots>
 			<releases>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
 			</releases>
 			<name>Cytoscape Snapshots</name>
 			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots/</url>
-		</repository>
+		</repository>-->
 		<repository>
 			<id>cytoscape_releases</id>
 			<snapshots>
@@ -391,7 +391,7 @@
 		<dependency>
 			<groupId>uk.ac.ebi.enfin.mi.cluster</groupId>
 			<artifactId>micluster</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.google.guava</groupId>
