@@ -6,6 +6,8 @@
   PPiMapBuilder uses PSICQUIC services to retrieve interaction data, InParanoid 8 for protein orthology and UniProt for protein data.
   
   This project was initiated by Pablo Echeverría from <a href="http://www.picard.ch/"><img src="http://www.picard.ch/Hsp90Int/img/logo.png" alt="picardLab" width="93" height="20" style="margin-top:-10px"/></a> as a bio-informatic master project.
+  
+![PPiMapBuilder ScreenShot](https://raw.githubusercontent.com/wiki/PPiMapBuilder/PPiMapBuilder/images/Screenshot.png)
 
 ## Installation
 ### From release
