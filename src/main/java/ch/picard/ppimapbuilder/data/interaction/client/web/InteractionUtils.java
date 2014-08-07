@@ -148,8 +148,8 @@ public class InteractionUtils {
 				new InteractionUtils.UniProtInteractionFilter()
 		);
 		for (BinaryInteraction interaction : interactions) {
-			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier());
-			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier());
+			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier().split("-")[0]);
+			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier().split("-")[0]);
 		}
 
 		return interactors;

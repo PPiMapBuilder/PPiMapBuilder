@@ -209,11 +209,11 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					for (UniProtEntry prot : interactorPool) {
 						Protein ortho = prot.getOrtholog(organism);
 						if (ortho != null) {
-							if (interaction.getInteractorA().equals(ortho.getUniProtId())) {
+							if (interaction.getInteractorA().startsWith(ortho.getUniProtId())) {
 								nodeAName = prot.getUniProtId();
 								nodeA = nodeNameMap.get(nodeAName);
 							}
-							if (interaction.getInteractorB().equals(ortho.getUniProtId())) {
+							if (interaction.getInteractorB().startsWith(ortho.getUniProtId())) {
 								nodeBName = prot.getUniProtId();
 								nodeB = nodeNameMap.get(nodeBName);
 							}
