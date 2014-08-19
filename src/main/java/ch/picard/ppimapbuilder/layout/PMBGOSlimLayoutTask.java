@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.cytoscape.model.CyNetwork;
@@ -36,7 +37,6 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		
 		ArrayList<String> fullListOfGOs = new ArrayList<String>(); // Stores every GO from the network
 		for (CyNode n : network.getNodeList()) {
-			//System.out.print(network.getRow(n).get("uniprot_id", String.class)+ " -> ");
 			for (String s : network.getRow(n).getList("go_slim", String.class)) {
 				fullListOfGOs.add(s);
 			}
@@ -46,7 +46,6 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		for (String go : fullListOfGOs) {
 			goOccurrences.put(go, Collections.frequency(fullListOfGOs, go));
 		}
-		//System.out.println(goOccurrences);
 
         ValueComparator bvc =  new ValueComparator(goOccurrences);
         TreeMap<String,Integer> sortedGoOccurrences = new TreeMap<String,Integer>(bvc); // Stores the GO ordered by amount
@@ -54,7 +53,20 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		System.out.println(sortedGoOccurrences);
         
 		
-		// TODO : assign one major GO for each prot
+		// Assign one major GO for each prot
+		if (nodeTable.getColumn("go_slim_group") == null) { // Create node attribute to store the cluster assignement
+			nodeTable.createColumn("go_slim_group", String.class, false);
+		}
+		for (CyNode n : network.getNodeList()) {
+			List<String> tempGOList = network.getRow(n).getList("go_slim", String.class);
+			for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
+				if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node 
+					//System.out.print(key);
+					network.getRow(n).set("go_slim_group", key); // We consider this GO as the major to cluster this node
+					break;
+				}
+			}
+		}
 		
 		
 		// TODO : call attribute layout
