@@ -30,7 +30,8 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		
 		for (CyNode n : network.getNodeList()) {
 			ArrayList<String> list = new ArrayList<String>();
-			list.add("toto");
+			//list.add("toto");
+			// TODO: do not reinit the go_slim before OK is pressed
 			network.getRow(n).set("go_slim", list);
 		}
 		
