@@ -64,7 +64,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		this.executorServices = new HashMap<Object, ExecutorService>();
 		this.executorServices.put(
 				this,
-				Executors.newCachedThreadPool()
+				Executors.newFixedThreadPool(3)
 		);
 
 		// Web Clients
@@ -73,14 +73,14 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			uniProtEntryClient = new UniProtEntryClient();
 			this.executorServices.put(
 					uniProtEntryClient,
-					uniProtEntryClient.setExecutorService(Executors.newCachedThreadPool())
+					uniProtEntryClient.setExecutorService(Executors.newFixedThreadPool(3))
 			);
 
 			// PSICQUIC Client
 			psicquicClient = new ThreadedPsicquicSimpleClient(selectedDatabases);
 			this.executorServices.put(
 					psicquicClient,
-					psicquicClient.setExecutorService(Executors.newCachedThreadPool())
+					psicquicClient.setExecutorService(Executors.newFixedThreadPool(3))
 			);
 
 			// Hybrid Web/Cache ortholog client
@@ -105,7 +105,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			proteinOrthologClient = new ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient>(webCached, 5);
 			this.executorServices.put(
 					proteinOrthologClient,
-					proteinOrthologClient.setExecutorService(Executors.newCachedThreadPool())
+					proteinOrthologClient.setExecutorService(Executors.newFixedThreadPool(3))
 			);
 		}
 	}
