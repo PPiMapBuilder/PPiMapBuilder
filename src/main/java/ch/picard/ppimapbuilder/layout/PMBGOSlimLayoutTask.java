@@ -69,16 +69,14 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		}
 		
 		
-		// TODO : call attribute layout
-		CyLayoutAlgorithm layout = layoutManager.getLayout("force-directed");
+		// Call attribute layout
+		CyLayoutAlgorithm layout = layoutManager.getLayout("attributes-layout");
 		Object context = layout.createLayoutContext();
-		String layoutAttribute = null;
+		String layoutAttribute = "go_slim_group";
 		insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
-	
+		
 	}
-
-	
-				
+			
 
 }
 
