@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.networkbuilder.query;
 
+import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicSimpleClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
@@ -8,6 +9,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
@@ -20,7 +22,9 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PMBQueryInteractionTask extends AbstractTask {
 
@@ -28,7 +32,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	final UniProtEntryClient uniProtEntryClient;
 	final ThreadedPsicquicSimpleClient psicquicClient;
 	final InParanoidClient inParanoidClient;
-	final ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient> proteinOrthologClient;
+	final ThreadedProteinOrthologClient proteinOrthologClient;
 
 	// Data input
 	private final List<String> inputProteinIDs;
@@ -42,10 +46,16 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	private final UniProtEntrySet interactorPool;
 
 	// Thread list
-	private final Map<Object, ExecutorService> executorServices;
+	private final List<AbstractThreadedClient> threadedClients;
+	private final ExecutorService executorService;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
-	public PMBQueryInteractionTask(HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg, UniProtEntrySet interactorPool, UniProtEntrySet proteinOfInterestPool, QueryWindow qw) {
+	public PMBQueryInteractionTask(
+			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
+			UniProtEntrySet interactorPool,
+			UniProtEntrySet proteinOfInterestPool,
+			QueryWindow qw
+	) {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
@@ -60,28 +70,22 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		allOrganisms.add(referenceOrganism);
 		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
 
+		final int STD_NB_THREAD =
+			Math.min(2, Runtime.getRuntime().availableProcessors()) + 1;
+
 		// Store thread pool used by web client and this task
-		this.executorServices = new HashMap<Object, ExecutorService>();
-		this.executorServices.put(
-				this,
-				Executors.newFixedThreadPool(3)
-		);
+		this.threadedClients = new ArrayList<AbstractThreadedClient>();
+		this.executorService = Executors.newFixedThreadPool(STD_NB_THREAD);
 
 		// Web Clients
 		{
 			// UniProt entry client
-			uniProtEntryClient = new UniProtEntryClient();
-			this.executorServices.put(
-					uniProtEntryClient,
-					uniProtEntryClient.setExecutorService(Executors.newFixedThreadPool(3))
-			);
+			threadedClients.add(uniProtEntryClient = new UniProtEntryClient());
+			uniProtEntryClient.setMaxNumberThread(STD_NB_THREAD);
 
 			// PSICQUIC Client
-			psicquicClient = new ThreadedPsicquicSimpleClient(selectedDatabases);
-			this.executorServices.put(
-					psicquicClient,
-					psicquicClient.setExecutorService(Executors.newFixedThreadPool(3))
-			);
+			threadedClients.add(psicquicClient = new ThreadedPsicquicSimpleClient(selectedDatabases));
+			psicquicClient.setMaxNumberThread(STD_NB_THREAD);
 
 			// Hybrid Web/Cache ortholog client
 			ProteinOrthologWebCachedClient webCached;
@@ -102,11 +106,11 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 				webCached = new ProteinOrthologWebCachedClient(inParanoidClient, cacheClient);
 			}
-			proteinOrthologClient = new ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient>(webCached, 5);
-			this.executorServices.put(
-					proteinOrthologClient,
-					proteinOrthologClient.setExecutorService(Executors.newFixedThreadPool(3))
-			);
+			ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient> orthologClient
+					= new ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient>(webCached);
+			proteinOrthologClient = orthologClient;
+			threadedClients.add(orthologClient);
+			orthologClient.setMaxNumberThread(STD_NB_THREAD);
 		}
 	}
 
@@ -134,16 +138,20 @@ public class PMBQueryInteractionTask extends AbstractTask {
 					MINIMUM_ORTHOLOGY_SCORE).call().getNewInteractors());
 		}
 
+		if(cancelled) return;
+
 		//Fetch orthologs of interactor pool in other organisms
 		monitor.setStep("Fetch interactors orthologs in other organisms...");
 		proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(interactorPool, otherOrganisms, MINIMUM_ORTHOLOGY_SCORE);
+
+		if(cancelled) return;
 
 		//Other organisms get primary interactors
 		monitor.setStep("Fetch interactors of input proteins in other organisms...");
 		{
 			//Requests
 			final UniProtEntrySet newInteractors = new UniProtEntrySet();
-			new ConcurrentExecutor<PrimaryInteractionQuery>(executorServices.get(this), otherOrganisms.size()) {
+			new ConcurrentExecutor<PrimaryInteractionQuery>(executorService, otherOrganisms.size()) {
 
 				@Override
 				public Callable<PrimaryInteractionQuery> submitRequests(int index) {
@@ -163,10 +171,12 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			interactorPool.addAll(newInteractors);
 		}
 
+		if(cancelled) return;
+
 		//Interaction search in protein pool for all organisms
 		monitor.setStep("Fetch interactions in all organisms...");
 		{
-			new ConcurrentExecutor<SecondaryInteractionQuery>(executorServices.get(this), allOrganisms.size()) {
+			new ConcurrentExecutor<SecondaryInteractionQuery>(executorService, allOrganisms.size()) {
 				@Override
 				public Callable<SecondaryInteractionQuery> submitRequests(int index) {
 					return new SecondaryInteractionQuery(
@@ -185,7 +195,6 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 		//Free memory
 		inParanoidClient.enableCache(false);
-		executorServices.clear();
 		System.gc();
 	}
 
@@ -197,12 +206,22 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		for (final String proteinID : inputProteinIDs) {
 			UniProtEntry entry = uniProtEntries.get(proteinID);
 
-			if (entry != null && !entry.getOrganism().equals(referenceOrganism)) {
-				try {
-					Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
-					entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
-				} catch (Exception e) {
-					entry = null;
+			if (entry != null) {
+				if(!entry.getOrganism().equals(referenceOrganism) &&
+					entry.getOrganism().sameSpecies(referenceOrganism)
+				) {
+					entry = new UniProtEntry.Builder(entry)
+							.setOrganism(referenceOrganism)
+							.build();
+				}
+
+				if(!entry.getOrganism().equals(referenceOrganism)) {
+					try {
+						Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
+						entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
+					} catch (Exception e) {
+						entry = null;
+					}
 				}
 			}
 
@@ -220,10 +239,14 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 	@Override
 	public void cancel() {
-		for (ExecutorService executorService : executorServices.values()) {
-			if (!executorService.isShutdown() && !executorService.isTerminated())
-				executorService.shutdownNow();
+		for (AbstractThreadedClient threadedClient : threadedClients) {
+			for (ExecutorService executorService : threadedClient.getExecutorServices()) {
+				if (!executorService.isShutdown() && !executorService.isTerminated())
+					executorService.shutdownNow();
+			}
 		}
+		if (!executorService.isShutdown() && !executorService.isTerminated())
+			executorService.shutdownNow();
 		interactionsByOrg.clear();
 		interactorPool.clear();
 		Thread.currentThread().interrupt();

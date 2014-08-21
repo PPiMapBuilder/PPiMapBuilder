@@ -24,24 +24,28 @@ public class PMBQueryInteractionTaskTest {
 	QueryWindow qw = new QueryWindow() {
 		@Override
 		public Organism getSelectedRefOrganism() {
-			return human;
+			return mouse;
 		}
 
 		@Override
-		public ArrayList<String> getSelectedUniprotID() {
-			return new ArrayList<String>(Arrays.asList("Q3THG9"));
+		public List<String> getSelectedUniprotID() {
+			return Arrays.asList("Q8VI75", "Q3THG9", "P04040");
 		}
 
 		@Override
 		public List<PsicquicService> getSelectedDatabases() {
 			return Arrays.asList(
 				new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+				, new PsicquicService("BioGrid", null, "http://tyersrest.tyerslab.com:8805/psicquic/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+				, new PsicquicService("BIND", null, "http://webservice.baderlab.org:8480/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+				, new PsicquicService("DIP", null, "http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+				, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			);
 		}
 
 		@Override
 		public List<Organism> getSelectedOrganisms() {
-			return Arrays.asList(mouse);
+			return UserOrganismRepository.getInstance().getOrganisms();
 		}
 	};
 

@@ -25,22 +25,23 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 			results.add(completionService.submit(submitRequests(i)));
 
 		//Process results and errors
-		for (int i = 0, requestsSize = results.size(); i < requestsSize; i++) {
+		for (Future<R> ignored : results) {
 			Future<R> take = null;
 			try {
+				if (executorService.isShutdown())
+					break;
+
 				take = completionService.take();
 				R result = take.get();
 
 				if (result != null)
 					processResult(result);
 			} catch (InterruptedException e) {
-				if(!processInterruptedException(e))
-					continue;
-				else break;
+				if (processInterruptedException(e))
+					break;
 			} catch (ExecutionException e) {
-				if(!processExecutionException(e))
-					continue;
-				else break;
+				if (processExecutionException(e))
+					break;
 			}
 		}
 	}

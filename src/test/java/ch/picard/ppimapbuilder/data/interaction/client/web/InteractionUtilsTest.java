@@ -155,7 +155,7 @@ public class InteractionUtilsTest {
 		List<BinaryInteraction> byQuery = client.getByQuery("id:P04040");
 
 		System.out.println(byQuery.size());
-		InteractionUtils.filter(byQuery, new InteractionUtils.UniProtInteractionFilter());
+		byQuery = InteractionUtils.filter(byQuery, new InteractionUtils.UniProtInteractionFilter());
 		System.out.println(byQuery.size());
 	}
 

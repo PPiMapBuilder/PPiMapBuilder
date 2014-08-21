@@ -1,5 +1,7 @@
 package ch.picard.ppimapbuilder.data.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -8,9 +10,10 @@ import java.util.concurrent.Executors;
  */
 public abstract class AbstractThreadedClient {
 	protected Integer maxNumberThread;
-	private ExecutorService executorService;
+	private List<ExecutorService> executorServices;
 
 	public AbstractThreadedClient(Integer maxNumberThread) {
+		this.executorServices = new ArrayList<ExecutorService>();
 		this.maxNumberThread = maxNumberThread;
 	}
 
@@ -18,16 +21,20 @@ public abstract class AbstractThreadedClient {
 		this(null);
 	}
 
-	public ExecutorService setExecutorService(ExecutorService executorService) {
-		return this.executorService = executorService;
+	public void setMaxNumberThread(Integer maxNumberThread) {
+		this.maxNumberThread = maxNumberThread;
 	}
 
-	public ExecutorService newFixedThreadPool() {
-		if (executorService == null) {
-			executorService = maxNumberThread != null ?
-					Executors.newFixedThreadPool(maxNumberThread) :
-					Executors.newCachedThreadPool();
-		}
+	public List<ExecutorService> getExecutorServices() {
+		return this.executorServices;
+	}
+
+	public ExecutorService newThreadPool() {
+		ExecutorService executorService = maxNumberThread != null ?
+				Executors.newFixedThreadPool(maxNumberThread) :
+				Executors.newCachedThreadPool();
+		executorServices.add(executorService);
 		return executorService;
 	}
+
 }

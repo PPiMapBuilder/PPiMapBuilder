@@ -1,21 +1,23 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.web;
 
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +30,7 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 	/**
 	 * Simple inParanoid cache of XML responses indexed by UniProt identifier
 	 */
+	private final List<String> lastUniprotId = new ArrayList<String>();
 	private Map<String, Document> inParanoidEntryCache;
 
 	/**
@@ -38,10 +41,13 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 	 * @param enable true to activate the cache; false to
 	 */
 	public void enableCache(boolean enable) {
-		if (enable && inParanoidEntryCache == null)
+		if (enable && inParanoidEntryCache == null) {
 			inParanoidEntryCache = new HashMap<String, Document>();
-		else if (!enable)
+			lastUniprotId.clear();
+		} else if (!enable) {
+			lastUniprotId.clear();
 			inParanoidEntryCache = null;
+		}
 	}
 
 	public boolean cacheEnabled() {
@@ -88,7 +94,12 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 
 						if (doc == null) {
 							doc = searchOrthologEntry(protein, timeout);
-
+							if(inParanoidEntryCache.size() > 30) {
+								String lastUsedUniprot = lastUniprotId.get(lastUniprotId.size() - 1);
+								inParanoidEntryCache.remove(lastUsedUniprot);
+								lastUniprotId.remove(lastUsedUniprot);
+							}
+							lastUniprotId.add(protein.getUniProtId());
 							inParanoidEntryCache.put(protein.getUniProtId(), doc);
 						} else System.out.print("cached-");
 						break;
@@ -127,7 +138,7 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 		Document doc = searchOrthologEntryWithRetryAndCache(protein);
 
 		if (doc == null) return null;
-		System.out.println(":OK:" + organism);
+		//System.out.println(":OK:" + organism);
 
 		OrthologGroup group = new OrthologGroup();
 

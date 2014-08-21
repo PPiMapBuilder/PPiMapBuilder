@@ -1,14 +1,11 @@
 package ch.picard.ppimapbuilder.layout;
 
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
-
-import java.util.ArrayList;
 
 public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 	private CyLayoutAlgorithmManager layoutManager;
@@ -27,15 +24,7 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		if (nodeTable.getColumn("go_slim") == null) {
 			nodeTable.createListColumn("go_slim", String.class, false);
 		}
-		
-		for (CyNode n : network.getNodeList()) {
-			ArrayList<String> list = new ArrayList<String>();
-			//list.add("toto");
-			// TODO: do not reinit the go_slim before OK is pressed
-			network.getRow(n).set("go_slim", list);
-		}
-		
-		
+
 		return new TaskIterator(
 			new PMBGOSlimQueryTask(network),
 			new PMBGOSlimLayoutTask(view, layoutManager)

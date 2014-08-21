@@ -104,7 +104,6 @@ public class SettingWindow extends JDialog {
 
 	private void setModificationMade(boolean modificationMade) {
 		saveSettings.setEnabled(this.modificationMade = modificationMade);
-		saveSettings.grabFocus();
 		getRootPane().setDefaultButton(modificationMade ? saveSettings : null);
 	}
 
@@ -141,7 +140,6 @@ public class SettingWindow extends JDialog {
 		return taskManager;
 	}
 
-
 	private boolean silent = false;
 
 	public void closeSilently() {
@@ -153,9 +151,6 @@ public class SettingWindow extends JDialog {
 	public void setVisible(boolean opening) {
 		if (opening) {
 			((TabPanel.TabContentPanel) tabPanel.getSelectedComponent()).resetUI();
-			this.toFront();
-			this.requestFocus();
-			this.setModal(opening);
 		} else {
 			if (!silent) {
 				if (modificationMade) {
@@ -181,6 +176,7 @@ public class SettingWindow extends JDialog {
 				//this.dispose();
 			} else silent = false;
 		}
+		setModal(opening);
 		super.setVisible(opening);
 	}
 }

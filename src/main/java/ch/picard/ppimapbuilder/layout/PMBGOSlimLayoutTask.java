@@ -1,12 +1,5 @@
 package ch.picard.ppimapbuilder.layout;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.TreeMap;
-
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
@@ -15,6 +8,8 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
+
+import java.util.*;
 
 public class PMBGOSlimLayoutTask extends AbstractTask {
 
@@ -37,9 +32,9 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		
 		ArrayList<String> fullListOfGOs = new ArrayList<String>(); // Stores every GO from the network
 		for (CyNode n : network.getNodeList()) {
-			for (String s : network.getRow(n).getList("go_slim", String.class)) {
-				fullListOfGOs.add(s);
-			}
+			List<String> go_slim = network.getRow(n).getList("go_slim", String.class);
+			if(go_slim != null)
+				fullListOfGOs.addAll(go_slim);
 		}
 		
 		LinkedHashMap<String, Integer> goOccurrences = new LinkedHashMap<String, Integer>(); // Stores the number of occurrences for each GO
@@ -59,6 +54,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		}
 		for (CyNode n : network.getNodeList()) {
 			List<String> tempGOList = network.getRow(n).getList("go_slim", String.class);
+			if(tempGOList == null) continue;
 			for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
 				if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node 
 					//System.out.print(key);

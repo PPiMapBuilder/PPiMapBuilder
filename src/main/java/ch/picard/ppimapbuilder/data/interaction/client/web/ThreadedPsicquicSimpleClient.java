@@ -42,8 +42,11 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 	 */
 	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
 		final List<Future<List<BinaryInteraction>>> requests = new ArrayList<Future<List<BinaryInteraction>>>();
-		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(
-				newFixedThreadPool());
+
+		ExecutorService executorService = newThreadPool();
+
+		final CompletionService<List<BinaryInteraction>> completionService =
+				new ExecutorCompletionService<List<BinaryInteraction>>(executorService);
 
 		// Launch and organism interaction requests
 		for (final PsicquicService service : services) {
@@ -77,6 +80,10 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 		// Collect all interaction results
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		for (int i = 0; i < requests.size(); i++) {
+
+			if (executorService.isShutdown())
+				break;
+
 			Future<List<BinaryInteraction>> take = null;
 			try {
 				take = completionService.take();
@@ -108,8 +115,11 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 	 * Gets cumulative list of interaction from a list of MiQL query
 	 */
 	public List<BinaryInteraction> getByQueries(final List<String> queries) throws Exception {
+
+		ExecutorService executorService = Executors.newFixedThreadPool(2);
+
 		// Thread manager
-		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(newFixedThreadPool());
+		final CompletionService<List<BinaryInteraction>> completionService = new ExecutorCompletionService<List<BinaryInteraction>>(executorService);
 
 		// Launch queries in thread
 		final List<Future<List<BinaryInteraction>>> interactionRequests = new ArrayList<Future<List<BinaryInteraction>>>();
@@ -138,7 +148,11 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 
 		// Collect all interaction results
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		for (Future<List<BinaryInteraction>> interactionRequest : interactionRequests) {
+		for (Future<List<BinaryInteraction>> ignored : interactionRequests) {
+
+			if (executorService.isShutdown())
+				break;
+
 			try {
 				results.addAll(completionService.take().get());
 			} catch (ExecutionException e) {

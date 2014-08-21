@@ -25,7 +25,7 @@ import java.util.concurrent.*;
 
 class InParanoidCacheLoaderTask implements Task {
 
-	private final static String BASE_URL = "http://inparanoid.sbc.su.se/download/8.0_current/OrthoXML/";
+	private final static String BASE_URL = "http://inparanoid.sbc.su.se/download/8.0_current/Orthologs_OrthoXML/";
 	private final InParanoidCacheLoaderTaskFactory parent;
 	private final CloseableHttpClient httpClient;
 	private final ExecutorService executorService;
@@ -82,7 +82,7 @@ class InParanoidCacheLoaderTask implements Task {
 		int j = 0, i = 0;
 		for (int requestsSize = requests.size(); i < requestsSize; i++) {
 			try {
-				if (cancelled || executorService.isShutdown() || executorService.isTerminated())
+				if (cancelled || executorService.isShutdown())
 					break;
 
 				future = completionService.take();

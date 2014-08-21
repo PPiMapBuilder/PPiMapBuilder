@@ -1,8 +1,11 @@
 package ch.picard.ppimapbuilder.networkbuilder.network;
 
+import ch.picard.ppimapbuilder.data.JSONUtils;
+import ch.picard.ppimapbuilder.data.JSONable;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
@@ -165,13 +168,37 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				nodeAttr.set("protein_name", protein.getProteinName());
 				nodeAttr.set("tax_id", String.valueOf(protein.getOrganism().getTaxId()));
 				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
-				nodeAttr.set("cellular_components_hidden", protein.getCellularComponentsAsJSONList());
+				nodeAttr.set("cellular_components_hidden",
+						JSONUtils.jsonListToStringList(
+								protein.getCellularComponents().toArray(
+										new JSONable[protein.getCellularComponents().size()]
+								)
+						)
+				);
 				nodeAttr.set("cellular_components", protein.getCellularComponentsAsSringList());
-				nodeAttr.set("biological_processes_hidden", protein.getBiologicalProcessesAsJSONList());
+				nodeAttr.set("biological_processes_hidden",
+						JSONUtils.jsonListToStringList(
+								protein.getBiologicalProcesses().toArray(
+										new JSONable[protein.getBiologicalProcesses().size()]
+								)
+						)
+				);
 				nodeAttr.set("biological_processes", protein.getBiologicalProcessesAsStringList());
-				nodeAttr.set("molecular_functions_hidden", protein.getMolecularFunctionsAsJSONList());
+				nodeAttr.set("molecular_functions_hidden",
+						JSONUtils.jsonListToStringList(
+								protein.getMolecularFunctions().toArray(
+										new JSONable[protein.getMolecularFunctions().size()]
+								)
+						)
+				);
 				nodeAttr.set("molecular_functions", protein.getMolecularFunctionsAsStringList());
-				nodeAttr.set("orthologs", protein.getOrthologsAsJSONList());
+				nodeAttr.set("orthologs",
+						JSONUtils.jsonListToStringList(
+								protein.getOrthologs().toArray(
+										new JSONable[protein.getOrthologs().size()]
+								)
+						)
+				);
 				nodeAttr.set("queried", String.valueOf(proteinOfInterestPool.contains(protein)));
 			}
 		}
@@ -203,19 +230,19 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				if (inRefOrg) {
 					nodeAName = interaction.getInteractorA("uniprotkb");
 					nodeBName = interaction.getInteractorB("uniprotkb");
-					nodeA = nodeNameMap.get(nodeAName);
-					nodeB = nodeNameMap.get(nodeBName);
+					nodeA = getNodeFromUniProtId(nodeAName);
+					nodeB = getNodeFromUniProtId(nodeBName);
 				} else {
 					for (UniProtEntry prot : interactorPool) {
 						Protein ortho = prot.getOrtholog(organism);
 						if (ortho != null) {
 							if (interaction.getInteractorA().startsWith(ortho.getUniProtId())) {
 								nodeAName = prot.getUniProtId();
-								nodeA = nodeNameMap.get(nodeAName);
+								nodeA = getNodeFromUniProtId(nodeAName);
 							}
 							if (interaction.getInteractorB().startsWith(ortho.getUniProtId())) {
 								nodeBName = prot.getUniProtId();
-								nodeB = nodeNameMap.get(nodeBName);
+								nodeB = getNodeFromUniProtId(nodeBName);
 							}
 						}
 
@@ -260,6 +287,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				}
 			}
 		}
+	}
+
+	private CyNode getNodeFromUniProtId(String uniProtId) {
+		String s = ProteinUtils.UniProtId.extractStrictUniProtId(uniProtId);
+		if(s != null)
+			return nodeNameMap.get(s);
+		return null;
 	}
 
 	private CyNetworkView applyView(CyNetwork network) {

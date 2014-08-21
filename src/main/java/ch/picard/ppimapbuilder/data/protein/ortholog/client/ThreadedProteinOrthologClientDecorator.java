@@ -17,11 +17,6 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 
 	private final POC proteinOrthologClient;
 
-	/**
-	 * @param maxNumberThread The maximum number of thread usable by the ortholog client.
-	 *                If set under 4, the thread count can actually exceed 4 in the @code{getOrthologsMultiOrganismMultiProtein()} method.
-	 *                Otherwise, this limit will be respected
-	 */
 	public ThreadedProteinOrthologClientDecorator(POC proteinOrthologClient, int maxNumberThread) {
 		super(maxNumberThread);
 		this.proteinOrthologClient = proteinOrthologClient;
@@ -55,7 +50,9 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 		 * Proposed implementation with thread pool which requests @code{getOrtholog()} for each given organism
 		 */
 		List<Future<OrthologScoredProtein>> requests = new ArrayList<Future<OrthologScoredProtein>>();
-		CompletionService<OrthologScoredProtein> completionService = new ExecutorCompletionService<OrthologScoredProtein>(newFixedThreadPool());
+
+		ExecutorService executorService = newThreadPool();
+		CompletionService<OrthologScoredProtein> completionService = new ExecutorCompletionService<OrthologScoredProtein>(executorService);
 
 		for (final Organism organism : organisms) {
 			requests.add(completionService.submit(new Callable<OrthologScoredProtein>() {
@@ -69,8 +66,11 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 		HashMap<Organism, OrthologScoredProtein> orthologs = new HashMap<Organism, OrthologScoredProtein>();
 		Future<OrthologScoredProtein> request;
 		OrthologScoredProtein ortholog;
-		for (int i = 0, requestsSize = requests.size(); i < requestsSize; i++) {
+		for (Future<OrthologScoredProtein> ignored : requests) {
 			try {
+				if (executorService.isShutdown())
+					break;
+
 				request = completionService.take();
 				ortholog = request.get();
 				if (ortholog != null)
@@ -101,10 +101,13 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 		List<Protein> proteinList = new ArrayList<Protein>(proteins);
 
 		//Temporally change the thread limit to be sure not to exceed it once
-		int oriNThread = maxNumberThread;
-		maxNumberThread = Math.max((int) Math.sqrt(maxNumberThread), 2);
-		List<Future<Map<Organism, OrthologScoredProtein>>> requests = new ArrayList<Future<Map<Organism, OrthologScoredProtein>>>();
-		CompletionService<Map<Organism, OrthologScoredProtein>> completionService = new ExecutorCompletionService<Map<Organism, OrthologScoredProtein>>(newFixedThreadPool());
+		List<Future<Map<Organism, OrthologScoredProtein>>> requests =
+				new ArrayList<Future<Map<Organism, OrthologScoredProtein>>>();
+
+		ExecutorService executorService = newThreadPool();
+		
+		CompletionService<Map<Organism, OrthologScoredProtein>> completionService =
+				new ExecutorCompletionService<Map<Organism, OrthologScoredProtein>>(executorService);
 
 		for (final Protein protein : proteinList) {
 			requests.add(completionService.submit(new Callable<Map<Organism, OrthologScoredProtein>>() {
@@ -118,8 +121,11 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 		HashMap<Protein, Map<Organism, OrthologScoredProtein>> out = new HashMap<Protein, Map<Organism, OrthologScoredProtein>>();
 		Future<Map<Organism, OrthologScoredProtein>> request;
 		Map<Organism, OrthologScoredProtein> orthologs;
-		for (int i = 0, requestsSize = requests.size(); i < requestsSize; i++) {
+		for (Future<Map<Organism, OrthologScoredProtein>> ignored : requests) {
 			try {
+				if (executorService.isShutdown())
+					break;
+				
 				request = completionService.take();
 				orthologs = request.get();
 				if (orthologs != null) {
@@ -131,7 +137,6 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 				e.printStackTrace();
 			}
 		}
-		maxNumberThread = oriNThread;
 		return out;
 	}
 

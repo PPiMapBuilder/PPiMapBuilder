@@ -31,7 +31,8 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 	PrimaryInteractionQuery(
 			Organism refOrganism, Organism organism, UniProtEntrySet POIproteinPool, UniProtEntrySet proteinPool,
 			ThreadedProteinOrthologClient proteinOrthologClient, ThreadedPsicquicSimpleClient psicquicClient, UniProtEntryClient uniProtEntryClient,
-			Double minimum_orthology_score) {
+			Double minimum_orthology_score
+	) {
 		this.refOrganism = refOrganism;
 		this.organism = organism;
 		this.POIproteinPool = POIproteinPool;
@@ -61,9 +62,15 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		}
 
 		//Get primary interactors via interaction search
-		Set<Protein> interactors = ProteinUtils.newProteins(InteractionUtils.getInteractorsBinary(
-				psicquicClient.getByQueries(additionnalQueries)
-		), organism);
+		Set<Protein> interactors = ProteinUtils.newProteins(
+			InteractionUtils.getInteractorsBinary(
+				InteractionUtils.filter(
+					psicquicClient.getByQueries(additionnalQueries),
+					new InteractionUtils.UniProtInteractionFilter()
+				)
+			),
+			organism
+		);
 
 		//Remove POIs
 		interactors.removeAll(POIinOrg);
@@ -72,13 +79,20 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		if (!interactors.isEmpty()) {
 
 			if (organism.equals(refOrganism)) {
-				newInteractors.addAll(
-					uniProtEntryClient.retrieveProteinsData(
-							ProteinUtils.asIdentifiers(interactors)
-					).values()
-				);
+				for (UniProtEntry proteinEntry :
+						uniProtEntryClient.retrieveProteinsData(ProteinUtils.asIdentifiers(interactors)).values()
+				) {
+					if(
+							!proteinEntry.getOrganism().equals(refOrganism) &&
+							proteinEntry.getOrganism().sameSpecies(refOrganism)
+					) {
+						proteinEntry = new UniProtEntry.Builder(proteinEntry)
+								.setOrganism(refOrganism)
+								.build();
+					}
+					newInteractors.add(proteinEntry);
+				}
 			} else {
-
 				Map<Protein, Map<Organism, OrthologScoredProtein>> orthologs =
 						proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(interactors, Arrays.asList(refOrganism), MINIMUM_ORTHOLOGY_SCORE);
 
@@ -93,10 +107,20 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 					if (!proteinPool.contains(protInRefOrg)) {
 						UniProtEntry proteinEntry = uniProtEntryClient.retrieveProteinData(protInRefOrg.getUniProtId());
+						if(
+								!proteinEntry.getOrganism().equals(refOrganism) &&
+								proteinEntry.getOrganism().sameSpecies(refOrganism)
+						) {
+							proteinEntry = new UniProtEntry.Builder(proteinEntry)
+									.setOrganism(refOrganism)
+									.build();
+						}
 
-						proteinEntry.addOrtholog(interactor);
+						if(proteinEntry != null) {
+							proteinEntry.addOrtholog(interactor);
 
-						newInteractors.add(proteinEntry);
+							newInteractors.add(proteinEntry);
+						}
 					}
 				}
 			}

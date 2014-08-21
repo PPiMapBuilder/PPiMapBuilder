@@ -139,24 +139,30 @@ public class InteractionUtils {
 	 */
 	public static Set<String> getInteractorsBinary(List<BinaryInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
-		List<BinaryInteraction> copyInteractions = new ArrayList<BinaryInteraction>(interactions);
-
 
 		// Interaction filtering
-		InteractionUtils.filter(
-				copyInteractions,
+		for (BinaryInteraction interaction : InteractionUtils.filter(
+				interactions,
 				new InteractionUtils.UniProtInteractionFilter()
-		);
-		for (BinaryInteraction interaction : interactions) {
-			interactors.add(interaction.getInteractorA().getIdentifiers().get(0).getIdentifier().split("-")[0]);
-			interactors.add(interaction.getInteractorB().getIdentifiers().get(0).getIdentifier().split("-")[0]);
+		)) {
+			String uniProtIdA = ProteinUtils.UniProtId.extractStrictUniProtId(
+					interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()
+			);
+			String uniProtIdB = ProteinUtils.UniProtId.extractStrictUniProtId(
+					interaction.getInteractorB().getIdentifiers().get(0).getIdentifier()
+			);
+
+			if(uniProtIdA != null && uniProtIdB != null) {
+				interactors.add(uniProtIdA);
+				interactors.add(uniProtIdB);
+			}
 		}
 
 		return interactors;
 	}
 
 	public static abstract class InteractionFilter {
-		public boolean isValidInteraction(BinaryInteraction interaction) {
+		public boolean isValidInteraction(BinaryInteraction ignored) {
 			return true;
 		}
 
@@ -191,8 +197,8 @@ public class InteractionUtils {
 			CrossReference uniprot = null;
 			boolean hasUniprot = false;
 			for (CrossReference ref : ids) {
-				final boolean isUniprot = ref.getDatabase().equals("uniprotkb");
-				final boolean idValid = ProteinUtils.UniProtId.isValid(ref.getIdentifier());
+				boolean isUniprot = ref.getDatabase().equals("uniprotkb");
+				boolean idValid = ProteinUtils.UniProtId.isValid(ref.getIdentifier());
 				hasUniprot = hasUniprot || (isUniprot && idValid);
 				if (hasUniprot) {
 					uniprot = ref;
@@ -218,29 +224,28 @@ public class InteractionUtils {
 	 * @param interactions
 	 * @param filters
 	 */
-	public static void filter(List<BinaryInteraction> interactions, InteractionFilter... filters) {
-		ArrayList<BinaryInteraction> invalidInteractions = new ArrayList<BinaryInteraction>();
+	public static ArrayList<BinaryInteraction> filter(List<BinaryInteraction> interactions, InteractionFilter... filters) {
+		ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
 		interactionLoop : for (BinaryInteraction interaction : interactions) {
+			boolean valid = true;
 
 			for (InteractionFilter filter : filters) {
-				if(!filter.isValidInteraction(interaction)) {
-					invalidInteractions.add(interaction);
-					continue interactionLoop;
-				}
+				valid = valid && filter.isValidInteraction(interaction);
+				if(!valid) continue  interactionLoop;
 			}
 
-			for (Interactor interactor : Arrays.asList(new Interactor[]{interaction.getInteractorA(),
-					interaction.getInteractorB()})) {
+			for (Interactor interactor : new Interactor[]{interaction.getInteractorA(),
+					interaction.getInteractorB()}) {
 
 				for (InteractionFilter filter : filters) {
-					if(!filter.isValidInteractor(interactor)) {
-						invalidInteractions.add(interaction);
-						continue interactionLoop;
-					}
+					valid = valid && filter.isValidInteractor(interactor);
+					if(!valid) continue  interactionLoop;
 				}
 			}
+
+			if(valid) validInteractions.add(interaction);
 		}
-		interactions.removeAll(invalidInteractions);
+		return validInteractions;
 	}
 
 	public static String generateMiQLQueryIDTaxID(final String id, final Integer taxId) {
