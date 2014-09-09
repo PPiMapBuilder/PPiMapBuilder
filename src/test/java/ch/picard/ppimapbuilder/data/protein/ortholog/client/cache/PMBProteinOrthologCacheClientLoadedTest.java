@@ -18,7 +18,7 @@ public class PMBProteinOrthologCacheClientLoadedTest {
 	private Organism mouse;
 	private Organism human;
 	private PMBProteinOrthologCacheClient cache;
-	private ThreadedProteinOrthologClientDecorator<PMBProteinOrthologCacheClient> threadedCache;
+	private ThreadedProteinOrthologClientDecorator threadedCache;
 	private SpeciesPairProteinOrthologCache speciesPairProteinOrthologCache;
 
 	@Before
@@ -31,7 +31,7 @@ public class PMBProteinOrthologCacheClientLoadedTest {
 		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		cache = PMBProteinOrthologCacheClient.getInstance();
-		threadedCache = new ThreadedProteinOrthologClientDecorator<PMBProteinOrthologCacheClient>(cache);
+		threadedCache = new ThreadedProteinOrthologClientDecorator(cache);
 		speciesPairProteinOrthologCache = cache.getSpeciesPairProteinOrthologCache(human, mouse);
 	}
 

@@ -4,7 +4,6 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrth
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 import javax.swing.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,11 +77,7 @@ public class UserOrganismRepository {
 	
 	public void removeOrganism(Organism o) {
 		listOrganism.remove(o);
-		try {
-			PMBProteinOrthologCacheClient.getInstance().emptyCacheLinkedToOrganism(o);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		PMBProteinOrthologCacheClient.getInstance().emptyCacheLinkedToOrganism(o);
 	}
 	
 	public void addOrganism(String scientificName) {

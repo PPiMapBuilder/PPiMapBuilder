@@ -20,7 +20,6 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +30,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 	// Clients
 	final UniProtEntryClient uniProtEntryClient;
 	final ThreadedPsicquicSimpleClient psicquicClient;
+	final PMBProteinOrthologCacheClient proteinOrthologCacheClient;
 	final InParanoidClient inParanoidClient;
 	final ThreadedProteinOrthologClient proteinOrthologClient;
 
@@ -97,25 +97,20 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				inParanoidClient.enableCache(true); //XML response cache
 
 				// PMB ortholog cache client
-				PMBProteinOrthologCacheClient cacheClient = null;
-				try {
-					cacheClient = PMBProteinOrthologCacheClient.getInstance();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				proteinOrthologCacheClient = PMBProteinOrthologCacheClient.getInstance();
 
-				webCached = new ProteinOrthologWebCachedClient(inParanoidClient, cacheClient);
+				webCached = new ProteinOrthologWebCachedClient(inParanoidClient, proteinOrthologCacheClient);
 			}
-			ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient> orthologClient
-					= new ThreadedProteinOrthologClientDecorator<ProteinOrthologWebCachedClient>(webCached);
+			ThreadedProteinOrthologClientDecorator orthologClient
+					= new ThreadedProteinOrthologClientDecorator(webCached);
+			orthologClient.setMaxNumberThread((int) (STD_NB_THREAD * 2.0));
 			proteinOrthologClient = orthologClient;
 			threadedClients.add(orthologClient);
-			orthologClient.setMaxNumberThread(STD_NB_THREAD);
 		}
 	}
 
 	/**
-	 * Complex network querying using PSICQUIC and InParanoid
+	 * Complex network querying using PSICQUIC, InParanoid and UniProt
 	 */
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
@@ -163,7 +158,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				}
 
 				@Override
-				public void processResult(PrimaryInteractionQuery result) {
+				public void processResult(PrimaryInteractionQuery result, Integer index) {
 					newInteractors.addAll(result.getNewInteractors());
 				}
 
@@ -186,7 +181,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 				}
 
 				@Override
-				public void processResult(SecondaryInteractionQuery result) {
+				public void processResult(SecondaryInteractionQuery result, Integer index) {
 					interactionsByOrg.put(result.getOrganism(), result.getInteractions());
 				}
 
@@ -195,6 +190,7 @@ public class PMBQueryInteractionTask extends AbstractTask {
 
 		//Free memory
 		inParanoidClient.enableCache(false);
+		proteinOrthologCacheClient.clearMemoryCache();
 		System.gc();
 	}
 

@@ -33,11 +33,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 	public OrthologySettingPanel(OpenBrowser openBrowser, SettingWindow settingWindow) {
 		super(new MigLayout("ins 5", "[grow, right]10[grow, left]", ""), "Orthology");
 		this.settingWindow = settingWindow;
-		try {
-			this.cache = PMBProteinOrthologCacheClient.getInstance();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.cache = PMBProteinOrthologCacheClient.getInstance();
 
 		add(new JLabel("Cache size :"));
 		add(lblCacheSize = new JLabel("-"), "wrap");

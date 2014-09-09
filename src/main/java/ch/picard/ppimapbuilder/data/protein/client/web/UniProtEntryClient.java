@@ -55,7 +55,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(RetrieveProteinData result) {
+			public void processResult(RetrieveProteinData result, Integer index) {
 				results.put(result.protein.getUniProtId(), result.protein);
 			}
 

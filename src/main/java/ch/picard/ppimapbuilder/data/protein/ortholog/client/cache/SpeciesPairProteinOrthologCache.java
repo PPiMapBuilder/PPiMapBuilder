@@ -7,18 +7,28 @@ import ch.picard.ppimapbuilder.util.AppendingObjectOutputStream;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Protein ortholog cache client for a pair of species. Linked to a file cache named "ORG1-ORG2.dat".
+ */
 public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCacheClient implements Serializable {
 
 	private static final long serialVersionUID = 2L;
 
 	/**
-	 * Indicates if this cache have been loaded entirely from InParanoid
+	 * Indicates if this cache have been loaded entirely from InParanoid (Set to true at the end of an OrthoXML parsing)
 	 */
 	private Boolean full = false;
 
 	private final CacheFile cacheDataFile;
+
+	/**
+	 * In memory cache of already read OrthologGroup
+	 */
+	private transient Map<Protein, OrthologGroup> readCache;
 
 	protected SpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		cacheDataFile = new CacheFile(organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".dat");
@@ -53,7 +63,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		}
 	}
 
-	private synchronized OrthologGroup getOrthologGroup(OrthologGroup orthologGroup) throws IOException {
+	private OrthologGroup getOrthologGroup(OrthologGroup orthologGroup) throws IOException {
 		for (Organism organism : orthologGroup.getOrganisms()) {
 			for (Protein protein : orthologGroup.getProteins()) {
 				if (!protein.getOrganism().equals(organism)) {
@@ -68,10 +78,18 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		return null;
 	}
 
-	@Override
-	public synchronized OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
+	//@Override
+	public OrthologGroup getOrthologGroup2(Protein protein, Organism organism) throws IOException {
 		if (!cacheDataFile.exists())
 			return null;
+
+		// Create or Check in memory cache before reading file cache
+		if (readCache == null) {
+			synchronized (this) {
+				readCache = new HashMap<Protein, OrthologGroup>();
+			}
+		} else if (readCache.size() > 0 && readCache.containsKey(protein))
+			return readCache.get(protein);
 
 		ObjectInputStream in = null;
 		try {
@@ -82,26 +100,78 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 				try {
 					OrthologGroup group = (OrthologGroup) in.readObject();
 
-					if (
-							group.contains(organism) &&
-									group.contains(protein)
-							)
+					boolean correctGroup = false;
+					if (!readCache.containsValue(group)) {
+						synchronized (this) {
+							for(Protein ortholog : group.getProteins()) {
+								if(ortholog.equals(protein))
+									correctGroup = true;
+
+								readCache.put(ortholog, group);
+							}
+						}
+					}
+
+					if (correctGroup || group.contains(protein)) {
 						return group;
+					}
+
 				} catch (EOFException e) {
 					EOF = true;
-				} catch (ClassNotFoundException e) {
-					continue;
+				} catch (ClassNotFoundException ignored) {
 				}
 			}
-		} catch (FileNotFoundException e) {
-			return null;
+		} catch (FileNotFoundException ignored) {
 		} finally {
 			if (in != null) in.close();
 		}
+
 		return null;
 	}
 
+	@Override
+	public OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
+		if (!cacheDataFile.exists())
+			return null;
+
+		// Create or Check in memory cache before reading file cache
+		if (readCache == null || readCache.size() == 0) {
+			synchronized (this) {
+				if(readCache == null)
+					readCache = new HashMap<Protein, OrthologGroup>();
+
+				ObjectInputStream in = null;
+				try {
+					in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
+
+					boolean EOF = false;
+					while (!EOF) {
+						try {
+							OrthologGroup group = (OrthologGroup) in.readObject();
+
+							for(Protein ortholog : group.getProteins()) {
+								readCache.put(ortholog, group);
+							}
+
+						} catch (EOFException e) {
+							EOF = true;
+						} catch (ClassNotFoundException ignored) {}
+					}
+				} catch (FileNotFoundException ignored) {
+				} finally {
+					if (in != null) in.close();
+				}
+			}
+		}
+
+		return readCache.get(protein);
+	}
+
+	/**
+	 * Clear both file cache and memory cache
+	 */
 	protected synchronized void clear() throws IOException {
+		clearReadCache();
 		cacheDataFile.clear();
 		full = false;
 	}
@@ -115,6 +185,13 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 			return full;
 		else
 			return (full = false);
+	}
+
+	/**
+	 * Clear memory cache of OrthologGroup read from the file cache
+	 */
+	protected void clearReadCache() {
+		readCache.clear();
 	}
 
 	/**

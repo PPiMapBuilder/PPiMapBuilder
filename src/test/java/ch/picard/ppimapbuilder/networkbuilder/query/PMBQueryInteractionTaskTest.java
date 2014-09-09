@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.networkbuilder.query;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
@@ -18,8 +19,8 @@ public class PMBQueryInteractionTaskTest {
 	UniProtEntrySet interactorPool = new UniProtEntrySet();
 	UniProtEntrySet proteinOfInterestPool = new UniProtEntrySet();
 
-	Organism human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-	Organism mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+	Organism human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+	Organism mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 	QueryWindow qw = new QueryWindow() {
 		@Override

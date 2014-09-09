@@ -29,10 +29,16 @@ public abstract class AbstractThreadedClient {
 		return this.executorServices;
 	}
 
-	public ExecutorService newThreadPool() {
+	protected ExecutorService newThreadPool() {
 		ExecutorService executorService = maxNumberThread != null ?
-				Executors.newFixedThreadPool(maxNumberThread) :
+				newThreadPool(maxNumberThread) :
 				Executors.newCachedThreadPool();
+		executorServices.add(executorService);
+		return executorService;
+	}
+
+	protected ExecutorService newThreadPool(int nbThread) {
+		ExecutorService executorService = Executors.newFixedThreadPool(nbThread);
 		executorServices.add(executorService);
 		return executorService;
 	}
