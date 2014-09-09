@@ -55,6 +55,11 @@
           <img src="http://inparanoid.sbc.su.se/images/inp8_txt_logo.png" alt="UniProt" width="269" height="73"/>
         </a>
       </td>
+      <td>
+        <a href="http://www.ebi.ac.uk/QuickGO/">
+          <img src="http://www.ebi.ac.uk/QuickGO/image/mb/logo.png" alt="UniProt" width="105" height="51"/>
+        </a>
+      </td>
     </tr>
   </table>
 </center>
