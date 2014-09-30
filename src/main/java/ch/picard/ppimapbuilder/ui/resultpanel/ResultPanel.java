@@ -359,7 +359,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setProteinId(row.get("uniprot_id", String.class));
 		this.setPtnName(row.get("protein_name", String.class));
 		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
-		this.setGeneName(row.get("gene_name", String.class), row.get("tax_id", String.class));
+		this.setGeneName(row.get("gene_name", String.class) != null ? row.get("gene_name", String.class) : "", row.get("tax_id", String.class));
 
 		this.setEcNumber(row.get("ec_number", String.class) != null ? row.get("ec_number", String.class) : "");
 		//
@@ -713,7 +713,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param ecNumber
 	 */
 	private void setEcNumber(String ecNumber) {
-		if (!ecNumber.isEmpty()) {
+		if (!ecNumber.isEmpty() && ecNumber != null) {
 			this.ecNum.setFont(STD_FONT);
 			this.ecNum.setText(ecNumber);
 			try {
