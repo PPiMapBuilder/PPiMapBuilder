@@ -367,6 +367,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setOntology(row.getList("biological_processes_hidden", String.class), row.getList("cellular_components_hidden", String.class),
 				row.getList("molecular_functions_hidden", String.class));
 		this.setOrganism(row.get("tax_id", String.class));
+		System.out.println(row.getList("orthologs", String.class));
+		
 		this.setOrthologs(row.getList("orthologs", String.class));
 
 		this.showProteinView();
@@ -814,13 +816,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param orthologs
 	 */
 	private void setOrthologs(List<String> orthologs) {
-		// TODO: Add orthologs column
-		// throw new NotImplementedException("Ortholog are not handle yet");
 		this.panelOrthologs.removeAll();
-
+		
 		for (String str : orthologs) {
 			JsonObject json = JsonObject.readFrom(str);
-			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("organism").asString() + "]"));
+			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("organism").asInt() + "]"));
 		}
 
 	}
