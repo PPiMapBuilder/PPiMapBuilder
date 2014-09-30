@@ -13,7 +13,7 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrtho
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
+import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.SteppedTaskMonitor;
 import org.cytoscape.work.AbstractTask;
@@ -54,21 +54,21 @@ public class PMBQueryInteractionTask extends AbstractTask {
 			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			UniProtEntrySet interactorPool,
 			UniProtEntrySet proteinOfInterestPool,
-			QueryWindow qw
+			NetworkQueryParameters networkQueryParameters
 	) {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
 
 		// Retrieve user input
-		referenceOrganism = qw.getSelectedRefOrganism();
-		inputProteinIDs = new ArrayList<String>(new HashSet<String>(qw.getSelectedUniprotID()));
-		otherOrganisms = qw.getSelectedOrganisms();
+		referenceOrganism = networkQueryParameters.getReferenceOrganism();
+		inputProteinIDs = new ArrayList<String>(new HashSet<String>(networkQueryParameters.getProteinOfInterestUniprotId()));
+		otherOrganisms = networkQueryParameters.getOtherOrganisms();
 		otherOrganisms.remove(referenceOrganism);
 		allOrganisms = new ArrayList<Organism>();
 		allOrganisms.addAll(otherOrganisms);
 		allOrganisms.add(referenceOrganism);
-		List<PsicquicService> selectedDatabases = qw.getSelectedDatabases();
+		List<PsicquicService> selectedDatabases = networkQueryParameters.getSelectedDatabases();
 
 		final int STD_NB_THREAD =
 			Math.min(2, Runtime.getRuntime().availableProcessors()) + 1;
@@ -127,17 +127,37 @@ public class PMBQueryInteractionTask extends AbstractTask {
 		//Ref organism get primary interactors
 		monitor.setStep("Fetch interactors of input proteins in reference organism...");
 		{
-			interactorPool.addAll(new PrimaryInteractionQuery(
+			interactorPool.addAll(
+				new PrimaryInteractionQuery(
 					referenceOrganism, referenceOrganism, proteinOfInterestPool, interactorPool,
 					proteinOrthologClient, psicquicClient, uniProtEntryClient,
-					MINIMUM_ORTHOLOGY_SCORE).call().getNewInteractors());
+					MINIMUM_ORTHOLOGY_SCORE
+				).call().getNewInteractors()
+			);
 		}
 
 		if(cancelled) return;
 
 		//Fetch orthologs of interactor pool in other organisms
 		monitor.setStep("Fetch interactors orthologs in other organisms...");
-		proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(interactorPool, otherOrganisms, MINIMUM_ORTHOLOGY_SCORE);
+		{
+			//optimization : searching orthologs in a number of organisms limited to
+			// the maximum organism in memory cache
+			int step = PMBProteinOrthologCacheClient.MAX_NB_MEMORY_CACHE - 1;
+			for(int i = 0; i < otherOrganisms.size(); i += step) {
+				proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
+						interactorPool,
+						otherOrganisms.subList(
+								i,
+								Math.min(
+										otherOrganisms.size(),
+										i + step
+								)
+						),
+						MINIMUM_ORTHOLOGY_SCORE
+				);
+			}
+		}
 
 		if(cancelled) return;
 

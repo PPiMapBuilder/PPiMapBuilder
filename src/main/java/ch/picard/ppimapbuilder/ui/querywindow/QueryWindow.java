@@ -2,6 +2,7 @@ package ch.picard.ppimapbuilder.ui.querywindow;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.DatabaseSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.panel.OtherOrganismSelectionPanel;
@@ -25,7 +26,7 @@ import java.util.List;
 /**
  * PPiMapBuilder interaction query window
  */
-public class QueryWindow extends JFrame {
+public class QueryWindow extends JFrame implements NetworkQueryParameters {
 	
 	/** Instance of the PPiMapBuilder frame to prevent several instances */
 	private static final long serialVersionUID = 1L;
@@ -230,19 +231,23 @@ public class QueryWindow extends JFrame {
 		});
 	}
 
+	@Override
 	public List<PsicquicService> getSelectedDatabases() {
 		return dsp.getSelectedDatabases();
 	}
 
-	public Organism getSelectedRefOrganism() {
+	@Override
+	public Organism getReferenceOrganism() {
 		return org.getSelectedOrganism();
 	}
 
-	public List<String> getSelectedUniprotID() {
+	@Override
+	public List<String> getProteinOfInterestUniprotId() {
 		return uus.getIdentifers();
 	}
 
-	public List<Organism> getSelectedOrganisms() {
+	@Override
+	public List<Organism> getOtherOrganisms() {
 		return ogs.getSelectedOrganisms();
 	}
 
@@ -255,7 +260,7 @@ public class QueryWindow extends JFrame {
 		this.taskManager = taskManager;
 	}
 	
-	public OtherOrganismSelectionPanel getOgs() {
+	public OtherOrganismSelectionPanel getOtherOrganismSelectionPanel() {
 		return ogs;
 	}
 

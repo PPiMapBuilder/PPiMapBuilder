@@ -3,17 +3,13 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
-import com.google.common.collect.Lists;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -21,106 +17,7 @@ import java.util.*;
  */
 public class InteractionUtils {
 
-	/**
-	 * Retrieve all interactions with the given interactors (optimized and threaded)
-	 */
-	public static List<BinaryInteraction> getInteractionsInProteinPool(Set<Protein> proteins, Organism sourceOrganism,
-	                                                                   ThreadedPsicquicSimpleClient psicquicClient) throws Exception {
-		if (proteins.size() <= 1)
-			return new ArrayList<BinaryInteraction>();
 
-		List<Protein> sourceProteins = Lists.newArrayList(proteins);
-		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
-		baseQuery.setRoot(true);
-		baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
-
-		// baseInteractionQuery.addParam(new MiQLParameterBuilder("type",
-		// "association"));
-
-		// Create idA and idB parameters
-		MiQLParameterBuilder idA, idB;
-		MiQLExpressionBuilder prots = new MiQLExpressionBuilder();
-		{
-			for (Protein protein : proteins)
-				prots.add(protein.getUniProtId());
-			idA = new MiQLParameterBuilder("idA", prots);
-			idB = new MiQLParameterBuilder("idB", prots);
-		}
-
-		// Calculate the estimated url query length
-		final int BASE_URL_LENGTH = 100;
-		int estimatedURLQueryLength = 0;
-		int idParamLength = 0, baseParamLength = 0;
-		{
-			try {
-				idParamLength = URLEncoder.encode(idB.toString(), "UTF-8").length() + URLEncoder.encode(idA.toString(), "UTF-8").length();
-				baseParamLength = URLEncoder.encode(baseQuery.toString(), "UTF-8").length();
-
-				estimatedURLQueryLength = BASE_URL_LENGTH + baseParamLength + idParamLength;
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-
-		// Slice the query in multiple queries if the result MiQL query is
-		// bigger than maxQuerySize
-		final List<String> queries = new ArrayList<String>();
-		final int MAX_QUERY_SIZE = BASE_URL_LENGTH + baseParamLength + 950;//TODO check difference in result when changing url length
-		{
-			if (estimatedURLQueryLength > MAX_QUERY_SIZE) {
-
-				final int STEP_LENGTH = (int) Math.ceil((double) (MAX_QUERY_SIZE - BASE_URL_LENGTH - baseParamLength) * sourceProteins.size()
-						/ (double) idParamLength);
-				final int NB_TRUNCATION = (int) Math.ceil((double) sourceProteins.size() / (double) STEP_LENGTH);
-
-				//System.out.println("N# proteins: " + sourceProteins.size());
-				//System.out.println("N# queries: " + NB_TRUNCATION);
-
-				// Generate truncated protein listing
-				// Ex: "prot1", "prot2", "prot3", "prot4" => ("prot1", "prot2"), ("prot3", "prot4")
-				final List<MiQLExpressionBuilder> protsExprs = new ArrayList<MiQLExpressionBuilder>();
-				int pos = 0;
-				for (int i = 0; i < NB_TRUNCATION; i++) {
-					int from = pos;
-					int to = Math.min(from + STEP_LENGTH, sourceProteins.size());
-
-					MiQLExpressionBuilder protsTruncated = new MiQLExpressionBuilder();
-					for (Protein protein : sourceProteins.subList(from, to))
-						protsTruncated.add(protein.getUniProtId());
-					protsExprs.add(protsTruncated);
-
-					pos = to;
-				}
-				MiQLExpressionBuilder protsIdA, protsIdB;
-				for (int i = 0; i < protsExprs.size(); i++) {
-					protsIdA = protsExprs.get(i);
-					//System.out.println(protsIdA);
-
-					for (int j = i; j < protsExprs.size(); j++) {
-						protsIdB = protsExprs.get(j);
-						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
-						queries.add(q.toString());
-						//System.out.println(q);
-					}
-				}
-			} else {
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idA);
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idB);
-				queries.add(baseQuery.toString());
-			}
-			System.gc();
-		}
-
-		//System.out.println(queries.size());
-
-		// Executing all MiQL queries using ThreadedPsicquicSimpleClient
-		List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		results.addAll(psicquicClient.getByQueries(queries));
-
-		return results;
-	}
 
 	/**
 	 * Uses to cluster interaction using MiCluster
@@ -137,24 +34,20 @@ public class InteractionUtils {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static Set<String> getInteractorsBinary(List<BinaryInteraction> interactions) {
+	public static Set<String> getInteractors(List<BinaryInteraction> interactions) {
 		HashSet<String> interactors = new HashSet<String>();
 
-		// Interaction filtering
-		for (BinaryInteraction interaction : InteractionUtils.filter(
-				interactions,
-				new InteractionUtils.UniProtInteractionFilter()
-		)) {
-			String uniProtIdA = ProteinUtils.UniProtId.extractStrictUniProtId(
+		for (BinaryInteraction interaction : interactions) {
+			String idA = ProteinUtils.UniProtId.extractStrictUniProtId(
 					interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()
 			);
-			String uniProtIdB = ProteinUtils.UniProtId.extractStrictUniProtId(
+			String idB = ProteinUtils.UniProtId.extractStrictUniProtId(
 					interaction.getInteractorB().getIdentifiers().get(0).getIdentifier()
 			);
 
-			if(uniProtIdA != null && uniProtIdB != null) {
-				interactors.add(uniProtIdA);
-				interactors.add(uniProtIdB);
+			if(idA != null && idB != null) {
+				interactors.add(idA);
+				interactors.add(idB);
 			}
 		}
 
@@ -259,49 +152,12 @@ public class InteractionUtils {
 		return query.toString();
 	}
 
-	/*
-	//Converts a Collection&lt;EncoreInteraction&gt; into a Collection&lt;BinaryInteraction&lt;Interactor&gt;&gt;
-	public static Collection<BinaryInteraction> convertEncoreInteraction(Collection<EncoreInteraction> interactions) {
-		List<BinaryInteraction> convertedInteractions = new ArrayList<BinaryInteraction>(interactions.size());
-		Iterator<EncoreInteraction> it = interactions.iterator();
-		Encore2Binary converter = new Encore2Binary();
-		while (it.hasNext()) {
-			EncoreInteraction encoreInteraction = (EncoreInteraction) it.next();
-			convertedInteractions.add(converter.getBinaryInteraction(encoreInteraction));
+	public static List<String> psicquicServicesToStrings(List<PsicquicService> services) {
+		ArrayList<String> out = new ArrayList<String>();
+		for(PsicquicService service : services) {
+			out.add(service.getName());
 		}
-		return convertedInteractions;
+		return out;
 	}
 
-	//Converts a Collection&lt;BinaryInteraction&lt;Interactor&gt;&gt; into a Collection&lt;EncoreInteraction&gt;
-	public static Collection<EncoreInteraction> convertBinaryInteraction(Collection<BinaryInteraction> interactions) {
-		List<EncoreInteraction> convertedInteractions = new ArrayList<EncoreInteraction>(interactions.size());
-		Iterator<BinaryInteraction> it = interactions.iterator();
-		Binary2Encore converter = new Binary2Encore();
-		while (it.hasNext()) {
-			BinaryInteraction binaryInteraction = (BinaryInteraction) it.next();
-			convertedInteractions.add(converter.getEncoreInteraction(binaryInteraction));
-		}
-		return convertedInteractions;
-	}
-
-	//Retrieve only interactors from list of interactions
-	public static Set<String> getInteractorsEncore(List<EncoreInteraction> interactions) {
-		HashSet<String> interactors = new HashSet<String>();
-
-		for (EncoreInteraction interaction : interactions) {
-			if (interaction.getInteractorAccsA().containsKey("uniprotkb")) {
-				String id = interaction.getInteractorAccsA().get("uniprotkb");
-				if (ProteinUtils.UniProtId.isValid(id))
-					interactors.add(id);
-			}
-			if (interaction.getInteractorAccsB().containsKey("uniprotkb")) {
-				String id = interaction.getInteractorAccsB().get("uniprotkb");
-				if (ProteinUtils.UniProtId.isValid(id))
-					interactors.add(id);
-			}
-		}
-
-		return interactors;
-	}
-	*/
 }

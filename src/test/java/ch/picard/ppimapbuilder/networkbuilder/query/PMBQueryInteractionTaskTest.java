@@ -24,12 +24,12 @@ public class PMBQueryInteractionTaskTest {
 
 	QueryWindow qw = new QueryWindow() {
 		@Override
-		public Organism getSelectedRefOrganism() {
+		public Organism getReferenceOrganism() {
 			return mouse;
 		}
 
 		@Override
-		public List<String> getSelectedUniprotID() {
+		public List<String> getProteinOfInterestUniprotId() {
 			return Arrays.asList("Q8VI75", "Q3THG9", "P04040");
 		}
 
@@ -45,7 +45,7 @@ public class PMBQueryInteractionTaskTest {
 		}
 
 		@Override
-		public List<Organism> getSelectedOrganisms() {
+		public List<Organism> getOtherOrganisms() {
 			return UserOrganismRepository.getInstance().getOrganisms();
 		}
 	};

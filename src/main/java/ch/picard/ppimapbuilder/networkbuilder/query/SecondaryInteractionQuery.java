@@ -39,7 +39,7 @@ class SecondaryInteractionQuery implements Callable<SecondaryInteractionQuery> {
 		final Set<Protein> proteins = proteinPool.getInOrg(organism);
 
 		//Get secondary interactions
-		List<BinaryInteraction> interactionsBinary = InteractionUtils.getInteractionsInProteinPool(proteins, organism, psicquicClient);
+		List<BinaryInteraction> interactionsBinary = psicquicClient.getInteractionsInProteinPool(proteins, organism);
 
 		//Filter non uniprot and non current organism
 		interactionsBinary = InteractionUtils.filter(

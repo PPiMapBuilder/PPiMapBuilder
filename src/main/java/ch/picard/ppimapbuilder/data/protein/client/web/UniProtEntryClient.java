@@ -60,7 +60,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public boolean processExecutionException(ExecutionException e) {
+			public boolean processExecutionException(ExecutionException e, Integer index) {
 				e.getCause().printStackTrace();
 				return false;
 			}

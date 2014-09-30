@@ -45,8 +45,9 @@ public class QuickGOClient {
 				// Construct request URL
 				for (URI requestURL : generateRequests(
 						new ArrayList<GeneOntologyTerm>(GOSlimTerms),
-						new ArrayList<Protein>(proteinSet))
-						) {
+						new ArrayList<Protein>(proteinSet)
+					)
+				) {
 					System.out.println(requestURL.toString());
 					System.out.println("Request length : " + requestURL.toString().length());
 
@@ -189,13 +190,10 @@ public class QuickGOClient {
 				}
 			}
 
-			final int GOTERMS_SUBLIST_SIZE = subListOfGOTerms.size();
-			final int PROTEIN_SUBLIST_SIZE = subListOfProtein.size();
-
 			//Create all combinations of subListOfGOTerms and subListOfProtein
 			// => Form a request URL
-			for (int i = 0; i < GOTERMS_SUBLIST_SIZE; i++) {
-				for (int j = 0; j < PROTEIN_SUBLIST_SIZE; j++) {
+			for (List<GeneOntologyTerm> goTerms : subListOfGOTerms) {
+				for (List<Protein> protein : subListOfProtein) {
 					out.add(new URIBuilder()
 									.setScheme("http")
 									.setHost("www.ebi.ac.uk")
@@ -204,8 +202,8 @@ public class QuickGOClient {
 									.addParameter("col", "proteinID,goID,goName,aspect")
 									.addParameter("termUse", "slim")
 									.addParameter("limit", "-1")
-									.addParameter("goid", StringUtils.join(subListOfGOTerms.get(i), ","))
-									.addParameter("protein", StringUtils.join(subListOfProtein.get(j), ","))
+									.addParameter("goid", StringUtils.join(goTerms, ","))
+									.addParameter("protein", StringUtils.join(protein, ","))
 									.build()
 					);
 				}

@@ -1,13 +1,10 @@
 package ch.picard.ppimapbuilder.ui.querywindow.listener;
 
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * 
@@ -20,7 +17,6 @@ public class ReferenceOrganismListener implements ActionListener{
 
 	/**
 	 * Create a reference organism combobox listener with reference to its parent window
-	 * @param window
 	 */
 	public ReferenceOrganismListener(QueryWindow createNetwork) {
 		this.createNetwork = createNetwork;
@@ -35,13 +31,13 @@ public class ReferenceOrganismListener implements ActionListener{
 		JCheckBox check = null;
 
 		// Get the checkbox corresponding to the selected element in combobox
-		for(JCheckBox c : createNetwork.getOgs().getOrganisms().values())
+		for(JCheckBox c : createNetwork.getOtherOrganismSelectionPanel().getOrganisms().values())
 			if(c.getText().equals(select.getSelectedItem()))
 				check = c;
 
 		if(check != null)  {
 			if(previous == null)
-				previous = (JCheckBox) createNetwork.getOgs().getOrganisms().values().toArray()[0];
+				previous = (JCheckBox) createNetwork.getOtherOrganismSelectionPanel().getOrganisms().values().toArray()[0];
 
 			previous.setEnabled(true);
 

@@ -63,11 +63,11 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 		//Get primary interactors via interaction search
 		Set<Protein> interactors = ProteinUtils.newProteins(
-			InteractionUtils.getInteractorsBinary(
-				InteractionUtils.filter(
-					psicquicClient.getByQueries(additionnalQueries),
-					new InteractionUtils.UniProtInteractionFilter()
-				)
+			InteractionUtils.getInteractors(
+					InteractionUtils.filter(
+							psicquicClient.getByQueries(additionnalQueries),
+							new InteractionUtils.UniProtInteractionFilter()
+					)
 			),
 			organism
 		);

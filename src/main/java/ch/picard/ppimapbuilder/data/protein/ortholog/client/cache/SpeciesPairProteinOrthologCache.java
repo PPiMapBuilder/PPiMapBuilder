@@ -78,57 +78,6 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		return null;
 	}
 
-	//@Override
-	public OrthologGroup getOrthologGroup2(Protein protein, Organism organism) throws IOException {
-		if (!cacheDataFile.exists())
-			return null;
-
-		// Create or Check in memory cache before reading file cache
-		if (readCache == null) {
-			synchronized (this) {
-				readCache = new HashMap<Protein, OrthologGroup>();
-			}
-		} else if (readCache.size() > 0 && readCache.containsKey(protein))
-			return readCache.get(protein);
-
-		ObjectInputStream in = null;
-		try {
-			in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
-
-			boolean EOF = false;
-			while (!EOF) {
-				try {
-					OrthologGroup group = (OrthologGroup) in.readObject();
-
-					boolean correctGroup = false;
-					if (!readCache.containsValue(group)) {
-						synchronized (this) {
-							for(Protein ortholog : group.getProteins()) {
-								if(ortholog.equals(protein))
-									correctGroup = true;
-
-								readCache.put(ortholog, group);
-							}
-						}
-					}
-
-					if (correctGroup || group.contains(protein)) {
-						return group;
-					}
-
-				} catch (EOFException e) {
-					EOF = true;
-				} catch (ClassNotFoundException ignored) {
-				}
-			}
-		} catch (FileNotFoundException ignored) {
-		} finally {
-			if (in != null) in.close();
-		}
-
-		return null;
-	}
-
 	@Override
 	public OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
 		if (!cacheDataFile.exists())
@@ -191,7 +140,8 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	 * Clear memory cache of OrthologGroup read from the file cache
 	 */
 	protected void clearReadCache() {
-		readCache.clear();
+		if(readCache != null)
+			readCache.clear();
 	}
 
 	/**

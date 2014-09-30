@@ -26,6 +26,8 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	private CacheFile orthologCacheIndexFile;
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> orthologCacheIndex;
 
+	public static final int MAX_NB_MEMORY_CACHE = 4;
+
 	/**
 	 * List of SpeciesPairProteinOrthologCache having memory cache
 	 */
@@ -189,7 +191,7 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 
 		if(!speciesPairMemoryCached.contains(cache)) {
 			synchronized(this) {
-				if (speciesPairMemoryCached.size() > 4 && !speciesPairMemoryCached.contains(cache)) {
+				if (speciesPairMemoryCached.size() > MAX_NB_MEMORY_CACHE) {
 					SpeciesPairProteinOrthologCache cache1 = speciesPairMemoryCached.get(0);
 					cache1.clearReadCache();
 					speciesPairMemoryCached.remove(cache1);

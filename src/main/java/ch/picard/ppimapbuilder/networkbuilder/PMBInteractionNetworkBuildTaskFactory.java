@@ -1,5 +1,9 @@
 package ch.picard.ppimapbuilder.networkbuilder;
 
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
+import ch.picard.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyTableFactory;
@@ -11,11 +15,6 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
-import ch.picard.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.Collection;
@@ -36,7 +35,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final VisualMappingManager vmm;
 
 	// Data input from the user
-	private final QueryWindow queryWindow;
+	private final NetworkQueryParameters networkQueryParameters;
 
 	// Data collection for network generation
 	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
@@ -49,7 +48,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public PMBInteractionNetworkBuildTaskFactory(final CyNetworkNaming cyNetworkNaming, final CyNetworkFactory cnf,
 			final CyNetworkManager networkManager, final CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager,
 			final CyLayoutAlgorithmManager layoutManagerServiceRef, final VisualMappingManager visualMappingManager,
-			final QueryWindow queryWindow, final CyTableFactory tableFactory,
+			final NetworkQueryParameters networkQueryParameters, final CyTableFactory tableFactory,
 			final MapTableToNetworkTablesTaskFactory mapTableToNetworkTablesTaskFactory) {
 
 		this.netMgr = networkManager;
@@ -59,7 +58,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.networkViewManager = networkViewManager;
 		this.layoutMan = layoutManagerServiceRef;
 		this.vmm = visualMappingManager;
-		this.queryWindow = queryWindow;
+		this.networkQueryParameters = networkQueryParameters;
 
 		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
 		this.interactorPool = new UniProtEntrySet();
@@ -71,17 +70,22 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	@Override
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
+
+		interactionsByOrg.clear();
+		interactorPool.clear();
+		proteinOfInterestPool.clear();
+
 		return new TaskIterator(
-			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
-			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow, startTime)
+			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, networkQueryParameters),
+			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, networkQueryParameters, startTime)
 		);
 	}
 
-	public void setError_message(String error_message) {
+	public void setErrorMessage(String error_message) {
 		this.error_message = error_message;
 	}
 	
-	public String getError_message() {
+	public String getErrorMessage() {
 		return error_message;
 	}
 	

@@ -2,14 +2,16 @@ package ch.picard.ppimapbuilder.networkbuilder.network;
 
 import ch.picard.ppimapbuilder.data.JSONUtils;
 import ch.picard.ppimapbuilder.data.JSONable;
+import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
@@ -44,7 +46,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final VisualMappingManager vizMapManager;
 
 
-	private final Organism referenceOrganism;
+	private final NetworkQueryParameters networkQueryParameters;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
 	private final UniProtEntrySet proteinOfInterestPool;
@@ -66,7 +68,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			final UniProtEntrySet interactorPool,
 			final UniProtEntrySet proteinOfInterestPool,
-			final QueryWindow queryWindow,
+			final NetworkQueryParameters networkQueryParameters,
 			long startTime
 	) {
 		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
@@ -89,7 +91,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
 		this.proteinOfInterestPool = proteinOfInterestPool;
-		this.referenceOrganism = queryWindow.getSelectedRefOrganism();
+
+		this.networkQueryParameters = networkQueryParameters;
 
 		this.nodeNameMap = new HashMap<String, CyNode>();
 
@@ -104,7 +107,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		monitor.setStatusMessage("Building Cytoscape network...");
 		monitor.setProgress(1.0);
 
-		if (!interactionsByOrg.get(referenceOrganism).isEmpty() && !interactionsByOrg.isEmpty()) {
+		if (!interactionsByOrg.get(networkQueryParameters.getReferenceOrganism()).isEmpty() && !interactionsByOrg.isEmpty()) {
 
 			// Create an empty network
 			CyNetwork network = networkFactory.createNetwork();
@@ -112,8 +115,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 			CyTable networkTable = network.getDefaultNetworkTable();
 			networkTable.createColumn("created by", String.class, true);
+			networkTable.createColumn("reference organism", String.class, true);
+			networkTable.createListColumn("other organisms", String.class, true);
+			networkTable.createListColumn("source databases", String.class, true);
 			networkTable.createColumn("build time (seconds)", Integer.class, true);
+
 			network.getRow(network).set("created by", "PPiMapBuilder");
+			network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
+			network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
+			network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
 
 			//Create nodes using interactors pool
 			createNodes(network);
@@ -223,7 +233,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		edgeTable.createColumn("interolog", String.class, false);
 
 		for (Organism organism : interactionsByOrg.keySet()) {
-			boolean inRefOrg = (organism.equals(referenceOrganism));
+			boolean inRefOrg = (organism.equals(networkQueryParameters.getReferenceOrganism()));
 			for (EncoreInteraction interaction : interactionsByOrg.get(organism)) {
 				String nodeAName = "", nodeBName = "";
 				CyNode nodeA = null, nodeB = null;
