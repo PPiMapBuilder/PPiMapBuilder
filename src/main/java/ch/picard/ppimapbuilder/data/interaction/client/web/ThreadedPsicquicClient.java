@@ -21,44 +21,58 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * An advanced PSICQUIC simple client capable of querying multiple service with multiple thread.<br/>
+ * A PSICQUIC client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
-public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
+public class ThreadedPsicquicClient extends AbstractThreadedClient {
 
+	// Clients for each services
 	private final Map<PsicquicService, PsicquicSimpleClient> clients;
+
+	// PSIMI-Tab reader
 	private final PsimiTabReader mitabReader = new PsimiTabReader();
 
-	private final ExecutorService Lvl1ExecutorService;
-	private final ExecutorService Lvl2ExecutorService;
+	// Executor services
+	private final ExecutorService lvl1ExecutorService;
+	private final Map<ExecutorService, Boolean> lvl2ExecutorServices;
 
 	/**
 	 * Constructs a new ThreadedPsicquicSimpleClient
 	 * @param services list of PSICQUIC services that will be use during query
 	 */
-	public ThreadedPsicquicSimpleClient(List<PsicquicService> services) {
-		this(services, null);
-	}
-
-	/**
-	 * Constructs a new ThreadedPsicquicSimpleClient
-	 * @param services list of PSICQUIC services that will be use during query
-	 */
-	public ThreadedPsicquicSimpleClient(List<PsicquicService> services, Integer nbThread) {
-		super(nbThread);
-
-		this.Lvl1ExecutorService = newThreadPool();
-		this.Lvl2ExecutorService = newThreadPool();
+	public ThreadedPsicquicClient(List<PsicquicService> services, Integer maxNumberThread) {
+		super(maxNumberThread);
 
 		clients = new HashMap<PsicquicService, PsicquicSimpleClient>(services.size());
 		for(PsicquicService service : services) {
 			clients.put(service, new PsicquicSimpleClient(service.getRestUrl()));
 		}
+
+		this.lvl1ExecutorService = newThreadPool();
+		this.lvl2ExecutorServices = new HashMap<ExecutorService, Boolean>();
+		for(int i = 0; i < maxNumberThread; i++) {
+			this.lvl2ExecutorServices.put(newThreadPool(maxNumberThread * 2), false);
+		}
+	}
+
+	private ExecutorService getNotRunningLvl2ExecutorService() {
+		for (ExecutorService lvl2ExecutorService : lvl2ExecutorServices.keySet()) {
+			if(!lvl2ExecutorServices.get(lvl2ExecutorService)) {
+				lvl2ExecutorServices.put(lvl2ExecutorService, true);
+				return lvl2ExecutorService;
+			}
+		}
+		return newThreadPool();
 	}
 
 	protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
 		return (List<BinaryInteraction>) mitabReader.read(
-				clients.get(service).getByQuery(query, PsicquicSimpleClient.MITAB25)
+				clients
+						.get(service)
+						.getByQuery(
+								query,
+								PsicquicSimpleClient.MITAB25
+						)
 		);
 	}
 
@@ -69,7 +83,8 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 		final List<PsicquicService> services = new ArrayList<PsicquicService>(clients.keySet());
 
 		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		new ConcurrentExecutor<List<BinaryInteraction>>(Lvl1ExecutorService, services.size()) {
+		final ExecutorService executorService = getNotRunningLvl2ExecutorService();
+		new ConcurrentExecutor<List<BinaryInteraction>>(executorService, services.size()) {
 			@Override
 			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
 				return new Callable<List<BinaryInteraction>>() {
@@ -86,12 +101,12 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 							} catch (Exception e) {
 								error = e;
 								// System.out.println("Retrying "+service.getName()+" interaction query");
-							} finally {
-								if (++i >= MAX_TRY)
-									if(error != null)
-										throw error;
-									else break;
 							}
+
+							if (++i >= MAX_TRY) {
+								if(error != null)
+									throw error;
+							} else break;
 						}
 
 						return result;
@@ -115,7 +130,7 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 							System.err.println(services.get(index).getName()+" server error");
 					}
 					else if(cause instanceof UnknownHostException) {
-						//No internet connection to the database
+						//No internet connection to the database (no internet or server no longer exists)
 						if(index != null)
 							System.err.println(services.get(index).getName()+" connection failed");
 					}
@@ -126,18 +141,19 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 			}
 		}.run();
 
+		lvl2ExecutorServices.put(executorService, false);
 		return results;
 	}
 	
 	/**
 	 * Gets cumulative list of interaction from a list of MiQL query
 	 */
-	public List<BinaryInteraction> getByQueries(final Collection<String> queries) throws Exception {
+	public synchronized List<BinaryInteraction> getByQueries(final Collection<String> queries) throws Exception {
 
 		final List<String> queryList = new ArrayList<String>(queries);
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 
-		new ConcurrentExecutor<List<BinaryInteraction>>(Lvl2ExecutorService, queryList.size()) {
+		new ConcurrentExecutor<List<BinaryInteraction>>(lvl1ExecutorService, queryList.size()) {
 			@Override
 			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
 				return new Callable<List<BinaryInteraction>>() {
@@ -177,8 +193,7 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 		baseQuery.setRoot(true);
 		baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
 
-		// baseInteractionQuery.addParam(new MiQLParameterBuilder("type",
-		// "association"));
+		// baseInteractionQuery.addParam(new MiQLParameterBuilder("type", "association"));
 
 		// Create idA and idB parameters
 		MiQLParameterBuilder idA, idB;
@@ -261,5 +276,4 @@ public class ThreadedPsicquicSimpleClient extends AbstractThreadedClient {
 		// Executing all MiQL queries using ThreadedPsicquicSimpleClient
 		return getByQueries(queries);
 	}
-
 }

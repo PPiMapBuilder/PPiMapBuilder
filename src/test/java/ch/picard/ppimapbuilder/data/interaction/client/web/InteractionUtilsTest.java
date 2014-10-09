@@ -13,26 +13,23 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 public class InteractionUtilsTest {
 
 	private static List<BinaryInteraction> sampleBinaryInteractions;
-	private static List<PsicquicService> services;
+	private static final List<PsicquicService> services = Arrays.asList(
+			new PsicquicService("IntAct", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("BioGrid", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("BIND", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("DIP", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("MINT", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+	);
 
 	@BeforeClass
 	public static void init() throws IOException, PsimiTabException {
-		services = new ArrayList<PsicquicService>() {{
-			add(PsicquicRegistry.getInstance().getService("intact", false));
-			add(PsicquicRegistry.getInstance().getService("bind", false));
-//			add(PsicquicRegistry.getInstance().getService("biogrid", false));
-//			add(PsicquicRegistry.getInstance().getService("uniprot", false));
-//			add(PsicquicRegistry.getInstance().getService("dip", false));
-//			add(PsicquicRegistry.getInstance().getService("apid", false));
-//			add(PsicquicRegistry.getInstance().getService("mint", false));
-		}};
-
 		PsicquicSimpleClient client = new PsicquicSimpleClient(PsicquicRegistry.getInstance().getService("intact", false).getRestUrl());
 		PsimiTabReader mitabReader = new PsimiTabReader();
 		InputStream result = client.getByQuery("P04040", PsicquicSimpleClient.MITAB25);
@@ -51,7 +48,7 @@ public class InteractionUtilsTest {
 	public void networkExpansion() throws Exception {
 		List<BinaryInteraction> res;
 		Set<String> prots;
-		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(services, 5);
+		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, 5);
 		MiQLParameterBuilder query = new MiQLParameterBuilder("identifier", "P04040");
 
 		int i = 0;
@@ -69,7 +66,7 @@ public class InteractionUtilsTest {
 
 	@Test
 	public void testFilterNonUniProt() throws Exception {
-		ThreadedPsicquicSimpleClient client = new ThreadedPsicquicSimpleClient(PsicquicRegistry.getInstance().getServices(), 3);
+		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, 3);
 		List<BinaryInteraction> byQuery = client.getByQuery("id:P04040");
 
 		System.out.println(byQuery.size());

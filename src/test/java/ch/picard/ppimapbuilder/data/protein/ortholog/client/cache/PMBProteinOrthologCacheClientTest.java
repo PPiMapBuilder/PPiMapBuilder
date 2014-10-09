@@ -1,8 +1,5 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
-import junit.framework.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import ch.picard.ppimapbuilder.TestUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
@@ -11,9 +8,15 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import junit.framework.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PMBProteinOrthologCacheClientTest {
 	//Test organisms
@@ -35,7 +38,7 @@ public class PMBProteinOrthologCacheClientTest {
 	private static File testFolderOutput;
 
 	private static PMBProteinOrthologCacheClient cache;
-	private static ThreadedProteinOrthologClientDecorator threadedCache;
+	private ThreadedProteinOrthologClientDecorator threadedCache;
 
 	@BeforeClass
 	public static void before() throws IOException {
@@ -57,30 +60,10 @@ public class PMBProteinOrthologCacheClientTest {
 		H9L027 = new Protein("H9L027", gallus);
 
 		cache = PMBProteinOrthologCacheClient.getInstance();
-		cache.addOrthologGroup(
-			new OrthologGroup(
-				new OrthologScoredProtein(P10144, 1d),
-				new OrthologScoredProtein(P04187, 1d)
-			)
-		);
-		cache.addOrthologGroup(
-				new OrthologGroup(
-						new OrthologScoredProtein(P10144, 1d),
-						new OrthologScoredProtein(H9L027, 1d)
-				)
-		);
-		cache.addOrthologGroup(
-				new OrthologGroup(
-						new OrthologScoredProtein(P04187, 1d),
-						new OrthologScoredProtein(H9L027, 1d)
-				)
-		);
-
-		threadedCache = new ThreadedProteinOrthologClientDecorator(cache);
 	}
 
 	@Test
-	public void testAdd() throws Exception {
+	public void testAddGet() throws Exception {
 		Protein expected;
 		Protein actual;
 
@@ -92,13 +75,13 @@ public class PMBProteinOrthologCacheClientTest {
 
 		//Get the ortholog from human catalase in mouse
 		expected = P24270;
-		actual = cache.getOrtholog(P04040, P24270.getOrganism(), 1d);
+		actual = cache.getOrtholog(P04040, P24270.getOrganism(), minimumScore);
 		Assert.assertEquals(expected, actual);
 
 		//Get the ortholog from mouse catalase to human
 		//Order doesn't matter so it should work same as above
 		expected = P04040;
-		actual = cache.getOrtholog(P24270, P04040.getOrganism(), 1d);
+		actual = cache.getOrtholog(P24270, P04040.getOrganism(), minimumScore);
 		Assert.assertEquals(expected, actual);
 
 
@@ -110,19 +93,48 @@ public class PMBProteinOrthologCacheClientTest {
 
 		//Get the ortholog from human catalase in cock
 		expected = F1NGJ7;
-		actual = cache.getOrtholog(P04040, F1NGJ7.getOrganism(), 1d);
+		actual = cache.getOrtholog(P04040, F1NGJ7.getOrganism(), minimumScore);
 		Assert.assertEquals(expected, actual);
 
 		//Get the ortholog from cock catalase in human
 		expected = P04040;
-		actual = cache.getOrtholog(F1NGJ7, P04040.getOrganism(), 1d);
+		actual = cache.getOrtholog(F1NGJ7, P04040.getOrganism(), minimumScore);
 		Assert.assertEquals(expected, actual);
 
 		//Get the ortholog from cock catalase in mouse
 		//Shouldn't work as the orthology relation is not transitive
 		expected = null;
-		actual = cache.getOrtholog(F1NGJ7, P24270.getOrganism(), 1d);
+		actual = cache.getOrtholog(F1NGJ7, P24270.getOrganism(), minimumScore);
 		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testThreadedGet() throws Exception {
+		cache.addOrthologGroup(
+				new OrthologGroup(
+						new OrthologScoredProtein(P10144, 1d),
+						new OrthologScoredProtein(P04187, 1d)
+				)
+		);
+		cache.addOrthologGroup(
+				new OrthologGroup(
+						new OrthologScoredProtein(P10144, 1d),
+						new OrthologScoredProtein(H9L027, 1d)
+				)
+		);
+
+		for(int nbThread = 1 ; nbThread <= 4; nbThread++) {
+			threadedCache = new ThreadedProteinOrthologClientDecorator(cache, nbThread);
+
+			Map<Organism, OrthologScoredProtein> expected = new HashMap<Organism, OrthologScoredProtein>();
+			expected.put(mouse, cache.getOrtholog(P10144, mouse, minimumScore));
+			expected.put(gallus, cache.getOrtholog(P10144, gallus, minimumScore));
+
+			Map<Organism, OrthologScoredProtein> actual =
+					threadedCache.getOrthologsMultiOrganism(P10144, Arrays.asList(mouse, gallus), minimumScore);
+
+			Assert.assertEquals(expected, actual);
+		}
 	}
 
 }

@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.List;
 
 /**
- * @authorGeorgios Migdos <cyberpython@gmail.com>
+ * @author Georgios Migdos <cyberpython@gmail.com>
  */
 public class JSearchTextField extends JIconTextField implements FocusListener {
 
@@ -45,7 +45,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	/**
 	 * List contained in the drop-down dialog.
 	 */
-	private JList list;
+	private JList<String> list;
 
 	/**
 	 * Vectors containing the original data and the filtered data for the
@@ -57,7 +57,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	 * Separate matcher-thread, prevents the text-field from hanging while the
 	 * suggestions are beeing prepared.
 	 */
-	private InterruptableMatcher matcher;
+	private IncorruptibleMatcher matcher;
 
 	/**
 	 * Fonts used to indicate that the text-field is processing the request,
@@ -82,7 +82,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	private String hint;
 
 	/**
-	 * Listeners, fire event when a selection as occured
+	 * Listeners, fire event when a selection as occurred
 	 */
 	private LinkedList<ActionListener> listeners;
 
@@ -181,7 +181,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		d.setUndecorated(true);
 		d.setFocusableWindowState(false);
 		d.setFocusable(false);
-		list = new JList();
+		list = new JList<String>();
 		list.setOpaque(false);
 		list.addMouseListener(new MouseListener() {
 			private int selected;
@@ -191,7 +191,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 				if (selected == list.getSelectedIndex()) {
 					// provide double-click for selecting a suggestion
 					setText((String) list.getSelectedValue());
-					lastChosenExistingVariable = list.getSelectedValue().toString();
+					lastChosenExistingVariable = list.getSelectedValue();
 					fireActionEvent();
 					d.setVisible(false);
 				}
@@ -261,13 +261,13 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			location = getLocationOnScreen();
 			location.y += 30;
 			d.setLocation(location);
-		} catch (IllegalComponentStateException e) {}
+		} catch (IllegalComponentStateException ignored) {}
 	}
 
 	public void fireEnterPressed() {
 		if (list.getSelectedValue() != null) {
-			setText((String) list.getSelectedValue());
-			lastChosenExistingVariable = list.getSelectedValue().toString();
+			setText(list.getSelectedValue());
+			lastChosenExistingVariable = list.getSelectedValue();
 		}
 		fireActionEvent();
 		d.setVisible(false);
@@ -328,7 +328,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		}
 		Collections.sort(data);
 		this.data = data;
-		list.setListData(data.toArray());
+		list.setListData(data.toArray(new String[data.size()]));
 		return true;
 	}
 
@@ -345,7 +345,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		super.paintComponent(g);
 
 		if (!this.hasFocus() && this.getText().equals("")) {
-			int width = this.getWidth();
+			//int width = this.getWidth();
 			int height = this.getHeight();
 			Font prev = g.getFont();
 			Font italic = prev.deriveFont(Font.ITALIC);
@@ -389,7 +389,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 		if (matcher != null) {
 			matcher.stop = true;
 		}
-		matcher = new InterruptableMatcher();
+		matcher = new IncorruptibleMatcher();
 		//matcher.start();
 		SwingUtilities.invokeLater(matcher);
 		lastWord = getText();
@@ -413,8 +413,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 			location = getLocationOnScreen();
 			location.y += getHeight();
 			d.setLocation(location);
-		} catch (IllegalComponentStateException e) {
-		}
+		} catch (IllegalComponentStateException ignored) {}
 	}
 
 
@@ -425,7 +424,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 	 * interrupted, so it won't process older requests while there's already a
 	 * new one.
 	 */
-	private class InterruptableMatcher extends Thread {
+	private class IncorruptibleMatcher extends Thread {
 		/**
 		 * flag used to stop the thread
 		 */
@@ -456,7 +455,7 @@ public class JSearchTextField extends JIconTextField implements FocusListener {
 				}
 				setFont(regular);
 				if (suggestions.size() > 0) {
-					list.setListData(suggestions.toArray());
+					list.setListData(suggestions.toArray(new String[suggestions.size()]));
 					list.setSelectedIndex(0);
 					list.ensureIndexIsVisible(0);
 					d.setVisible(true);

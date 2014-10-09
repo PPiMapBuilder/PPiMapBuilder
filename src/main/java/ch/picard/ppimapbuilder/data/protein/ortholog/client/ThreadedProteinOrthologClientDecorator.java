@@ -16,19 +16,32 @@ import java.util.concurrent.*;
  */
 public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClient implements ThreadedProteinOrthologClient {
 
+	// Decorated protein ortholog client
 	private final ProteinOrthologClient proteinOrthologClient;
-	private final ExecutorService Lvl1ExecutorService;
-	private final ExecutorService Lvl2ExecutorService;
 
-	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient, int maxNumberThread) {
+	// Executor services
+	private final ExecutorService lvl1ExecutorService;
+	private final Map<ExecutorService, Boolean> lvl2ExecutorServices;
+
+	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient, Integer maxNumberThread) {
 		super(maxNumberThread);
 		this.proteinOrthologClient = proteinOrthologClient;
-		this.Lvl1ExecutorService = newThreadPool(maxNumberThread * 2);
-		this.Lvl2ExecutorService = newThreadPool();
+
+		this.lvl1ExecutorService = newThreadPool();
+		this.lvl2ExecutorServices = new HashMap<ExecutorService, Boolean>();
+		for(int i = 0; i < maxNumberThread; i++) {
+			this.lvl2ExecutorServices.put(newThreadPool(), false);
+		}
 	}
 
-	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient) {
-		this(proteinOrthologClient, 9);
+	private ExecutorService getNotRunningLvl2ExecutorService() {
+		for (ExecutorService lvl2ExecutorService : lvl2ExecutorServices.keySet()) {
+			if(!lvl2ExecutorServices.get(lvl2ExecutorService)) {
+				lvl2ExecutorServices.put(lvl2ExecutorService, true);
+				return lvl2ExecutorService;
+			}
+		}
+		return newThreadPool();
 	}
 
 	@Override
@@ -57,7 +70,9 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 		final HashMap<Organism, OrthologScoredProtein> orthologs = new HashMap<Organism, OrthologScoredProtein>();
 		final List<Organism> organismList = new ArrayList<Organism>(organisms);
 
-		new ConcurrentExecutor<OrthologScoredProtein>(Lvl1ExecutorService, organisms.size()) {
+		final ExecutorService executorService = getNotRunningLvl2ExecutorService();
+
+		new ConcurrentExecutor<OrthologScoredProtein>(executorService, organisms.size()) {
 			@Override
 			public Callable<OrthologScoredProtein> submitRequests(final int index) {
 				return new Callable<OrthologScoredProtein>() {
@@ -74,6 +89,8 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 			}
 		}.run();
 
+		lvl2ExecutorServices.put(executorService, false);
+
 		return orthologs;
 	}
 
@@ -86,14 +103,14 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 	 * @return @code{Map} of ortholog proteins indexed by organism indexed by source protein
 	 */
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
+	public synchronized Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrthologsMultiOrganism()} for each given source protein
 		 */
 		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
 		final HashMap<Protein, Map<Organism, OrthologScoredProtein>> out = new HashMap<Protein, Map<Organism, OrthologScoredProtein>>();
 
-		new ConcurrentExecutor<Map<Organism, OrthologScoredProtein>>(Lvl2ExecutorService, proteinList.size()) {
+		new ConcurrentExecutor<Map<Organism, OrthologScoredProtein>>(lvl1ExecutorService, proteinList.size()) {
 			@Override
 			public Callable<Map<Organism, OrthologScoredProtein>> submitRequests(final int index) {
 				return new Callable<Map<Organism, OrthologScoredProtein>>() {

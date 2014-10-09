@@ -10,18 +10,10 @@ import java.util.concurrent.Executors;
  */
 public abstract class AbstractThreadedClient {
 	protected Integer maxNumberThread;
-	private List<ExecutorService> executorServices;
+	private final List<ExecutorService> executorServices;
 
 	public AbstractThreadedClient(Integer maxNumberThread) {
 		this.executorServices = new ArrayList<ExecutorService>();
-		this.maxNumberThread = maxNumberThread;
-	}
-
-	public AbstractThreadedClient() {
-		this(null);
-	}
-
-	public void setMaxNumberThread(Integer maxNumberThread) {
 		this.maxNumberThread = maxNumberThread;
 	}
 
@@ -32,8 +24,7 @@ public abstract class AbstractThreadedClient {
 	protected ExecutorService newThreadPool() {
 		ExecutorService executorService = maxNumberThread != null ?
 				newThreadPool(maxNumberThread) :
-				Executors.newCachedThreadPool();
-		executorServices.add(executorService);
+				null;
 		return executorService;
 	}
 

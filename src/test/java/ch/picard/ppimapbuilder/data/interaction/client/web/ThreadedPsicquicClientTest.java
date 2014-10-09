@@ -5,6 +5,7 @@ import ch.picard.ppimapbuilder.data.PairUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
 import org.junit.Assert;
 import org.junit.Test;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -12,135 +13,150 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class ThreadedPsicquicSimpleClientTest {
+public class ThreadedPsicquicClientTest {
 
 	private static final List<PsicquicService> services = Arrays.asList(
-			new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-			, new PsicquicService("BioGrid", null, "http://tyersrest.tyerslab.com:8805/psicquic/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-			, new PsicquicService("BIND", null, "http://webservice.baderlab.org:8480/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-			, new PsicquicService("DIP", null, "http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-			, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+			new PsicquicService("IntAct", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("BioGrid", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("BIND", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("DIP", null, "", "true", "1", "", "", "true", new ArrayList<String>())
+			, new PsicquicService("MINT", null, "", "true", "1", "", "", "true", new ArrayList<String>())
 	);
 
 	@Test
 	public void testGetByQuery() throws Exception {
-		final String query = "identifier:P04040";
+		for(int nbThread = 1; nbThread <= 10; nbThread++) {
+			final String query = "identifier:P04040";
 
-		final Map<PsicquicService, String> expected = new HashMap<PsicquicService, String>() {{
-			for(PsicquicService service : services) {
-				put(service, query);
-			}
-		}};
+			final Map<String, String> expected = new HashMap<String, String>() {{
+				for (PsicquicService service : services) {
+					put(service.getName(), query);
+				}
+			}};
 
-		final Map<PsicquicService, String> actual = new HashMap<PsicquicService, String>();
-		new ThreadedPsicquicSimpleClient(services, 3){
-			@Override
-			protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
-				actual.put(service, query);
-				return null;
-			}
-		}.getByQuery(query);
+			final Map<String, String> actual = new HashMap<String, String>();
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+				@Override
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+					actual.put(service.getName(), query);
+					return null;
+				}
+			};
+			client.getByQuery(query);
 
-		Assert.assertEquals(expected, actual);
+			Assert.assertEquals(expected, actual);
+		}
 	}
 
 	@Test
 	public void testGetByQueries() throws Exception {
-		final Set<String> queries = new HashSet<String>(Arrays.asList(
+		final Set<String> queries = new TreeSet<String>(Arrays.asList(
 				"identifier:P04040",
 				"identifier:P61106",
 				"identifier:Q70EK8"
 		));
 
-		final Map<PsicquicService, Set<String>> expected = new HashMap<PsicquicService, Set<String>>() {{
-			for(PsicquicService service : services) {
-				put(service, queries);
+		final Map<String, Set<String>> expected = new TreeMap<String, Set<String>>() {{
+			for (PsicquicService service : services) {
+				put(service.getName(), queries);
 			}
 		}};
 
-		final Map<PsicquicService, Set<String>> actual = new HashMap<PsicquicService, Set<String>>();
-		new ThreadedPsicquicSimpleClient(services, 3){
-			@Override
-			protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
-				if(!actual.containsKey(service))
-					actual.put(service, new HashSet<String>());
+		Error error = null;
+		for(int nbThread = 1; nbThread <= 10; nbThread++) {
+			final Map<String, Set<String>> actual = new TreeMap<String, Set<String>>();
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+				@Override
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+					if (!actual.containsKey(service.getName()))
+						actual.put(service.getName(), new TreeSet<String>());
 
-				if(!actual.get(service).add(query))
-					Assert.fail("Duplicated query");
+					if (!actual.get(service.getName()).add(query))
+						Assert.fail("Duplicated query");
 
-				return null;
+					return null;
+				}
+			};
+			client.getByQueries(queries);
+
+			try {
+				Assert.assertEquals(expected, actual);
+			} catch (AssertionError e) {
+				error = e;
+				e.printStackTrace();
 			}
-		}.getByQueries(queries);
+		}
 
-		Assert.assertEquals(expected, actual);
+		if(error != null)
+			throw error;
 	}
 
 
 	@Test
 	public void testGetInteractionsInProteinPool() throws Exception {
-		final Set<Pair<String>> expected = PairUtils.createCombinations(new HashSet<String>(ProteinUtils.asIdentifiers(proteins)), true, false);
+		final Set<Set<String>> expected = new HashSet<Set<String>>() {{
+			for (Pair<String> pair : PairUtils.createCombinations(new HashSet<String>(ProteinUtils.asIdentifiers(proteins)), true, false)) {
+				add(new HashSet<String>(Arrays.asList(pair.getFirst(), pair.getSecond())));
+			}
+		}};
 
-		final Set<Pair<String>> actual = new HashSet<Pair<String>>();
+		for(int nbThread = 1; nbThread <= 10; nbThread++) {
+			final Set<Pair<String>> result = new TreeSet<Pair<String>>();
 
-		final Pattern idAPattern = Pattern.compile(".*idA:\\((.*)\\)\\s.*");
-		final Pattern idBPattern = Pattern.compile(".*idB:\\((.*)\\).*");
+			final Pattern idAPattern = Pattern.compile(".*idA:\\((.*)\\)\\s.*");
+			final Pattern idBPattern = Pattern.compile(".*idB:\\((.*)\\).*");
 
-		final Set<String> treatedQuery = new HashSet<String>();
+			final Set<String> treatedQuery = new HashSet<String>();
 
-		new ThreadedPsicquicSimpleClient(services, 3) {
-			@Override
-			protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
-				synchronized (treatedQuery) {
-					if(treatedQuery.contains(query))
-						return null;
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+				@Override
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+					synchronized (treatedQuery) {
+						if(treatedQuery.contains(query))
+							return null;
 
-					treatedQuery.add(query);
-				}
+						treatedQuery.add(query);
+					}
 
-				Matcher m = idAPattern.matcher(query);
-				m.find();
-				String[] idsA = m.group(1).split("\\s");
-				m = idBPattern.matcher(query);
-				m.find();
-				String[] idsB = m.group(1).split("\\s");
+					Matcher m = idAPattern.matcher(query);
+					m.find();
+					String[] idsA = m.group(1).split("\\s");
+					m = idBPattern.matcher(query);
+					m.find();
+					String[] idsB = m.group(1).split("\\s");
 
-				synchronized (actual) {
-					for(String idA : idsA) {
-						for(String idB: idsB) {
-							if(idA.compareTo(idB) < 0)
-								actual.add(new Pair<String>(idA, idB));
-							else
-								actual.add(new Pair<String>(idB, idA));
+					synchronized (result) {
+						for(String idA : idsA) {
+							for(String idB: idsB) {
+								if(idA.compareTo(idB) < 0)
+									result.add(new Pair<String>(idA, idB));
+								else
+									result.add(new Pair<String>(idB, idA));
 
+							}
 						}
 					}
+
+					return null;
 				}
+			};
+			client.getInteractionsInProteinPool(proteins, human);
 
-				return null;
-			}
-		}.getInteractionsInProteinPool(proteins, human);
+			final Set<Set<String>> actual = new HashSet<Set<String>>() {{
+				for (Pair<String> pair : result) {
+					add(new HashSet<String>(Arrays.asList(pair.getFirst(), pair.getSecond())));
+				}
+			}};
 
-		System.out.println("proteins: " + proteins.size());
-		System.out.println("expected combinations: " + expected.size());
-		System.out.println("actual combinations: " + actual.size());
-
-
-		for (Pair<String> stringPair : expected) {
-			Assert.assertTrue(actual.contains(stringPair));
+			Assert.assertEquals(expected, actual);
 		}
-
-		for (Pair<String> stringPair : actual) {
-			if(!expected.contains(stringPair))
-				System.out.print(stringPair + ", ");
-		}
-		System.out.println();
-
-
-		//Assert.assertEquals(expected, actual);
 	}
 
 	private static final Organism human = new Organism("Homo sapiens", 9606);

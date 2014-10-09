@@ -1,7 +1,7 @@
 package ch.picard.ppimapbuilder.networkbuilder.query;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
-import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicSimpleClient;
+import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
@@ -18,25 +18,29 @@ class SecondaryInteractionQuery implements Callable<SecondaryInteractionQuery> {
 	private final Organism organism;
 	private final UniProtEntrySet proteinPool;
 
-	private final ThreadedPsicquicSimpleClient psicquicClient;
+	private final PMBQueryInteractionTask.ThreadedClientManager threadedClientManager;
 
 	private final List<EncoreInteraction> interactions;
 
+	private final ThreadedPsicquicClient psicquicClient;
+
 	SecondaryInteractionQuery(
 			Organism organism, UniProtEntrySet proteinPool,
-			ThreadedPsicquicSimpleClient psicquicClient
+			PMBQueryInteractionTask.ThreadedClientManager threadedClientManager
 	) {
 		this.organism = organism;
 		this.proteinPool = proteinPool;
 
-		this.psicquicClient = psicquicClient;
+		this.threadedClientManager = threadedClientManager;
 
 		this.interactions = new ArrayList<EncoreInteraction>();
+		this.psicquicClient = threadedClientManager.registerPsicquicClient();
 	}
 
 	public SecondaryInteractionQuery call() throws Exception {
 		//Get proteins in the current organism
-		final Set<Protein> proteins = proteinPool.getInOrg(organism);
+		final Set<Protein> proteins = proteinPool.getInOrg(organism).keySet();
+
 
 		//Get secondary interactions
 		List<BinaryInteraction> interactionsBinary = psicquicClient.getInteractionsInProteinPool(proteins, organism);
@@ -53,6 +57,7 @@ class SecondaryInteractionQuery implements Callable<SecondaryInteractionQuery> {
 				interactionsBinary
 		));
 
+		threadedClientManager.unRegister(psicquicClient);
 		return this;
 	}
 

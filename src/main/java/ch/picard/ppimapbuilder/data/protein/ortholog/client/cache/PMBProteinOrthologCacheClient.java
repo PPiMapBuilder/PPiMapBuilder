@@ -26,6 +26,9 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	private CacheFile orthologCacheIndexFile;
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> orthologCacheIndex;
 
+	/**
+	 * Maximum number of species pair cache that can store a reading cache.
+	 */
 	public static final int MAX_NB_MEMORY_CACHE = 4;
 
 	/**
@@ -64,6 +67,7 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	/**
 	 * Loads or creates the PMB orthology cache index form file "ortholog-cache.idx"
 	 */
+	@SuppressWarnings("unchecked")
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> load() throws IOException {
 		HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> index = null;
 
@@ -120,8 +124,6 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile.getOrCreateFile()));
 
 			out.writeObject(orthologCacheIndex);
-		} catch (IOException e) {
-			throw e;
 		} finally {
 			if (out != null) out.close();
 		}
@@ -157,47 +159,41 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	}
 
 	/**
-	 * Gets the species pair ortholog cache from the ortholog index or create it using a species couple.
+	 * Gets the species pair ortholog cache from the ortholog index or create it using a species pair.
 	 */
-	public SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
+	public synchronized SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		//First organism exists in index?
 		HashMap<Organism, SpeciesPairProteinOrthologCache> d = this.orthologCacheIndex.get(organismA);
 		if (d == null) {
-			synchronized(this) {
-				//Doesn't exist, create an index entry
-				this.orthologCacheIndex.put(organismA, (d = new HashMap<Organism, SpeciesPairProteinOrthologCache>()));
-			}
+			//Doesn't exists, create an index entry
+			this.orthologCacheIndex.put(organismA, (d = new HashMap<Organism, SpeciesPairProteinOrthologCache>()));
 		}
 
 		//Second organism leads to the organism pair orthology cache?
 		SpeciesPairProteinOrthologCache cache = d.get(organismB);
 		if (cache == null) {
-			//Doesn't exist, create a cache
+			//Doesn't exists, create a cache
 			cache = new SpeciesPairProteinOrthologCache(organismA, organismB);
 
-			synchronized(this) {
-				d.put(organismB, cache);
+			d.put(organismB, cache);
 
-				HashMap<Organism, SpeciesPairProteinOrthologCache> f = this.orthologCacheIndex.get(organismB);
-				if (f == null)
-					this.orthologCacheIndex.put(organismB, (f = new HashMap<Organism, SpeciesPairProteinOrthologCache>()));
+			HashMap<Organism, SpeciesPairProteinOrthologCache> f = this.orthologCacheIndex.get(organismB);
+			if (f == null)
+				this.orthologCacheIndex.put(organismB, (f = new HashMap<Organism, SpeciesPairProteinOrthologCache>()));
 
-				f.put(organismA, cache);
+			f.put(organismA, cache);
 
-				//Save index
-				save();
-			}
+			//Save index
+			save();
 		}
 
 		if(!speciesPairMemoryCached.contains(cache)) {
-			synchronized(this) {
-				if (speciesPairMemoryCached.size() > MAX_NB_MEMORY_CACHE) {
-					SpeciesPairProteinOrthologCache cache1 = speciesPairMemoryCached.get(0);
-					cache1.clearReadCache();
-					speciesPairMemoryCached.remove(cache1);
-				}
-				speciesPairMemoryCached.add(cache);
+			if (speciesPairMemoryCached.size() > MAX_NB_MEMORY_CACHE) {
+				SpeciesPairProteinOrthologCache cache1 = speciesPairMemoryCached.get(0);
+				cache1.clearReadCache();
+				speciesPairMemoryCached.remove(cache1);
 			}
+			speciesPairMemoryCached.add(cache);
 		}
 
 		return cache;

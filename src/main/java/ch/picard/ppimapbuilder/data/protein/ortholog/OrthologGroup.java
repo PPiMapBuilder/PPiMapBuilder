@@ -8,7 +8,7 @@ import java.util.*;
 
 /**
  * Data structure representing a group of proteins orthologous with each other.
- * Inspired by the OrthoXML specifications (but not compliant with them at all).
+ * Inspired by the OrthoXML specifications (but not compliant with them).
  */
 public class OrthologGroup implements Serializable {
 

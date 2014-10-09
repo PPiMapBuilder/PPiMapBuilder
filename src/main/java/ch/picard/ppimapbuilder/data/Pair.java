@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Convenient class to store object by pair
  */
-public class Pair<T> {
+public class Pair<T> implements Comparable<Pair<T>> {
 
 	private final T first;
 	private final T second;
@@ -59,5 +59,10 @@ public class Pair<T> {
 	@Override
 	public String toString() {
 		return "Pair["+first.toString()+", "+second.toString()+"]";
+	}
+
+	@Override
+	public int compareTo(Pair<T> o) {
+		return toString().compareTo(o.toString());
 	}
 }

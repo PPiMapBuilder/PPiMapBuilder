@@ -19,7 +19,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	private static final long serialVersionUID = 2L;
 
 	/**
-	 * Indicates if this cache have been loaded entirely from InParanoid (Set to true at the end of an OrthoXML parsing)
+	 * Indicates if this cache have been loaded entirely from InParanoid
 	 */
 	private Boolean full = false;
 
@@ -49,12 +49,8 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 
 			for (OrthologGroup orthologGroup : orthologGroups) {
 				boolean ok = true;
-				if (checkOrthologyExists) {
-					OrthologGroup existingGroup = getOrthologGroup(orthologGroup);
-
-					if (existingGroup != null)
-						ok = false;
-				}
+				if (checkOrthologyExists && orthologGroupExist(orthologGroup))
+					ok = false;
 
 				if (ok) out.writeObject(orthologGroup);
 			}
@@ -63,57 +59,56 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		}
 	}
 
-	private OrthologGroup getOrthologGroup(OrthologGroup orthologGroup) throws IOException {
-		for (Organism organism : orthologGroup.getOrganisms()) {
-			for (Protein protein : orthologGroup.getProteins()) {
-				if (!protein.getOrganism().equals(organism)) {
-					OrthologGroup group = getOrthologGroup(protein, organism);
-
-					if (group != null)
-						return group;
-				}
-			}
-		}
-
-		return null;
+	private boolean orthologGroupExist(OrthologGroup orthologGroup) throws IOException {
+		OrthologGroup group = getOrthologGroup(
+				orthologGroup.getProteins().get(0),
+				orthologGroup.getOrganisms().get(0)
+		);
+		return group != null;
 	}
 
+	/**
+	 * Get the ortholog group of a protein in the species pair. Here the organism parameter doesn't apply.
+	 */
 	@Override
-	public OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
+	public synchronized OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
 		if (!cacheDataFile.exists())
 			return null;
 
+		OrthologGroup result = null;
+
 		// Create or Check in memory cache before reading file cache
-		if (readCache == null || readCache.size() == 0) {
-			synchronized (this) {
-				if(readCache == null)
-					readCache = new HashMap<Protein, OrthologGroup>();
+		if (readCache == null || readCache.size() == 0 || (result = readCache.get(protein)) == null) {
+			if(readCache == null)
+				readCache = new HashMap<Protein, OrthologGroup>();
 
-				ObjectInputStream in = null;
-				try {
-					in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
+			ObjectInputStream in = null;
+			try {
+				in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
 
-					boolean EOF = false;
-					while (!EOF) {
-						try {
-							OrthologGroup group = (OrthologGroup) in.readObject();
+				boolean EOF = false;
+				while (!EOF) {
+					try {
+						OrthologGroup group = (OrthologGroup) in.readObject();
 
-							for(Protein ortholog : group.getProteins()) {
-								readCache.put(ortholog, group);
-							}
+						for(Protein ortholog : group.getProteins()) {
+							readCache.put(ortholog, group);
+						}
 
-						} catch (EOFException e) {
-							EOF = true;
-						} catch (ClassNotFoundException ignored) {}
-					}
-				} catch (FileNotFoundException ignored) {
-				} finally {
-					if (in != null) in.close();
+						if(group.contains(protein))
+							result = group;
+
+					} catch (EOFException e) {
+						EOF = true;
+					} catch (ClassNotFoundException ignored) {}
 				}
+			} catch (FileNotFoundException ignored) {
+			} finally {
+				if (in != null) in.close();
 			}
 		}
 
-		return readCache.get(protein);
+		return result == null ? readCache.get(protein) : result;
 	}
 
 	/**
@@ -125,10 +120,18 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 		full = false;
 	}
 
+	/**
+	 * Get a new loader to completely load the species pair cache (and clearing it before load).
+	 */
 	public Loader newLoader() {
 		return new Loader();
 	}
 
+	/**
+	 * Indicate whether the cache have been totally loaded from InParanoid or not.
+	 * Caches declared as full are trusted to contains all possible orthologs in species pair.
+	 * This is used to tell if the program has to retry the ortholog request using the InParanoid web service.
+	 */
 	public boolean isFull() {
 		if (cacheDataFile.exists())
 			return full;
@@ -150,7 +153,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	 */
 	public class Loader {
 		/**
-		 * Loads a big group of orthologs into the cache
+		 * Loads all orthologGroup of the species pair and declare the cache full.
 		 */
 		public void load(List<OrthologGroup> orthologGroups) throws IOException {
 			//Empty the cache and protein index

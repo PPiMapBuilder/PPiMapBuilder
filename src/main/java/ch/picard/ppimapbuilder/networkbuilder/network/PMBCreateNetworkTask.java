@@ -27,6 +27,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -53,7 +54,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 
 	//Network data
-	private final HashMap<String, CyNode> nodeNameMap;
+	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
 	private final long startTime;
 
 	public PMBCreateNetworkTask(
@@ -94,7 +95,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		this.networkQueryParameters = networkQueryParameters;
 
-		this.nodeNameMap = new HashMap<String, CyNode>();
+		this.nodeNameMap = new HashMap<UniProtEntry, CyNode>();
 
 		this.startTime = startTime;
 	}
@@ -165,9 +166,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createColumn("queried", String.class, false);
 
 		for (UniProtEntry protein : interactorPool) {
-			if (!nodeNameMap.containsKey(protein.getUniProtId())) {
+			if (!nodeNameMap.containsKey(protein)) {
 				CyNode node = network.addNode();
-				nodeNameMap.put(protein.getUniProtId(), node);
+				nodeNameMap.put(protein, node);
 
 				CyRow nodeAttr = network.getRow(node);
 				nodeAttr.set("name", protein.getUniProtId());
@@ -235,27 +236,23 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		for (Organism organism : interactionsByOrg.keySet()) {
 			boolean inRefOrg = (organism.equals(networkQueryParameters.getReferenceOrganism()));
 			for (EncoreInteraction interaction : interactionsByOrg.get(organism)) {
-				String nodeAName = "", nodeBName = "";
 				CyNode nodeA = null, nodeB = null;
+
+				String nodeAName = interaction.getInteractorA("uniprotkb");
+				String nodeBName = interaction.getInteractorB("uniprotkb");
+
 				if (inRefOrg) {
-					nodeAName = interaction.getInteractorA("uniprotkb");
-					nodeBName = interaction.getInteractorB("uniprotkb");
 					nodeA = getNodeFromUniProtId(nodeAName);
 					nodeB = getNodeFromUniProtId(nodeBName);
 				} else {
-					for (UniProtEntry prot : interactorPool) {
-						Protein ortho = prot.getOrtholog(organism);
-						if (ortho != null) {
-							if (interaction.getInteractorA().startsWith(ortho.getUniProtId())) {
-								nodeAName = prot.getUniProtId();
-								nodeA = getNodeFromUniProtId(nodeAName);
-							}
-							if (interaction.getInteractorB().startsWith(ortho.getUniProtId())) {
-								nodeBName = prot.getUniProtId();
-								nodeB = getNodeFromUniProtId(nodeBName);
-							}
+					Map<Protein, UniProtEntry> orthologs = interactorPool.getInOrg(organism);
+					for (Protein ortholog : orthologs.keySet()) {
+						if(ortholog.getUniProtId().contains(nodeAName)) {
+							nodeA = getNodeFromUniProtId(orthologs.get(ortholog).getUniProtId());
 						}
-
+						if(ortholog.getUniProtId().contains(nodeBName)) {
+							nodeB = getNodeFromUniProtId(orthologs.get(ortholog).getUniProtId());
+						}
 						if (nodeA != null && nodeB != null) break;
 					}
 				}
@@ -277,7 +274,6 @@ public class PMBCreateNetworkTask extends AbstractTask {
 							protNameB = r.get("protein_name", String.class);
 						}
 					}
-
 
 					CyRow edgeAttr = network.getRow(myEdge);
 					edgeAttr.set("Interactor_A", nodeAName);
@@ -301,9 +297,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	private CyNode getNodeFromUniProtId(String uniProtId) {
 		String s = ProteinUtils.UniProtId.extractStrictUniProtId(uniProtId);
-		if(s != null)
-			return nodeNameMap.get(s);
-		return null;
+
+		UniProtEntry uniProtEntry = interactorPool.find(s);
+
+		if(uniProtEntry == null)
+			uniProtEntry = interactorPool.findWithAccessions(s);
+
+		return nodeNameMap.get(uniProtEntry);
 	}
 
 	private CyNetworkView applyView(CyNetwork network) {

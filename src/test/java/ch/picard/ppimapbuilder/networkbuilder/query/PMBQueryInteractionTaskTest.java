@@ -6,12 +6,15 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
+import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import org.cytoscape.work.Task;
 import org.junit.Test;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 public class PMBQueryInteractionTaskTest {
 
@@ -22,7 +25,7 @@ public class PMBQueryInteractionTaskTest {
 	Organism human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
 	Organism mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
-	QueryWindow qw = new QueryWindow() {
+	NetworkQueryParameters nqp = new NetworkQueryParameters() {
 		@Override
 		public Organism getReferenceOrganism() {
 			return mouse;
@@ -30,17 +33,17 @@ public class PMBQueryInteractionTaskTest {
 
 		@Override
 		public List<String> getProteinOfInterestUniprotId() {
-			return Arrays.asList("Q8VI75", "Q3THG9", "P04040");
+			return Arrays.asList("O75153", "P04040");
 		}
 
 		@Override
 		public List<PsicquicService> getSelectedDatabases() {
 			return Arrays.asList(
-				new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-				, new PsicquicService("BioGrid", null, "http://tyersrest.tyerslab.com:8805/psicquic/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-				, new PsicquicService("BIND", null, "http://webservice.baderlab.org:8480/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-				, new PsicquicService("DIP", null, "http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
-				, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+					new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+					, new PsicquicService("BioGrid", null, "http://tyersrest.tyerslab.com:8805/psicquic/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+					, new PsicquicService("BIND", null, "http://webservice.baderlab.org:8480/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+					, new PsicquicService("DIP", null, "http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+					, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			);
 		}
 
@@ -52,7 +55,7 @@ public class PMBQueryInteractionTaskTest {
 
 	@Test
 	public void test() throws Exception {
-		Task t = new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, qw);
+		Task t = new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, nqp);
 		t.run(null);
 
 		System.out.println("\n");

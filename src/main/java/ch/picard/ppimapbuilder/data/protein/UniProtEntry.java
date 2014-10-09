@@ -11,6 +11,7 @@ import java.util.Set;
 
 public class UniProtEntry extends Protein {
 
+	transient private final Set<String> accessions;
 	transient private final String geneName;
 	transient private final List<String> synonymGeneNames;
 	transient private final String proteinName;
@@ -23,6 +24,7 @@ public class UniProtEntry extends Protein {
 
 	public UniProtEntry(
 			String uniprotId,
+			Set<String> accessions,
 			String geneName,
 			String ecNumber,
 			Organism organism,
@@ -34,6 +36,7 @@ public class UniProtEntry extends Protein {
 			Set<GeneOntologyTerm> molecularFunctions
 	) {
 		super(uniprotId, organism);
+		this.accessions = accessions;
 		this.proteinName = proteinName;
 		this.ecNumber = ecNumber;
 		this.geneName = geneName;
@@ -128,11 +131,16 @@ public class UniProtEntry extends Protein {
 		return out.toString();
 	}
 
+	public Set<String> getAccessions() {
+		return accessions;
+	}
+
 	public static class Builder {
 
 		final UniProtEntry template;
 
 		String uniprotId = null;
+		Set<String> accessions = null;
 		Organism organism = null;
 		String geneName = null;
 		List<String> synonymGeneNames = null;
@@ -150,6 +158,11 @@ public class UniProtEntry extends Protein {
 
 		public Builder setUniprotId(String uniprotId) {
 			this.uniprotId = uniprotId;
+			return this;
+		}
+
+		public Builder setAccessions(Set<String> accessions) {
+			this.accessions = accessions;
 			return this;
 		}
 
@@ -206,6 +219,7 @@ public class UniProtEntry extends Protein {
 		public UniProtEntry build() {
 			if (template != null) {
 				if (uniprotId == null) uniprotId = template.getUniProtId();
+				if (accessions == null) accessions = template.getAccessions();
 				if (organism == null) organism = template.getOrganism();
 				if (geneName == null) geneName = template.geneName;
 				if (synonymGeneNames == null) synonymGeneNames = template.synonymGeneNames;
@@ -219,6 +233,7 @@ public class UniProtEntry extends Protein {
 			}
 			UniProtEntry uniProtEntry = new UniProtEntry(
 					uniprotId,
+					accessions,
 					geneName,
 					ecNumber,
 					organism,

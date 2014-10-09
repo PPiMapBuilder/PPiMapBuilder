@@ -16,42 +16,53 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 	@Override
 	public void run() {
-		//Initializations
-		final Map<Future<R>, Integer> futuresIndexed = new HashMap<Future<R>, Integer>(nbRequests);
-		final CompletionService<R> completionService = new ExecutorCompletionService<R>(executorService);
+		if (executorService == null) {
+			for (int i = 0; i < nbRequests; i++) {
+				try {
+					processResult(submitRequests(i).call(), i);
+				} catch (Exception e) {
+					if (processExecutionException(new ExecutionException(e), i))
+						break;
+				}
+			}
+		} else {
+			//Initializations
+			final Map<Future<R>, Integer> futuresIndexed = new HashMap<Future<R>, Integer>(nbRequests);
+			final CompletionService<R> completionService = new ExecutorCompletionService<R>(executorService);
 
-		//Submit requests
-		for(int i = 0; i < nbRequests; i++)
-			futuresIndexed.put(completionService.submit(submitRequests(i)), i);
+			//Submit requests
+			for (int i = 0; i < nbRequests; i++)
+				futuresIndexed.put(completionService.submit(submitRequests(i)), i);
 
-		//Process results and errors
-		for (Future<R> ignored : futuresIndexed.keySet()) {
-			Future<R> take = null;
-			Integer index = null;
-			try {
-				if (executorService.isShutdown())
-					break;
+			//Process results and errors
+			for (Future<R> ignored : futuresIndexed.keySet()) {
+				Future<R> take = null;
+				Integer index = null;
+				try {
+					if (executorService.isShutdown())
+						break;
 
-				take = completionService.take();
-				index = futuresIndexed.get(take);
+					take = completionService.take();
+					index = futuresIndexed.get(take);
 
-				R result = take.get();
+					R result = take.get();
 
-				if (result != null)
-					processResult(result, index);
-			} catch (InterruptedException e) {
-				if (processInterruptedException(e))
-					break;
-			} catch (ExecutionException e) {
-				if (processExecutionException(e, index))
-					break;
+					if (result != null)
+						processResult(result, index);
+				} catch (InterruptedException e) {
+					if (processInterruptedException(e))
+						break;
+				} catch (ExecutionException e) {
+					if (processExecutionException(e, index))
+						break;
+				}
 			}
 		}
 	}
 
 	public abstract Callable<R> submitRequests(int index);
 
-	public abstract void processResult(R result, Integer index);
+	public void processResult(R result, Integer index) {}
 
 	public boolean processInterruptedException(InterruptedException e) {
 		e.printStackTrace();

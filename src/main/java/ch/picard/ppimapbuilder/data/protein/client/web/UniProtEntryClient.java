@@ -25,12 +25,8 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 	private static final String UNIPROT_URL = "http://www.uniprot.org/uniprot/";
 
-	public UniProtEntryClient() {
-		super();
-	}
-
-	public UniProtEntryClient(int nbThread) {
-		super(nbThread);
+	public UniProtEntryClient(Integer maxNumberThread) {
+		super(maxNumberThread);
 	}
 
 	/**
@@ -100,13 +96,23 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 				}
 			} while (doc == null && ++pos < MAX_TRY);
 			if (doc == null) throw lastError;
+			if (doc.select("body").get(0).childNodeSize() < 1) {
+				return this;
+			}
 
+			Set<String> accessions = new HashSet<String>();
 			Organism organism = null;
 			String geneName = null;
 			ArrayList<String> synonymGeneNames = new ArrayList<String>();
 			String proteinName = null;
 			String ec_number = null;
 			boolean reviewed = false;
+
+			// ACCESSIONS
+			for (Element e : doc.select("accession")) {
+				accessions.add(e.text());
+			}
+			accessions.add(uniProtId);
 
 			// ORGANISM
 			for (Element e : doc.select("organism")) {
@@ -139,7 +145,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			for (Element e : doc.select("protein")) {
 				if (!e.select("recommendedName").isEmpty()) { // We retrieve the recommended name
 					proteinName = e.select("recommendedName").select("fullName").text();
-				} else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exist, we take the submitted name (usually from TrEMBL but not always)
+				} else if (!e.select("submittedName").isEmpty()) { // If the recommended name does not exists, we take the submitted name (usually from TrEMBL but not always)
 					proteinName = e.select("submittedName").select("fullName").text();
 				}
 				break;
@@ -192,6 +198,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			// PROTEIN CREATION
 			protein = new UniProtEntry(
 					uniProtId,
+					accessions,
 					geneName,
 					ec_number,
 					organism,

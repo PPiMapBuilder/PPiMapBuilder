@@ -16,7 +16,7 @@ public class ThreadedInParanoidClient extends AbstractThreadedClient implements 
 	private final ThreadedProteinOrthologClientDecorator decorator;
 	private final InParanoidClient inParanoidClient;
 
-	public ThreadedInParanoidClient(int maxNumberThread) {
+	public ThreadedInParanoidClient(Integer maxNumberThread) {
 		super(maxNumberThread);
 		inParanoidClient = new InParanoidClient();
 		decorator = new ThreadedProteinOrthologClientDecorator(inParanoidClient, maxNumberThread);
