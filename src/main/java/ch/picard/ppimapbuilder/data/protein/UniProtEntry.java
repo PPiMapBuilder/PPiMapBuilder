@@ -8,7 +8,7 @@ import java.util.*;
 
 public class UniProtEntry extends Protein {
 
-	transient private final Set<String> accessions;
+	transient private final LinkedHashSet<String> accessions;
 	transient private final String geneName;
 	transient private final Set<String> synonymGeneNames;
 	transient private final String proteinName;
@@ -21,7 +21,7 @@ public class UniProtEntry extends Protein {
 
 	public UniProtEntry(
 			String uniprotId,
-			Set<String> accessions,
+			LinkedHashSet<String> accessions,
 			String geneName,
 			String ecNumber,
 			Organism organism,
@@ -143,7 +143,7 @@ public class UniProtEntry extends Protein {
 		return out.toString();
 	}
 
-	public Set<String> getAccessions() {
+	public LinkedHashSet<String> getAccessions() {
 		return accessions;
 	}
 
@@ -158,7 +158,7 @@ public class UniProtEntry extends Protein {
 		private final UniProtEntry template;
 
 		private String uniprotId = null;
-		private Set<String> accessions = null;
+		private LinkedHashSet<String> accessions = null;
 		private Organism organism = null;
 		private String geneName = null;
 		private Set<String> synonymGeneNames = null;
@@ -183,7 +183,7 @@ public class UniProtEntry extends Protein {
 			for (UniProtEntry entry : entries) {
 				if (first) {
 					first = false;
-					accessions = new HashSet<String>(entry.accessions);
+					accessions = new LinkedHashSet<String>(entry.accessions);
 					synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
 					cellularComponents = new HashSet<GeneOntologyTerm>(entry.cellularComponents);
 					biologicalProcesses = new HashSet<GeneOntologyTerm>(entry.biologicalProcesses);
@@ -208,7 +208,7 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder setAccessions(Set<String> accessions) {
+		public Builder setAccessions(LinkedHashSet<String> accessions) {
 			this.accessions = accessions;
 			return this;
 		}

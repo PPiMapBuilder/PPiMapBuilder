@@ -14,10 +14,6 @@ public class UniProtEntrySet extends HashSet<UniProtEntry> {
 			if (prot.getUniProtId().equals(uniprotId))
 				return prot;
 		}
-		return null;
-	}
-
-	public UniProtEntry findWithAccessions(String uniprotId) {
 		for (UniProtEntry prot : this) {
 			if (prot.getAccessions().contains(uniprotId))
 				return prot;
@@ -46,7 +42,7 @@ public class UniProtEntrySet extends HashSet<UniProtEntry> {
 		List<Pair<UniProtEntry>> duplicates = new ArrayList<Pair<UniProtEntry>>();
 
 		for (UniProtEntry uniProtEntry : uniProtEntries) {
-			UniProtEntry existingEntry = findWithAccessions(uniProtEntry.getUniProtId());
+			UniProtEntry existingEntry = find(uniProtEntry.getUniProtId());
 
 			//All new entry
 			if (existingEntry == null) {
@@ -72,6 +68,16 @@ public class UniProtEntrySet extends HashSet<UniProtEntry> {
 		}
 
 		return atLeastOneAdditionMade;
+	}
+
+	public boolean contains(UniProtEntry entry) {
+		if(contains(entry.getUniProtId()))
+			return true;
+		for (String accession : entry.getAccessions()) {
+			if(contains(accession))
+				return true;
+		}
+		return false;
 	}
 
 	public boolean contains(String uniProtId) {

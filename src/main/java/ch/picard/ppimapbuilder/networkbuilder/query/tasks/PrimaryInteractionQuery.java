@@ -116,7 +116,6 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 						continue;
 
 					UniProtEntry entry = proteinPool.find(protInRefOrg.getUniProtId());
-					if (entry == null) entry = proteinPool.findWithAccessions(protInRefOrg.getUniProtId());
 
 					if (entry == null) {
 						entry = uniProtClient.retrieveProteinData(protInRefOrg.getUniProtId());

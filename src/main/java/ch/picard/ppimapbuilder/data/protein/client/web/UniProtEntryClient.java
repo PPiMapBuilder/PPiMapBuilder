@@ -153,7 +153,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			}
 
 			String uniprotId = null;
-			Set<String> accessions = new HashSet<String>();
+			LinkedHashSet<String> accessions = new LinkedHashSet<String>();
 			Organism organism = null;
 			String geneName = null;
 			HashSet<String> synonymGeneNames = new HashSet<String>();

@@ -32,6 +32,7 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 			),
 			human,
 			Arrays.asList(
+					mouse,
 					InParanoidOrganismRepository.getInstance().getOrganismByTaxId(559292)
 			)
 	);

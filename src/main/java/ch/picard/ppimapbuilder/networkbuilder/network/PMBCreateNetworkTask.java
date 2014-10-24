@@ -293,12 +293,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private CyNode getNodeFromUniProtId(String uniProtId) {
-		UniProtEntry uniProtEntry = interactorPool.find(uniProtId);
-
-		if (uniProtEntry == null)
-			uniProtEntry = interactorPool.findWithAccessions(uniProtId);
-
-		return nodeNameMap.get(uniProtEntry);
+		return nodeNameMap.get(
+				interactorPool.find(uniProtId)
+		);
 	}
 
 	private CyNetworkView applyView(CyNetwork network) {

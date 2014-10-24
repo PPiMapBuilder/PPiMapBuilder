@@ -77,8 +77,10 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 			}
 
 			// Save the protein into the interactor pool
-			proteinOfInterestPool.add(entry);
-			interactorPool.add(entry);
+			if(!proteinOfInterestPool.contains(entry)) {
+				proteinOfInterestPool.add(entry);
+				interactorPool.add(entry);
+			}
 		}
 
 		threadedClientManager.unRegister(proteinOrthologClient);
