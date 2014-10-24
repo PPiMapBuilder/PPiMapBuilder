@@ -2,6 +2,7 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import com.google.common.collect.Lists;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import org.junit.BeforeClass;
@@ -48,7 +49,7 @@ public class InteractionUtilsTest {
 	public void networkExpansion() throws Exception {
 		List<BinaryInteraction> res;
 		Set<String> prots;
-		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, 5);
+		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(5));
 		MiQLParameterBuilder query = new MiQLParameterBuilder("identifier", "P04040");
 
 		int i = 0;
@@ -66,7 +67,7 @@ public class InteractionUtilsTest {
 
 	@Test
 	public void testFilterNonUniProt() throws Exception {
-		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, 3);
+		ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(3));
 		List<BinaryInteraction> byQuery = client.getByQuery("id:P04040");
 
 		System.out.println(byQuery.size());

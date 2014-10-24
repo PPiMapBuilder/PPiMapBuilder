@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.querywindow.panel;
+package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.ui.util.HelpIcon;
@@ -18,10 +18,7 @@ public class OtherOrganismSelectionPanel {
 	private final LinkedHashMap<Organism, JCheckBox> organisms;
 	private final JPanel panSourceOtherOrganisms;
 
-	public OtherOrganismSelectionPanel(JPanel parent, Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
-
-		//parent.setLayout(new MigLayout());
-		
+	public OtherOrganismSelectionPanel(JPanel parent, CompoundBorder fancyBorder) {
 		// Other organisms label
 		JLabel lblHomologOrganism = new JLabel("Other organisms:");
 		parent.add(lblHomologOrganism, "cell 0 2");
@@ -45,47 +42,28 @@ public class OtherOrganismSelectionPanel {
 		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms,BoxLayout.Y_AXIS));
 		
 		organisms = new LinkedHashMap<Organism, JCheckBox>();
-		
-		/*setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
-		organisms = new LinkedHashMap<Organism, JCheckBox>();
-		final JLabel lblSourceDatabases = new JLabel("Organisms for homology:");
-		add(lblSourceDatabases, BorderLayout.NORTH);
-
-		panSourceOtherOrganisms = new JPanel();
-		panSourceOtherOrganisms.setBackground(Color.white);
-		panSourceOtherOrganisms.setBorder(PMBUIStyle.emptyBorder);
-
-		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms, BoxLayout.Y_AXIS));
-
-		// Source databases scrollpane containing a panel that will contain checkbox at display
-		final JScrollPane scrollPaneSourceDatabases = new JScrollPane(panSourceOtherOrganisms);
-		scrollPaneSourceDatabases.setViewportBorder(PMBUIStyle.emptyBorder);
-		add(scrollPaneSourceDatabases, BorderLayout.CENTER);*/
 	}
 
 	/**
 	 * Updates the database list with an list of String
  	 * Updates the organism list with an list of organism
-	 * @param ogs
 	 */
-	public void updateList(List<Organism> ogs) {
+	public void updateList(List<Organism> organisms) {
 		// Creation of the database list
-		organisms.clear();
+		this.organisms.clear();
 		panSourceOtherOrganisms.removeAll();
-		for (Organism og : ogs) {
-			JCheckBox j = new JCheckBox(og.getScientificName(), true);
-			j.setBackground(Color.white);
-			organisms.put(og, j);
+		for (Organism organism : organisms) {
+			JCheckBox checkBox = new JCheckBox(organism.getScientificName(), true);
+			checkBox.setToolTipText("Taxonomy ID: " + organism.getTaxId());
+			checkBox.setBackground(Color.white);
+			this.organisms.put(organism, checkBox);
 
-			panSourceOtherOrganisms.add(j);
+			panSourceOtherOrganisms.add(checkBox);
 		}
 	}
 
 	/**
 	 * Get the list of selected databases
-	 *
-	 * @return list of database values
 	 */
 	public List<Organism> getSelectedOrganisms() {
 		ArrayList<Organism> organismList = new ArrayList<Organism>();

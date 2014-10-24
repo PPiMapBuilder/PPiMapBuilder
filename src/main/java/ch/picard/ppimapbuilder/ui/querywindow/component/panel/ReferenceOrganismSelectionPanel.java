@@ -1,7 +1,7 @@
-package ch.picard.ppimapbuilder.ui.querywindow.panel;
+package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
-import ch.picard.ppimapbuilder.ui.querywindow.listener.ReferenceOrganismListener;
+import ch.picard.ppimapbuilder.ui.querywindow.component.listener.ReferenceOrganismListener;
 import ch.picard.ppimapbuilder.ui.util.HelpIcon;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 
@@ -11,10 +11,7 @@ import java.util.List;
 public class ReferenceOrganismSelectionPanel {
 
 	private static final long serialVersionUID = 1L;
-	private QueryWindow parent;
-	private List<Organism> organisms;
-	private final JComboBox refOrgCb;
-	private final DefaultComboBoxModel refOrgCbModel;
+	private final JComboBox<Organism> refOrgCb;
 
 	public ReferenceOrganismSelectionPanel(QueryWindow parentWindow, JPanel parent) {
 		//this.setLayout(new MigLayout());
@@ -24,47 +21,36 @@ public class ReferenceOrganismSelectionPanel {
 		parent.add(lblReferenceOrganism, "cell 0 0");
 
 		// Reference organism combobox
-		refOrgCbModel = new DefaultComboBoxModel();
-		refOrgCb = new JComboBox(refOrgCbModel);
-		refOrgCb.addActionListener(new ReferenceOrganismListener(parentWindow));
+		refOrgCb = new JComboBox<Organism>();
+		refOrgCb.addActionListener(new ReferenceOrganismListener(parentWindow, this));
+		refreshToolTip();
 
 		// Reference organism Help Icon
 		JLabel lblHelpRefOrganism = new HelpIcon("Select here the organism from which the protein you entered come from");
 		lblHelpRefOrganism.setHorizontalAlignment(SwingConstants.RIGHT);
 		parent.add(lblHelpRefOrganism, "cell 1 0");
 		parent.add(refOrgCb, "cell 0 1 2 1,growx");
-		
-		
-		
-		/*setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
-		JLabel title = new JLabel("Reference organism:");
-		add(title, BorderLayout.NORTH);
-		
-		refOrgCbModel = new DefaultComboBoxModel();
-		refOrgCb = new JComboBox(refOrgCbModel);
-		add(refOrgCb, BorderLayout.CENTER);*/
 	}
 	
 	/**
 	 * Updates the database list with an list of String
-	 * @param orgs
 	 */
-	public void updateList(List<Organism> orgs) {
-		// Creation of the database list
-		organisms = orgs;
-		
-		refOrgCbModel.removeAllElements();
-		for (Organism org : orgs) {
-			refOrgCbModel.addElement(org.getSimpleScientificName());
-		}
+	public void updateList(List<Organism> organisms) {
+		refOrgCb.removeAllItems();
+		for (Organism organism : organisms)
+			refOrgCb.addItem(organism);
+	}
+
+	public void refreshToolTip() {
+		Object item = refOrgCb.getSelectedItem();
+		if(item != null)
+			refOrgCb.setToolTipText("Taxonomy ID: "+((Organism)item).getTaxId());
 	}
 	
 	/**
 	 * Gets the selected reference organism in the JComboBox
-	 * @return
 	 */
 	public Organism getSelectedOrganism() {
-		return organisms.get(refOrgCb.getSelectedIndex());
+		return (Organism) refOrgCb.getSelectedItem();
 	}
 }

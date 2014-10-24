@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.ui.querywindow.panel;
+package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
@@ -19,10 +19,7 @@ public class DatabaseSelectionPanel {
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
-	public DatabaseSelectionPanel(JPanel parent, Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
-
-		//parent.setLayout(new MigLayout());
-		
+	public DatabaseSelectionPanel(JPanel parent, CompoundBorder fancyBorder) {
 		// Source databases label
 		javax.swing.JLabel lblSourceDatabases = new javax.swing.JLabel("Source databases:");
 		parent.add(lblSourceDatabases, "cell 0 4");
@@ -50,8 +47,6 @@ public class DatabaseSelectionPanel {
 
 	/**
 	 * Updates the database list with an list of String
-	 *
-	 * @param dbs
 	 */
 	public void updateList(List<PsicquicService> dbs) {
 		// Creation of the database list
@@ -95,8 +90,6 @@ public class DatabaseSelectionPanel {
 
 	/**
 	 * Get the list of selected databases
-	 *
-	 * @return list of database values
 	 */
 	public List<PsicquicService> getSelectedDatabases() {
 		ArrayList<PsicquicService> databaseList = new ArrayList<PsicquicService>();

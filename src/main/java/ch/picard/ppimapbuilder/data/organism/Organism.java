@@ -107,7 +107,9 @@ public class Organism implements Comparable<Organism>, Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Organism)
+		if(obj == null)
+			return false;
+		else if (obj instanceof Organism)
 			return ncbiTaxId == ((Organism) obj).ncbiTaxId;
 		else
 			return ncbiTaxId == (Integer) obj;

@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.util;
+package ch.picard.ppimapbuilder.util.concurrency;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,14 +8,24 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 	private final ExecutorService executorService;
 	private final int nbRequests;
+	private final ExecutorServiceManager executorServiceManager;
+
+	private ConcurrentExecutor(ExecutorService executorService, ExecutorServiceManager executorServiceManager, int nbRequests) {
+		this.executorService = executorService == null ? executorServiceManager.getOrCreateThreadPool() : executorService;
+		this.nbRequests = nbRequests;
+		this.executorServiceManager = executorServiceManager;
+	}
+
+	public ConcurrentExecutor(ExecutorServiceManager executorServiceManager, int nbRequests) {
+		this(null, executorServiceManager, nbRequests);
+	}
 
 	public ConcurrentExecutor(ExecutorService executorService, int nbRequests) {
-		this.executorService = executorService;
-		this.nbRequests = nbRequests;
+		this(executorService, null, nbRequests);
 	}
 
 	@Override
-	public void run() {
+	public final void run() {
 		if (executorService == null) {
 			for (int i = 0; i < nbRequests; i++) {
 				try {
@@ -31,8 +41,11 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 			final CompletionService<R> completionService = new ExecutorCompletionService<R>(executorService);
 
 			//Submit requests
-			for (int i = 0; i < nbRequests; i++)
-				futuresIndexed.put(completionService.submit(submitRequests(i)), i);
+			for (int i = 0; i < nbRequests; i++) {
+				Callable<R> callable = submitRequests(i);
+				if(callable != null)
+					futuresIndexed.put(completionService.submit(callable), i);
+			}
 
 			//Process results and errors
 			for (Future<R> ignored : futuresIndexed.keySet()) {
@@ -58,6 +71,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 				}
 			}
 		}
+		if(executorServiceManager != null) executorServiceManager.unRegister(executorService);
 	}
 
 	public abstract Callable<R> submitRequests(int index);

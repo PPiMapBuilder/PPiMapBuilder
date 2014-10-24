@@ -10,10 +10,9 @@ import java.util.List;
 /**
  * Class that keeps a register of organisms in PMB
  */
-public class UserOrganismRepository {
+public class UserOrganismRepository extends OrganismRepository {
 
 	private static UserOrganismRepository _instance;
-	private final List<Organism> listOrganism;
 
 	public static UserOrganismRepository getInstance() {
 		if (_instance == null)
@@ -22,7 +21,7 @@ public class UserOrganismRepository {
 	}
 
 	private UserOrganismRepository(List<Organism> organismList) {
-		listOrganism = organismList;
+		super(organismList);
 	}
 	private UserOrganismRepository() {
 		this(PMBSettings.getInstance().getOrganismList());
@@ -46,53 +45,20 @@ public class UserOrganismRepository {
 		return organismList;
 	}
 
-	public List<Organism> getOrganisms() {
-		return listOrganism;
-	}
-	
-	public Organism getOrganismByTaxId(int taxId) {
-		for (Organism org : listOrganism)
-			if (org.getTaxId() == taxId)
-				return org;
-		return null;
-	}
-
-	public Organism getOrganismBySimpleName(String simpleName) {
-		for (Organism org : listOrganism)
-			if (org.getSimpleScientificName().equals(simpleName.trim()))
-				return org;
-		return null;
-	}
-	
-	public Organism getOrganismByScientificName(String scientificName) {
-		for (Organism org : listOrganism)
-			if (org.getScientificName().equals(scientificName))
-				return org;
-		return null;
-	}
-	
-	public void addOrganism(Organism o) {
-		listOrganism.add(o);
-	}
-	
 	public void removeOrganism(Organism o) {
-		listOrganism.remove(o);
+		organisms.remove(o);
 		PMBProteinOrthologCacheClient.getInstance().emptyCacheLinkedToOrganism(o);
 	}
 	
 	public void addOrganism(String scientificName) {
 		Organism orga = InParanoidOrganismRepository.getInstance().getOrganismByScientificName(scientificName);		
 		if (orga != null) {
-			listOrganism.add(orga);
+            organisms.add(orga);
 		}
 	}
 	
-	public void removeOrganism(String scientificName) {
-		removeOrganism(getOrganismByScientificName(scientificName));
-	}
-	
 	public void removeOrganismExceptLastOne(String scientificName) {
-		if (listOrganism.size() > 1)
+		if (organisms.size() > 1)
 			removeOrganism(getOrganismByScientificName(scientificName));
 		else 
 			JOptionPane.showMessageDialog(null, "Please keep at least one organism", "Deletion impossible", JOptionPane.INFORMATION_MESSAGE);

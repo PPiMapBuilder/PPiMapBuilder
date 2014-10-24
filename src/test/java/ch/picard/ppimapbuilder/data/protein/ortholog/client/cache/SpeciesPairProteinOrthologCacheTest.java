@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,8 +38,8 @@ public class SpeciesPairProteinOrthologCacheTest {
 		testFolderOutput = TestUtils.createTestOutputFolder(SpeciesPairProteinOrthologCacheTest.class.getSimpleName());
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		P04040 = new Protein("P04040", human);
 		Q06141 = new Protein("Q06141", human);

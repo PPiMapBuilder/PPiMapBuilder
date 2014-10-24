@@ -5,7 +5,8 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBu
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import com.google.common.collect.Lists;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -27,89 +28,74 @@ import java.util.concurrent.*;
 public class ThreadedPsicquicClient extends AbstractThreadedClient {
 
 	// Clients for each services
+	private final List<PsicquicService> services;
 	private final Map<PsicquicService, PsicquicSimpleClient> clients;
 
 	// PSIMI-Tab reader
 	private final PsimiTabReader mitabReader = new PsimiTabReader();
 
-	// Executor services
-	private final ExecutorService lvl1ExecutorService;
-	private final Map<ExecutorService, Boolean> lvl2ExecutorServices;
-
 	/**
 	 * Constructs a new ThreadedPsicquicSimpleClient
+	 *
 	 * @param services list of PSICQUIC services that will be use during query
 	 */
-	public ThreadedPsicquicClient(List<PsicquicService> services, Integer maxNumberThread) {
-		super(maxNumberThread);
+	public ThreadedPsicquicClient(List<PsicquicService> services, ExecutorServiceManager executorServiceManager) {
+		super(executorServiceManager);
 
-		clients = new HashMap<PsicquicService, PsicquicSimpleClient>(services.size());
-		for(PsicquicService service : services) {
+		this.services = services;
+		this.clients = new HashMap<PsicquicService, PsicquicSimpleClient>(services.size());
+		for (PsicquicService service : services) {
 			clients.put(service, new PsicquicSimpleClient(service.getRestUrl()));
 		}
-
-		this.lvl1ExecutorService = newThreadPool();
-		this.lvl2ExecutorServices = new HashMap<ExecutorService, Boolean>();
-		for(int i = 0; i < maxNumberThread; i++) {
-			this.lvl2ExecutorServices.put(newThreadPool(maxNumberThread * 2), false);
-		}
-	}
-
-	private ExecutorService getNotRunningLvl2ExecutorService() {
-		for (ExecutorService lvl2ExecutorService : lvl2ExecutorServices.keySet()) {
-			if(!lvl2ExecutorServices.get(lvl2ExecutorService)) {
-				lvl2ExecutorServices.put(lvl2ExecutorService, true);
-				return lvl2ExecutorService;
-			}
-		}
-		return newThreadPool();
 	}
 
 	protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+		final int MAX_TRY = 2;
+		int i = 0;
+		Exception error = null;
+		while (++i <= MAX_TRY) {
+			try {
+				return (List<BinaryInteraction>) mitabReader.read(
+						clients
+								.get(service)
+								.getByQuery(
+										query,
+										PsicquicSimpleClient.MITAB25
+								)
+				);
+			} catch (Exception e) {
+				error = e;
+			}
+		}
+		if (error != null) {
+			if (error instanceof IOException) throw (IOException) error;
+			else throw (PsimiTabException) error;
+		}
+		return null;
+	}
+
+	protected List<BinaryInteraction> getProteinInteractorSimple(PsicquicService service, Protein protein) throws IOException, PsimiTabException {
 		return (List<BinaryInteraction>) mitabReader.read(
 				clients
 						.get(service)
-						.getByQuery(
-								query,
+						.getByInteractor(
+								protein.getUniProtId(),
 								PsicquicSimpleClient.MITAB25
 						)
 		);
 	}
 
-	/**
-	 * Same as PsicquicSimpleClient.getByQuery but with threaded request over multiple PSICQUIC services
-	 */
-	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
-		final List<PsicquicService> services = new ArrayList<PsicquicService>(clients.keySet());
 
+
+	public List<BinaryInteraction> getProteinInteractor(final Protein protein) throws Exception {
 		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-		final ExecutorService executorService = getNotRunningLvl2ExecutorService();
-		new ConcurrentExecutor<List<BinaryInteraction>>(executorService, services.size()) {
+		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), services.size()) {
 			@Override
 			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
 				return new Callable<List<BinaryInteraction>>() {
 					@Override
 					public List<BinaryInteraction> call() throws Exception {
-						List<BinaryInteraction> result = null;
-
-						final int MAX_TRY = 2;
-						int i = 0;
-						while (result == null) {
-							Exception error = null;
-							try {
-								result = getByQuerySimple(services.get(index), query);
-							} catch (Exception e) {
-								error = e;
-								// System.out.println("Retrying "+service.getName()+" interaction query");
-							}
-
-							if (++i >= MAX_TRY) {
-								if(error != null)
-									throw error;
-							} else break;
-						}
-
-						return result;
+						return getProteinInteractorSimple(services.get(index), protein);
 					}
 				};
 			}
@@ -124,15 +110,58 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 				Throwable cause = e.getCause();
 
 				if (cause != null) {
-					if(cause instanceof SocketTimeoutException) {
+					if (cause instanceof SocketTimeoutException) {
 						//Connection failed to a remote database (error from the database)
-						if(index != null)
-							System.err.println(services.get(index).getName()+" server error");
-					}
-					else if(cause instanceof UnknownHostException) {
+						if (index != null)
+							System.err.println(services.get(index).getName() + " server error");
+					} else if (cause instanceof UnknownHostException) {
 						//No internet connection to the database (no internet or server no longer exists)
-						if(index != null)
-							System.err.println(services.get(index).getName()+" connection failed");
+						if (index != null)
+							System.err.println(services.get(index).getName() + " connection failed");
+					}
+				} else {
+					//unknown error
+				}
+				return false;
+			}
+		}.run();
+		return results;
+	}
+
+	/**
+	 * Same as PsicquicSimpleClient.getByQuery but with threaded request over multiple PSICQUIC services
+	 */
+	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
+		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
+		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), services.size()) {
+			@Override
+			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
+				return new Callable<List<BinaryInteraction>>() {
+					@Override
+					public List<BinaryInteraction> call() throws Exception {
+						return getByQuerySimple(services.get(index), query);
+					}
+				};
+			}
+
+			@Override
+			public void processResult(List<BinaryInteraction> result, Integer index) {
+				results.addAll(result);
+			}
+
+			@Override
+			public boolean processExecutionException(ExecutionException e, Integer index) {
+				Throwable cause = e.getCause();
+
+				if (cause != null) {
+					if (cause instanceof SocketTimeoutException) {
+						//Connection failed to a remote database (error from the database)
+						if (index != null)
+							System.err.println(services.get(index).getName() + " server error");
+					} else if (cause instanceof UnknownHostException) {
+						//No internet connection to the database (no internet or server no longer exists)
+						if (index != null)
+							System.err.println(services.get(index).getName() + " connection failed");
 					}
 				} else {
 					//unknown error
@@ -141,19 +170,17 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 		}.run();
 
-		lvl2ExecutorServices.put(executorService, false);
 		return results;
 	}
-	
+
 	/**
 	 * Gets cumulative list of interaction from a list of MiQL query
 	 */
-	public synchronized List<BinaryInteraction> getByQueries(final Collection<String> queries) throws Exception {
-
+	public List<BinaryInteraction> getByQueries(final Collection<String> queries) throws Exception {
 		final List<String> queryList = new ArrayList<String>(queries);
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 
-		new ConcurrentExecutor<List<BinaryInteraction>>(lvl1ExecutorService, queryList.size()) {
+		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), queryList.size()) {
 			@Override
 			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
 				return new Callable<List<BinaryInteraction>>() {
@@ -169,10 +196,29 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 				results.addAll(result);
 			}
 
+		}.run();
+
+		return results;
+	}
+
+	public List<BinaryInteraction> getProteinsInteractor(final Collection<Protein> proteins) {
+		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
+		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
+
+		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), proteinList.size()) {
 			@Override
-			public boolean processExecutionException(ExecutionException e, Integer index) {
-				System.err.println("Interaction query failed -> " + e.getMessage());
-				return false;
+			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
+				return new Callable<List<BinaryInteraction>>() {
+					@Override
+					public List<BinaryInteraction> call() throws Exception {
+						return getProteinInteractor(proteinList.get(index));
+					}
+				};
+			}
+
+			@Override
+			public void processResult(List<BinaryInteraction> result, Integer index) {
+				results.addAll(result);
 			}
 
 		}.run();

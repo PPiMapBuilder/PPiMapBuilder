@@ -125,6 +125,8 @@ public final class PMBSettings {
 		PMBSettings saveSettings(PMBSettings settings) {
 			ObjectOutputStream fileOut = null;
 			try {
+                if(!pmbSettingFile.exists())
+                    pmbSettingFile.createNewFile();
 				fileOut = new ObjectOutputStream(new FileOutputStream(pmbSettingFile));
 				fileOut.writeObject(settings.databaseList);
 				fileOut.writeObject(settings.organismList);

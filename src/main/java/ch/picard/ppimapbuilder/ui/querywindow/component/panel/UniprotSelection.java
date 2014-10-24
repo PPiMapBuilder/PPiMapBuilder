@@ -1,10 +1,14 @@
-package ch.picard.ppimapbuilder.ui.querywindow.panel;
+package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
+import ch.picard.ppimapbuilder.ui.querywindow.component.ChangingColorComponent;
+import ch.picard.ppimapbuilder.ui.querywindow.component.ChangingColorComponentUpdater;
+import ch.picard.ppimapbuilder.ui.querywindow.component.ChangingColorPanel;
 import ch.picard.ppimapbuilder.ui.util.HelpIcon;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
@@ -18,7 +22,7 @@ public class UniprotSelection extends JPanel {
 
 	private JTextArea identifiers;
 
-	public ArrayList<String> getIdentifers() {
+	public ArrayList<String> getIdentifiers() {
 		ArrayList<String> identifierList = new ArrayList<String>();
 		for (String str : identifiers.getText().split("\n")) {
 			if (!str.equals("")) {
@@ -28,10 +32,9 @@ public class UniprotSelection extends JPanel {
 		return identifierList;
 	}
 
-	public UniprotSelection(Color darkForeground, CompoundBorder panelBorder, CompoundBorder fancyBorder) {
+	public UniprotSelection() {
 		// Uniprot identifiers left panel
-		super();
-		this.setBorder(new CompoundBorder(new MatteBorder(0, 5, 0, 0, darkForeground), panelBorder));
+		setBorder(PMBUIStyle.fancyPanelBorderWithPadding);
 		this.setLayout(new MigLayout("inset 10", "[129px,grow][14px:14px:14px,right]", "[20px][366px,grow][35px]"));
 
 		// Label "Uniprot identifiers"
@@ -44,14 +47,14 @@ public class UniprotSelection extends JPanel {
 		this.add(lblHelpUniprotIdentifiers, "cell 1 0");
 
 		// Text area uniprot identifiers
-		identifiers = new JTextArea(); 
+		identifiers = new JTextArea();
 		identifiers.setFont(new Font("Monospaced", Font.PLAIN, 13));
 		identifiers.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		// Scroll pane around the text area
 		JScrollPane scrollPane = new JScrollPane(identifiers);
 		scrollPane.setViewportBorder(PMBUIStyle.emptyBorder);
-		scrollPane.setBorder(fancyBorder);
+		scrollPane.setBorder(PMBUIStyle.fancyPanelBorder);
 		this.add(scrollPane, "cell 0 1 2 1,grow");
 
 		// Cancel button
@@ -65,21 +68,5 @@ public class UniprotSelection extends JPanel {
 			}
 		});
 		this.add(button, "cell 0 2 2 1,alignx right,aligny center");
-		
-		/*setLayout(new BorderLayout());
-		setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		final JLabel lblIdSelection = new JLabel("Uniprot accession number:");
-		// uniprot pattern = ^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$
-		add(lblIdSelection, BorderLayout.NORTH);
-
-		this.identifiers = new JTextArea("", 5, 10);
-
-		JScrollPane scroll = new JScrollPane(identifiers);
-		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-		add(scroll, BorderLayout.CENTER);*/
 	}
-
 }

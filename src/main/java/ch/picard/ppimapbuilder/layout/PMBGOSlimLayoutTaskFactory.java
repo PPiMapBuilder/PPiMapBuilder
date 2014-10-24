@@ -15,8 +15,8 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 	}
 
 	public TaskIterator createTaskIterator(CyNetworkView view) {
-		System.out.println("PMBGOSlimLayoutTaskFactory");
-		System.out.println(view);
+		//System.out.println("PMBGOSlimLayoutTaskFactory");
+		//System.out.println(view);
 		
 		CyNetwork network = view.getModel();
 		CyTable nodeTable = network.getDefaultNodeTable();

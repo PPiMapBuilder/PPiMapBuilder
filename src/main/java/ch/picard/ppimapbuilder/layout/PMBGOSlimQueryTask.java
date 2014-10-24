@@ -43,7 +43,7 @@ public class PMBGOSlimQueryTask extends AbstractTask {
 		QuickGOClient.GOSlimClient goSlimClient = new QuickGOClient.GOSlimClient();
 
 		monitor.setTitle("Fetching slimmed Gene Ontology");
-		System.out.println("PMB Layout Task");
+		//System.out.println("PMB Layout Task");
 
 		Set<Protein> networkProteins = new HashSet<Protein>();
 		for (CyNode node : network.getNodeList()) {
@@ -55,7 +55,9 @@ public class PMBGOSlimQueryTask extends AbstractTask {
 			);
 		}
 		HashMap<Protein, Set<GeneOntologyTerm>> proteinSetHashMap =
-				goSlimClient.searchProteinGOSlim(GOSlimRepository.getInstance().getGOSlim(goSlim.getSelectedValue()), networkProteins);
+				goSlimClient.searchProteinGOSlim(
+						GOSlimRepository.getInstance().getGOSlim(goSlim.getSelectedValue()), networkProteins
+				);
 		//System.out.println(proteinSetHashMap);
 
 		for (CyNode node : network.getNodeList()) {

@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * Simple protein model with a unique identifier (UniProt identifier) and an Organism.
  */
-public class Protein implements Serializable, JSONable{
+public class Protein implements Serializable, JSONable {
 
 	private static final long serialVersionUID = 1L;
 	public static final int ID_LENGTH = 10; //MAX length of UniProt identifier

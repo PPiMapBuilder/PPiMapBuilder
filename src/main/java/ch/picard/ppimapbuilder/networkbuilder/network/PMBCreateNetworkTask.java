@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.networkbuilder.network;
 
+import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.JSONUtils;
 import ch.picard.ppimapbuilder.data.JSONable;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
@@ -7,11 +8,9 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTransla
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
-import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
@@ -25,6 +24,7 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,60 +34,57 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	// For the network
 	private final CyNetworkManager networkManager;
 	private final CyNetworkFactory networkFactory;
-	private final CyNetworkNaming namingUtil;
+	private final CyNetworkNaming networkNaming;
 
 	// For the view
-	private final CyNetworkViewFactory viewFactory;
-	private final CyNetworkViewManager viewManager;
+	private final CyNetworkViewFactory networkViewFactory;
+	private final CyNetworkViewManager networkViewManager;
 
 	// For the layout
-	private final CyLayoutAlgorithmManager layoutManager;
+	private final CyLayoutAlgorithmManager layoutAlgorithmManager;
 
 	// For the visual style
-	private final VisualMappingManager vizMapManager;
+	private final VisualMappingManager visualMappingManager;
 
 
 	private final NetworkQueryParameters networkQueryParameters;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
 	private final UniProtEntrySet proteinOfInterestPool;
-	private final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory;
 
 	//Network data
 	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
 	private final long startTime;
 
 	public PMBCreateNetworkTask(
-			final PMBInteractionNetworkBuildTaskFactory pmbInteractionNetworkBuildTaskFactory,
-			final CyNetworkManager netMgr,
-			final CyNetworkNaming namingUtil,
-			final CyNetworkFactory cnf,
-			final CyNetworkViewFactory cnvf,
+			final CyNetworkManager networkManager,
+			final CyNetworkNaming networkNaming,
+			final CyNetworkFactory networkFactory,
+			final CyNetworkViewFactory networkViewFactory,
 			final CyNetworkViewManager networkViewManager,
-			final CyLayoutAlgorithmManager layoutMan,
-			final VisualMappingManager vmm,
+			final CyLayoutAlgorithmManager layoutAlgorithmManager,
+			final VisualMappingManager visualMappingManager,
 			final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			final UniProtEntrySet interactorPool,
 			final UniProtEntrySet proteinOfInterestPool,
 			final NetworkQueryParameters networkQueryParameters,
 			long startTime
 	) {
-		this.pmbInteractionNetworkBuildTaskFactory = pmbInteractionNetworkBuildTaskFactory;
 
 		// For the network
-		this.networkManager = netMgr;
-		this.networkFactory = cnf;
-		this.namingUtil = namingUtil;
+		this.networkManager = networkManager;
+		this.networkFactory = networkFactory;
+		this.networkNaming = networkNaming;
 
 		// For the view
-		this.viewFactory = cnvf;
-		this.viewManager = networkViewManager;
+		this.networkViewFactory = networkViewFactory;
+		this.networkViewManager = networkViewManager;
 
 		// For the layout
-		this.layoutManager = layoutMan;
+		this.layoutAlgorithmManager = layoutAlgorithmManager;
 
 		// For the visual style
-		this.vizMapManager = vmm;
+		this.visualMappingManager = visualMappingManager;
 
 		this.interactionsByOrg = interactionsByOrg;
 		this.interactorPool = interactorPool;
@@ -102,17 +99,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor monitor) {
-
 		monitor.setTitle("PPiMapBuilder interaction network build");
-
 		monitor.setStatusMessage("Building Cytoscape network...");
-		monitor.setProgress(1.0);
 
 		if (!interactionsByOrg.get(networkQueryParameters.getReferenceOrganism()).isEmpty() && !interactionsByOrg.isEmpty()) {
 
 			// Create an empty network
 			CyNetwork network = networkFactory.createNetwork();
-			network.getRow(network).set(CyNetwork.NAME, namingUtil.getSuggestedNetworkTitle("PPiMapBuilder network"));
+			network.getRow(network).set(CyNetwork.NAME, networkNaming.getSuggestedNetworkTitle("PPiMapBuilder network"));
 
 			CyTable networkTable = network.getDefaultNetworkTable();
 			networkTable.createColumn("created by", String.class, true);
@@ -121,16 +115,24 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			networkTable.createListColumn("source databases", String.class, true);
 			networkTable.createColumn("build time (seconds)", Integer.class, true);
 
-			network.getRow(network).set("created by", "PPiMapBuilder");
+			network.getRow(network).set(
+					"created by",
+					"PPiMapBuilder v"
+							+ PMBActivator.version
+							+ (PMBActivator.isSnapshot ? " " + PMBActivator.buildTimestamp : "") //display PMB build timestamp in snapshots
+			);
 			network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
 			network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
 			network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
+			monitor.setProgress(0.33);
 
 			//Create nodes using interactors pool
 			createNodes(network);
+			monitor.setProgress(0.66);
 
 			//Create edges using reference interactions and organism interactions
 			createEdges(network);
+			monitor.setProgress(0.99);
 
 			// Creation on the view
 			CyNetworkView view = applyView(network);
@@ -141,8 +143,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			// Visual Style
 			applyVisualStyle(view);
 
-			network.getRow(network).set("build time (seconds)", (((int) (System.currentTimeMillis() - startTime)) / 1000));
+			// Add network build time
+			network.getRow(network).set(
+					"build time (seconds)",
+					(((int) (System.currentTimeMillis() - startTime)) / 1000)
+			);
 		}
+		monitor.setProgress(1.0);
 	}
 
 	private void createNodes(CyNetwork network) {
@@ -150,6 +157,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		// Node attributes
 		CyTable nodeTable = network.getDefaultNodeTable();
 		nodeTable.createColumn("uniprot_id", String.class, false);
+		nodeTable.createListColumn("accessions", String.class, false);
 		nodeTable.createColumn("gene_name", String.class, false);
 		nodeTable.createColumn("ec_number", String.class, false);
 		nodeTable.createListColumn("synonym_gene_names", String.class, false);
@@ -173,9 +181,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				CyRow nodeAttr = network.getRow(node);
 				nodeAttr.set("name", protein.getUniProtId());
 				nodeAttr.set("uniprot_id", protein.getUniProtId());
+				nodeAttr.set("accessions", new ArrayList<String>(protein.getAccessions()));
 				nodeAttr.set("gene_name", protein.getGeneName());
 				nodeAttr.set("ec_number", protein.getEcNumber());
-				nodeAttr.set("synonym_gene_names", protein.getSynonymGeneNames());
+				nodeAttr.set("synonym_gene_names", new ArrayList<String>(protein.getSynonymGeneNames()));
 				nodeAttr.set("protein_name", protein.getProteinName());
 				nodeAttr.set("tax_id", String.valueOf(protein.getOrganism().getTaxId()));
 				nodeAttr.set("reviewed", String.valueOf(protein.isReviewed()));
@@ -245,13 +254,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					nodeA = getNodeFromUniProtId(nodeAName);
 					nodeB = getNodeFromUniProtId(nodeBName);
 				} else {
-					Map<Protein, UniProtEntry> orthologs = interactorPool.getInOrg(organism);
-					for (Protein ortholog : orthologs.keySet()) {
-						if(ortholog.getUniProtId().contains(nodeAName)) {
-							nodeA = getNodeFromUniProtId(orthologs.get(ortholog).getUniProtId());
+					Map<Protein, UniProtEntry> proteinInOrganismWithReferenceEntry = interactorPool.getProteinInOrganismWithReferenceEntry(organism);
+					for (Protein ortholog : proteinInOrganismWithReferenceEntry.keySet()) {
+						if (ortholog.getUniProtId().contains(nodeAName)) {
+							nodeA = getNodeFromUniProtId(proteinInOrganismWithReferenceEntry.get(ortholog).getUniProtId());
 						}
-						if(ortholog.getUniProtId().contains(nodeBName)) {
-							nodeB = getNodeFromUniProtId(orthologs.get(ortholog).getUniProtId());
+						if (ortholog.getUniProtId().contains(nodeBName)) {
+							nodeB = getNodeFromUniProtId(proteinInOrganismWithReferenceEntry.get(ortholog).getUniProtId());
 						}
 						if (nodeA != null && nodeB != null) break;
 					}
@@ -260,28 +269,16 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				if (nodeA != null && nodeB != null) {
 					CyEdge myEdge = network.addEdge(nodeA, nodeB, true);
 
-					CyTable nodeTable = network.getDefaultNodeTable();
-
-					String geneNameA = "", geneNameB = "";
-					String protNameA = "", protNameB = "";
-					for (CyRow r : nodeTable.getAllRows()) {
-						if (r.get("uniprot_id", String.class).equalsIgnoreCase(nodeAName)) {
-							geneNameA = r.get("gene_name", String.class);
-							protNameA = r.get("protein_name", String.class);
-						}
-						if (r.get("uniprot_id", String.class).equalsIgnoreCase(nodeBName)) {
-							geneNameB = r.get("gene_name", String.class);
-							protNameB = r.get("protein_name", String.class);
-						}
-					}
+					CyRow rowA = network.getRow(nodeA);
+					CyRow rowB = network.getRow(nodeB);
 
 					CyRow edgeAttr = network.getRow(myEdge);
 					edgeAttr.set("Interactor_A", nodeAName);
 					edgeAttr.set("Interactor_B", nodeBName);
-					edgeAttr.set("Gene_name_A", geneNameA);
-					edgeAttr.set("Gene_name_B", geneNameB);
-					edgeAttr.set("Protein_name_A", protNameA);
-					edgeAttr.set("Protein_name_B", protNameB);
+					edgeAttr.set("Gene_name_A", rowA.get("gene_name", String.class));
+					edgeAttr.set("Gene_name_B", rowB.get("gene_name", String.class));
+					edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
+					edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
 					edgeAttr.set("source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
 					edgeAttr.set("detmethod", PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
 					edgeAttr.set("type", PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));
@@ -296,12 +293,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private CyNode getNodeFromUniProtId(String uniProtId) {
-		String s = ProteinUtils.UniProtId.extractStrictUniProtId(uniProtId);
+		UniProtEntry uniProtEntry = interactorPool.find(uniProtId);
 
-		UniProtEntry uniProtEntry = interactorPool.find(s);
-
-		if(uniProtEntry == null)
-			uniProtEntry = interactorPool.findWithAccessions(s);
+		if (uniProtEntry == null)
+			uniProtEntry = interactorPool.findWithAccessions(uniProtId);
 
 		return nodeNameMap.get(uniProtEntry);
 	}
@@ -312,7 +307,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		}
 		this.networkManager.addNetwork(network);
 
-		final Collection<CyNetworkView> views = viewManager.getNetworkViews(network);
+		final Collection<CyNetworkView> views = networkViewManager.getNetworkViews(network);
 		CyNetworkView view = null;
 		if (views.size() != 0) {
 			view = views.iterator().next();
@@ -320,8 +315,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 		if (view == null) {
 			// create a new view for my network
-			view = viewFactory.createNetworkView(network);
-			viewManager.addNetworkView(view);
+			view = networkViewFactory.createNetworkView(network);
+			networkViewManager.addNetworkView(view);
 		} else {
 			System.out.println("networkView already existed.");
 		}
@@ -330,26 +325,29 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private void applyLayout(CyNetworkView view) {
-		CyLayoutAlgorithm layout = layoutManager.getLayout("force-directed");
+		CyLayoutAlgorithm layout = layoutAlgorithmManager.getLayout("force-directed");
 		Object context = layout.createLayoutContext();
 		String layoutAttribute = null;
-		insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
+		insertTasksAfterCurrentTask(
+				layout.createTaskIterator(
+						view,
+						context,
+						CyLayoutAlgorithm.ALL_NODE_VIEWS,
+						layoutAttribute
+				)
+		);
 	}
 
 	private void applyVisualStyle(CyNetworkView view) {
-		for (VisualStyle curVS : vizMapManager.getAllVisualStyles()) {
+		for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
 			if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style")) {
 				curVS.apply(view);
-				vizMapManager.setCurrentVisualStyle(curVS);
+				visualMappingManager.setCurrentVisualStyle(curVS);
 				break;
 			}
 		}
 
 		view.updateView();
-	}
-
-	public PMBInteractionNetworkBuildTaskFactory getPmbInteractionNetworkBuildTaskFactory() {
-		return pmbInteractionNetworkBuildTaskFactory;
 	}
 
 }

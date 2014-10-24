@@ -1,6 +1,7 @@
-package ch.picard.ppimapbuilder.ui.querywindow.listener;
+package ch.picard.ppimapbuilder.ui.querywindow.component.listener;
 
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
+import ch.picard.ppimapbuilder.ui.querywindow.component.panel.ReferenceOrganismSelectionPanel;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -13,13 +14,15 @@ import java.awt.event.ActionListener;
  */
 public class ReferenceOrganismListener implements ActionListener{
 	private QueryWindow createNetwork;
+	private final ReferenceOrganismSelectionPanel referenceOrganismSelectionPanel;
 	private JCheckBox previous = null;
 
 	/**
 	 * Create a reference organism combobox listener with reference to its parent window
 	 */
-	public ReferenceOrganismListener(QueryWindow createNetwork) {
+	public ReferenceOrganismListener(QueryWindow createNetwork, ReferenceOrganismSelectionPanel referenceOrganismSelectionPanel) {
 		this.createNetwork = createNetwork;
+		this.referenceOrganismSelectionPanel = referenceOrganismSelectionPanel;
 	}
 
 	/**
@@ -28,11 +31,10 @@ public class ReferenceOrganismListener implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		JComboBox select = (JComboBox)e.getSource();
 
-		JCheckBox check = null;
-
 		// Get the checkbox corresponding to the selected element in combobox
+		JCheckBox check = null;
 		for(JCheckBox c : createNetwork.getOtherOrganismSelectionPanel().getOrganisms().values())
-			if(c.getText().equals(select.getSelectedItem()))
+			if(select.getSelectedItem() != null && c.getText().equals(select.getSelectedItem().toString()))
 				check = c;
 
 		if(check != null)  {
@@ -46,5 +48,6 @@ public class ReferenceOrganismListener implements ActionListener{
 
 			previous = check;
 		}
+		referenceOrganismSelectionPanel.refreshToolTip();
 	}
 }

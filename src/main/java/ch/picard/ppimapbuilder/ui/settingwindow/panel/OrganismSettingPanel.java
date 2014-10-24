@@ -75,7 +75,7 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 				panSourceOrganism.removeAllRow();
 				for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
 					panSourceOrganism.addRow(
-						new ListDeletableItem.ListRow(org.getScientificName())
+						new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
 							.addDeleteButton(new ActionListener() {
 
 								@Override

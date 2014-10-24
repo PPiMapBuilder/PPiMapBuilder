@@ -48,8 +48,8 @@ public class QuickGOClient {
 						new ArrayList<Protein>(proteinSet)
 					)
 				) {
-					System.out.println(requestURL.toString());
-					System.out.println("Request length : " + requestURL.toString().length());
+					//System.out.println(requestURL.toString());
+					//System.out.println("Request length : " + requestURL.toString().length());
 
 					// Prepare HTTP client, request and response
 					httpClient = HttpClientBuilder.create().build();

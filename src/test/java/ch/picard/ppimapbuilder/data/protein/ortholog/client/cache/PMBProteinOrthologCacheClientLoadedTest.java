@@ -25,8 +25,8 @@ public class PMBProteinOrthologCacheClientLoadedTest {
 		System.out.println(folder.getAbsolutePath());
 		PMBSettings.getInstance().setOrthologCacheFolder(folder);
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		cache = PMBProteinOrthologCacheClient.getInstance();
 		speciesPairProteinOrthologCache = cache.getSpeciesPairProteinOrthologCache(human, mouse);

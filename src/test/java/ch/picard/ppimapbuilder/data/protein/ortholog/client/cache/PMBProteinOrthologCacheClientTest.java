@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
 import ch.picard.ppimapbuilder.TestUtils;
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
@@ -8,6 +9,7 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,9 +49,9 @@ public class PMBProteinOrthologCacheClientTest {
 
 		minimumScore = 0.95;
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
-		gallus = UserOrganismRepository.getInstance().getOrganismByTaxId(9031);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		gallus = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9031);
 
 		P04040 = new Protein("P04040", human);
 		P24270 = new Protein("P24270", mouse);
@@ -124,7 +126,7 @@ public class PMBProteinOrthologCacheClientTest {
 		);
 
 		for(int nbThread = 1 ; nbThread <= 4; nbThread++) {
-			threadedCache = new ThreadedProteinOrthologClientDecorator(cache, nbThread);
+			threadedCache = new ThreadedProteinOrthologClientDecorator(cache, new ExecutorServiceManager(3));
 
 			Map<Organism, OrthologScoredProtein> expected = new HashMap<Organism, OrthologScoredProtein>();
 			expected.put(mouse, cache.getOrtholog(P10144, mouse, minimumScore));

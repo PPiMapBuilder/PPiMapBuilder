@@ -5,7 +5,7 @@ import ch.picard.ppimapbuilder.data.PairUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
-import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.junit.Assert;
 import org.junit.Test;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -13,9 +13,6 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +39,7 @@ public class ThreadedPsicquicClientTest {
 			}};
 
 			final Map<String, String> actual = new HashMap<String, String>();
-			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
 				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
 					actual.put(service.getName(), query);
@@ -72,7 +69,7 @@ public class ThreadedPsicquicClientTest {
 		Error error = null;
 		for(int nbThread = 1; nbThread <= 10; nbThread++) {
 			final Map<String, Set<String>> actual = new TreeMap<String, Set<String>>();
-			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
 				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
 					if (!actual.containsKey(service.getName()))
@@ -115,7 +112,7 @@ public class ThreadedPsicquicClientTest {
 
 			final Set<String> treatedQuery = new HashSet<String>();
 
-			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, nbThread) {
+			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
 				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
 					synchronized (treatedQuery) {

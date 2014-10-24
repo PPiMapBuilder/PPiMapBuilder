@@ -3,6 +3,7 @@ package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import ch.picard.ppimapbuilder.util.AppendingObjectOutputStream;
 
 import java.io.*;
@@ -14,7 +15,7 @@ import java.util.Map;
 /**
  * Protein ortholog cache client for a pair of species. Linked to a file cache named "ORG1-ORG2.dat".
  */
-public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCacheClient implements Serializable {
+public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologClient implements ProteinOrthologCacheClient, Serializable {
 
 	private static final long serialVersionUID = 2L;
 
@@ -35,7 +36,7 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	}
 
 	@Override
-	protected synchronized void addOrthologGroup(OrthologGroup orthologGroup) throws IOException {
+	public synchronized void addOrthologGroup(OrthologGroup orthologGroup) throws IOException {
 		addOrthologGroup(Arrays.asList(orthologGroup), true);
 	}
 

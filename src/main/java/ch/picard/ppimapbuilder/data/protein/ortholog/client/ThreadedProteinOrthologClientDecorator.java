@@ -5,7 +5,8 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
-import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -19,29 +20,10 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 	// Decorated protein ortholog client
 	private final ProteinOrthologClient proteinOrthologClient;
 
-	// Executor services
-	private final ExecutorService lvl1ExecutorService;
-	private final Map<ExecutorService, Boolean> lvl2ExecutorServices;
 
-	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient, Integer maxNumberThread) {
-		super(maxNumberThread);
+	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient, ExecutorServiceManager executorServiceManager) {
+		super(executorServiceManager);
 		this.proteinOrthologClient = proteinOrthologClient;
-
-		this.lvl1ExecutorService = newThreadPool();
-		this.lvl2ExecutorServices = new HashMap<ExecutorService, Boolean>();
-		for(int i = 0; i < maxNumberThread; i++) {
-			this.lvl2ExecutorServices.put(newThreadPool(), false);
-		}
-	}
-
-	private ExecutorService getNotRunningLvl2ExecutorService() {
-		for (ExecutorService lvl2ExecutorService : lvl2ExecutorServices.keySet()) {
-			if(!lvl2ExecutorServices.get(lvl2ExecutorService)) {
-				lvl2ExecutorServices.put(lvl2ExecutorService, true);
-				return lvl2ExecutorService;
-			}
-		}
-		return newThreadPool();
 	}
 
 	@Override
@@ -70,15 +52,14 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 		final HashMap<Organism, OrthologScoredProtein> orthologs = new HashMap<Organism, OrthologScoredProtein>();
 		final List<Organism> organismList = new ArrayList<Organism>(organisms);
 
-		final ExecutorService executorService = getNotRunningLvl2ExecutorService();
-
-		new ConcurrentExecutor<OrthologScoredProtein>(executorService, organisms.size()) {
+		new ConcurrentExecutor<OrthologScoredProtein>(getExecutorServiceManager(), organisms.size()) {
 			@Override
 			public Callable<OrthologScoredProtein> submitRequests(final int index) {
 				return new Callable<OrthologScoredProtein>() {
 					@Override
 					public OrthologScoredProtein call() throws Exception {
-						return getOrtholog(protein, organismList.get(index), score);
+						Organism organism = organismList.get(index);
+						return organism != null ? getOrtholog(protein, organism, score) : null;
 					}
 				};
 			}
@@ -88,8 +69,6 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 				orthologs.put(organismList.get(index), result);
 			}
 		}.run();
-
-		lvl2ExecutorServices.put(executorService, false);
 
 		return orthologs;
 	}
@@ -110,13 +89,14 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
 		final HashMap<Protein, Map<Organism, OrthologScoredProtein>> out = new HashMap<Protein, Map<Organism, OrthologScoredProtein>>();
 
-		new ConcurrentExecutor<Map<Organism, OrthologScoredProtein>>(lvl1ExecutorService, proteinList.size()) {
+		new ConcurrentExecutor<Map<Organism, OrthologScoredProtein>>(getExecutorServiceManager(), proteinList.size()) {
 			@Override
 			public Callable<Map<Organism, OrthologScoredProtein>> submitRequests(final int index) {
 				return new Callable<Map<Organism, OrthologScoredProtein>>() {
 					@Override
 					public Map<Organism, OrthologScoredProtein> call() throws Exception {
-						return getOrthologsMultiOrganism(proteinList.get(index), organisms, score);
+						Protein protein = proteinList.get(index);
+						return protein != null ? getOrthologsMultiOrganism(protein, organisms, score) : null;
 					}
 				};
 			}

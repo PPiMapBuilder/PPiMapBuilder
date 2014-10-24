@@ -4,16 +4,13 @@ import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import com.eclipsesource.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class UniProtEntry extends Protein {
 
 	transient private final Set<String> accessions;
 	transient private final String geneName;
-	transient private final List<String> synonymGeneNames;
+	transient private final Set<String> synonymGeneNames;
 	transient private final String proteinName;
 	transient private final String ecNumber;
 	transient private final boolean reviewed;
@@ -30,7 +27,7 @@ public class UniProtEntry extends Protein {
 			Organism organism,
 			String proteinName,
 			boolean reviewed,
-			List<String> synonymGeneNames,
+			Set<String> synonymGeneNames,
 			Set<GeneOntologyTerm> biologicalProcesses,
 			Set<GeneOntologyTerm> cellularComponents,
 			Set<GeneOntologyTerm> molecularFunctions
@@ -51,8 +48,8 @@ public class UniProtEntry extends Protein {
 		return orthologs.get(organism);
 	}
 
-	public List<Protein> getOrthologs() {
-		return new ArrayList<Protein>(orthologs.values());
+	public Collection<Protein> getOrthologs() {
+		return orthologs.values();
 	}
 
 	public Protein addOrtholog(Protein prot) {
@@ -93,7 +90,7 @@ public class UniProtEntry extends Protein {
 		return list;
 	}
 
-	public List<String> getSynonymGeneNames() {
+	public Set<String> getSynonymGeneNames() {
 		return synonymGeneNames;
 	}
 
@@ -111,6 +108,21 @@ public class UniProtEntry extends Protein {
 
 	public String getEcNumber() {
 		return ecNumber;
+	}
+
+	public boolean isIdentical(UniProtEntry entry) {
+		return uniProtId.equals(entry.uniProtId)
+				&& organism.equals(entry.organism)
+				&& accessions.equals(entry.accessions)
+				&& orthologs.equals(entry.orthologs)
+				&& synonymGeneNames.equals(entry.synonymGeneNames)
+				&& biologicalProcesses.equals(entry.biologicalProcesses)
+				&& cellularComponents.equals(entry.cellularComponents)
+				&& molecularFunctions.equals(entry.molecularFunctions)
+				&& geneName.equals(entry.geneName)
+				&& ecNumber.equals(entry.ecNumber)
+				&& proteinName.equals(entry.proteinName)
+				&& reviewed == entry.reviewed;
 	}
 
 	/**
@@ -135,25 +147,60 @@ public class UniProtEntry extends Protein {
 		return accessions;
 	}
 
+	/**
+	 * UniProtEntry.Builder used to create new UniProt entry from a template which can be modified.
+	 * Can also be used to merge several entry into one by taking the first one as a template and merging accessions,
+	 * gene name synonymes, cellular component annotations, biological processes annotations, molecular function annotations
+	 * and orthologs.
+	 */
 	public static class Builder {
 
-		final UniProtEntry template;
+		private final UniProtEntry template;
 
-		String uniprotId = null;
-		Set<String> accessions = null;
-		Organism organism = null;
-		String geneName = null;
-		List<String> synonymGeneNames = null;
-		String proteinName = null;
-		String ecNumber = null;
-		Boolean reviewed = null;
-		Set<GeneOntologyTerm> cellularComponents = null;
-		Set<GeneOntologyTerm> biologicalProcesses = null;
-		Set<GeneOntologyTerm> molecularFunctions = null;
-		HashMap<Organism, Protein> orthologs = null;
+		private String uniprotId = null;
+		private Set<String> accessions = null;
+		private Organism organism = null;
+		private String geneName = null;
+		private Set<String> synonymGeneNames = null;
+		private String proteinName = null;
+		private String ecNumber = null;
+		private Boolean reviewed = null;
+		private Set<GeneOntologyTerm> cellularComponents = null;
+		private Set<GeneOntologyTerm> biologicalProcesses = null;
+		private Set<GeneOntologyTerm> molecularFunctions = null;
+		private HashMap<Organism, Protein> orthologs = null;
+
+		public Builder() {
+			this((UniProtEntry) null);
+		}
 
 		public Builder(UniProtEntry entry) {
 			this.template = entry;
+		}
+
+		public Builder(UniProtEntry... entries) {
+			boolean first = true;
+			for (UniProtEntry entry : entries) {
+				if (first) {
+					first = false;
+					accessions = new HashSet<String>(entry.accessions);
+					synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
+					cellularComponents = new HashSet<GeneOntologyTerm>(entry.cellularComponents);
+					biologicalProcesses = new HashSet<GeneOntologyTerm>(entry.biologicalProcesses);
+					molecularFunctions = new HashSet<GeneOntologyTerm>(entry.molecularFunctions);
+					orthologs = new HashMap<Organism, Protein>(entry.orthologs);
+				} else {
+					accessions.addAll(entry.accessions);
+					accessions.add(entry.uniProtId);
+					synonymGeneNames.addAll(entry.synonymGeneNames);
+					cellularComponents.addAll(entry.cellularComponents);
+					biologicalProcesses.addAll(entry.biologicalProcesses);
+					molecularFunctions.addAll(entry.molecularFunctions);
+					orthologs.putAll(entry.orthologs);
+				}
+			}
+
+			this.template = entries[0];
 		}
 
 		public Builder setUniprotId(String uniprotId) {
@@ -176,7 +223,7 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder setSynonymGeneNames(List<String> synonymGeneNames) {
+		public Builder setSynonymGeneNames(Set<String> synonymGeneNames) {
 			this.synonymGeneNames = synonymGeneNames;
 			return this;
 		}
@@ -217,33 +264,22 @@ public class UniProtEntry extends Protein {
 		}
 
 		public UniProtEntry build() {
-			if (template != null) {
-				if (uniprotId == null) uniprotId = template.getUniProtId();
-				if (accessions == null) accessions = template.getAccessions();
-				if (organism == null) organism = template.getOrganism();
-				if (geneName == null) geneName = template.geneName;
-				if (synonymGeneNames == null) synonymGeneNames = template.synonymGeneNames;
-				if (proteinName == null) proteinName = template.proteinName;
-				if (ecNumber == null) ecNumber = template.ecNumber;
-				if (reviewed == null) reviewed = template.reviewed;
-				if (orthologs == null) orthologs = template.orthologs;
-				if (biologicalProcesses == null) biologicalProcesses = template.biologicalProcesses;
-				if (cellularComponents == null) cellularComponents = template.cellularComponents;
-				if (molecularFunctions == null) molecularFunctions = template.molecularFunctions;
-			}
 			UniProtEntry uniProtEntry = new UniProtEntry(
-					uniprotId,
-					accessions,
-					geneName,
-					ecNumber,
-					organism,
-					proteinName,
-					reviewed,
-					synonymGeneNames,
-					biologicalProcesses,
-					cellularComponents,
-					molecularFunctions
+				template != null && uniprotId == null           ? template.uniProtId           : uniprotId,
+				template != null && accessions == null          ? template.accessions          : accessions,
+				template != null && geneName == null            ? template.geneName            : geneName,
+				template != null && ecNumber == null            ? template.ecNumber            : ecNumber,
+				template != null && organism == null            ? template.organism            : organism,
+				template != null && proteinName == null         ? template.proteinName         : proteinName,
+				template != null && reviewed == null            ? template.reviewed            : reviewed,
+				template != null && synonymGeneNames == null    ? template.synonymGeneNames    : synonymGeneNames,
+				template != null && biologicalProcesses == null ? template.biologicalProcesses : biologicalProcesses,
+				template != null && cellularComponents == null  ? template.cellularComponents  : cellularComponents,
+				template != null && molecularFunctions == null  ? template.molecularFunctions  : molecularFunctions
 			);
+
+			if (template != null && orthologs == null)
+				orthologs = template.orthologs;
 			for (Protein ortholog : orthologs.values()) {
 				uniProtEntry.addOrtholog(ortholog);
 			}
@@ -251,4 +287,5 @@ public class UniProtEntry extends Protein {
 		}
 
 	}
+
 }

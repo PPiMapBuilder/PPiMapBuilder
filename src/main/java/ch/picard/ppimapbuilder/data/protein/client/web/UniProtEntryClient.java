@@ -4,15 +4,20 @@ import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.util.ConcurrentExecutor;
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClients;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -25,8 +30,18 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 	private static final String UNIPROT_URL = "http://www.uniprot.org/uniprot/";
 
-	public UniProtEntryClient(Integer maxNumberThread) {
-		super(maxNumberThread);
+	private final DefaultHttpRequestRetryHandler retryHandler;
+	private final RequestConfig requestConfig;
+
+	public UniProtEntryClient(ExecutorServiceManager executorServiceManager) {
+		super(executorServiceManager);
+
+		requestConfig = RequestConfig.custom()
+				.setSocketTimeout(1000)
+				.setConnectTimeout(1000)
+				.setConnectionRequestTimeout(1000)
+				.build();
+		retryHandler = new DefaultHttpRequestRetryHandler(1, true);
 	}
 
 	/**
@@ -43,7 +58,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 		final List<String> proteinArray = new ArrayList<String>(new HashSet<String>(uniProtIds));
 
 		final HashMap<String, UniProtEntry> results = new HashMap<String, UniProtEntry>();
-		new ConcurrentExecutor<RetrieveProteinData>(newThreadPool(), uniProtIds.size()) {
+		new ConcurrentExecutor<RetrieveProteinData>(getExecutorServiceManager(), uniProtIds.size()) {
 
 			@Override
 			public Callable<RetrieveProteinData> submitRequests(int index) {
@@ -52,7 +67,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 			@Override
 			public void processResult(RetrieveProteinData result, Integer index) {
-				results.put(result.protein.getUniProtId(), result.protein);
+				results.put(result.originalUniProtId, result.protein);
 			}
 
 			@Override
@@ -62,70 +77,113 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			}
 
 		}.run();
+
 		return results;
 	}
 
-	private static class RetrieveProteinData implements Callable<RetrieveProteinData> {
+	private class RetrieveProteinData implements Callable<RetrieveProteinData> {
+
+		private CloseableHttpClient httpClient;
 
 		//Input
-		final String uniProtId;
+		final String originalUniProtId;
 
 		//Output
 		UniProtEntry protein = null;
 
-		private RetrieveProteinData(String uniProtId) {
-			this.uniProtId = uniProtId;
+		private RetrieveProteinData(String originalUniProtId) {
+			this.originalUniProtId = originalUniProtId;
+			this.httpClient = HttpClients.custom()
+					.setRetryHandler(retryHandler)
+					.setDefaultRequestConfig(requestConfig)
+					.build();
+		}
+
+		public Document getDocumentRetry() throws IOException {
+			HttpRequestBase req = null;
+			CloseableHttpResponse res = null;
+			String url = UNIPROT_URL + originalUniProtId + ".xml";
+
+			final int MAX_TRY = 5;
+			int tryCount = 0;
+			IOException error = null;
+			while(tryCount <= MAX_TRY) {
+				if(tryCount > 0) {
+					httpClient = HttpClients.custom()
+							.setRetryHandler(retryHandler)
+							.setDefaultRequestConfig(RequestConfig.custom()
+									.setSocketTimeout(1000 + tryCount * 800)
+									.setConnectTimeout(1000 + tryCount * 800)
+									.setConnectionRequestTimeout(1000 + tryCount * 800)
+									.build())
+							.build();
+				}
+				tryCount++;
+
+				try {
+					req = new HttpGet(url);
+					res = httpClient.execute(req);
+
+					int statusCode = res.getStatusLine().getStatusCode();
+
+					if (200 <= statusCode && statusCode < 300) {
+						return Jsoup.parse(
+								res.getEntity().getContent(),
+								"UTF-8",
+								"/"
+						);
+					}
+				} catch (IOException e) {
+					error = new IOException(e.getMessage() + " " + url);
+				} finally {
+					if (res != null) res.close();
+					if (req != null) req.releaseConnection();
+				}
+			}
+			if(error != null) throw error;
+			return null;
 		}
 
 		@Override
 		public RetrieveProteinData call() throws IOException {
-			Document doc = null;
-			final int MAX_TRY = 4;
-			int pos = 0;
-			IOException lastError = null;
-			do {
-				try {
-					Connection connect = Jsoup.connect(UNIPROT_URL + uniProtId + ".xml");
-					connect.timeout(6000);
-					doc = connect.get();
-				} catch (HttpStatusException e) {
-					if (e.getStatusCode() == 404) return null;//No protein entry found
-					lastError = new IOException(e);
-				} catch (SocketTimeoutException e) {
-					lastError = new IOException(e);
-				}
-			} while (doc == null && ++pos < MAX_TRY);
-			if (doc == null) throw lastError;
-			if (doc.select("body").get(0).childNodeSize() < 1) {
+			Document doc = getDocumentRetry();
+
+			if (doc == null || doc.select("body").get(0).childNodeSize() < 1) {
 				return this;
 			}
 
+			String uniprotId = null;
 			Set<String> accessions = new HashSet<String>();
 			Organism organism = null;
 			String geneName = null;
-			ArrayList<String> synonymGeneNames = new ArrayList<String>();
+			HashSet<String> synonymGeneNames = new HashSet<String>();
 			String proteinName = null;
 			String ec_number = null;
 			boolean reviewed = false;
 
 			// ACCESSIONS
+			boolean first = true;
 			for (Element e : doc.select("accession")) {
+				if(first) {
+					uniprotId = e.text();
+					first = false;
+				}
 				accessions.add(e.text());
 			}
-			accessions.add(uniProtId);
+			accessions.add(originalUniProtId);
 
 			// ORGANISM
 			for (Element e : doc.select("organism")) {
 				String scientificName = "";
-				for(Element name: e.select("name")) {
-					if(name.attr("type").equals("scientific")) {
+				for (Element name : e.select("name")) {
+					if (name.attr("type").equals("scientific")) {
 						scientificName = name.text();
 						break;
 					}
 				}
 				organism = new Organism(
-					scientificName,
-					Integer.valueOf(e.select("dbReference").attr("id"))
+						scientificName,
+						Integer.valueOf(e.select("dbReference").attr("id"))
 				);
 				break;
 			}
@@ -177,13 +235,13 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 							GeneOntologyTerm go = new GeneOntologyTerm(id, values[1], values[0].charAt(0));
 							switch (go.getCategory()) {
-								case BIOLOGICAL_PROCESS :
+								case BIOLOGICAL_PROCESS:
 									biologicalProcesses.add(go);
 									break;
-								case CELLULAR_COMPONENT :
+								case CELLULAR_COMPONENT:
 									cellularComponents.add(go);
 									break;
-								case MOLECULAR_FUNCTION :
+								case MOLECULAR_FUNCTION:
 									molecularFunctions.add(go);
 									break;
 							}
@@ -197,7 +255,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 			// PROTEIN CREATION
 			protein = new UniProtEntry(
-					uniProtId,
+					uniprotId,
 					accessions,
 					geneName,
 					ec_number,

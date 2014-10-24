@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import com.google.common.collect.Sets;
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
@@ -19,7 +20,7 @@ import java.util.*;
  * The orthology links actually stores multiple orthologs and scores in an OrhtologGroup but only the ortholog with
  * highest score is currently accessible
  */
-public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheClient {
+public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologClient implements ProteinOrthologCacheClient {
 
 	private static PMBProteinOrthologCacheClient _instance;
 	//private File orthologCacheIndexFile;
@@ -32,7 +33,7 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	public static final int MAX_NB_MEMORY_CACHE = 4;
 
 	/**
-	 * List of SpeciesPairProteinOrthologCache having memory cache
+	 * List of SpeciesPairProteinOrthologCache having reading cache on
 	 */
 	private final ArrayList<SpeciesPairProteinOrthologCache> speciesPairMemoryCached;
 

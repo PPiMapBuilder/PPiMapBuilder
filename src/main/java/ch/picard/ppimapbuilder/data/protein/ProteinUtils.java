@@ -25,6 +25,22 @@ public class ProteinUtils {
 	}
 
 	/**
+	 * Making sure a protein entry is from a specific organism. Will change the entry organism if the entry don't have
+	 * exactly the same organism as specified but is from the same species (differences can come from strains).
+	 */
+	public static UniProtEntry correctEntryOrganism(UniProtEntry originalEntry, Organism organism) {
+		if (
+			!originalEntry.getOrganism().equals(organism) &&
+			originalEntry.getOrganism().sameSpecies(organism)
+		) {
+			return new UniProtEntry.Builder(originalEntry)
+					.setOrganism(organism)
+					.build();
+		}
+		return originalEntry;
+	}
+
+	/**
 	 * @author Kevin Gravouil
 	 */
 	public static class UniProtId {
@@ -33,14 +49,10 @@ public class ProteinUtils {
 		 * Uniprot ID pattern. According to
 		 * http://www.ebi.ac.uk/miriam/main/export/xml/
 		 */
-		private final static Pattern pattern = Pattern.compile("([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})(\\-\\d+)?");
-		private final static Pattern strictPattern = Pattern.compile("([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})");
+		private final static Pattern pattern = Pattern.compile("([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})(\\-\\w+)?");
 
 		/**
-		 * Test if a given string matches the Uniprot ID pattern.
-		 *
-		 * @param uniprotId
-		 * @return boolean
+		 * Test if a given string matches the Uniprot ID pattern (authorizing extension like "-1" or "-PRO_XXXXXX").
 		 */
 		public static boolean isValid(String uniprotId) {
 			Matcher matcher = pattern.matcher(uniprotId);
@@ -48,12 +60,20 @@ public class ProteinUtils {
 		}
 
 		/**
+		 * Test if a given string matches the strict Uniprot ID pattern (no extension authorized)
+		 */
+		public static boolean isStrict(String uniprotId) {
+			Matcher matcher = pattern.matcher(uniprotId);
+			return matcher.matches() && uniprotId.equals(matcher.group(1));
+		}
+
+		/**
 		 * Extract strict UniProt ID from a string
 		 */
 		public static String extractStrictUniProtId(String string) {
-			Matcher matcher = strictPattern.matcher(string);
+			Matcher matcher = pattern.matcher(string);
 			if(matcher.matches())
-				return matcher.group();
+				return matcher.group(1);
 			return  null;
 		}
 

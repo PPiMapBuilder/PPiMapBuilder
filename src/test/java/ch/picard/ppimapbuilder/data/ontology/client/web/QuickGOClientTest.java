@@ -82,7 +82,7 @@ public class QuickGOClientTest {
 				int length = uri.toString().length();
 
 				//System.out.println(length);
-				System.out.println(uri);
+				//System.out.println(uri);
 				Assert.assertTrue(length < QuickGOClient.MAX_URL_LENGTH);
 			}
 		}

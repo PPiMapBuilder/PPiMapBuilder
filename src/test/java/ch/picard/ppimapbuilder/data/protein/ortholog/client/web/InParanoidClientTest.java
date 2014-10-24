@@ -1,5 +1,10 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.web;
 
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,7 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class InParanoidTest {
+public class InParanoidClientTest {
 
 	private static Organism human;
 	private static Organism mouse;
@@ -23,20 +28,23 @@ public class InParanoidTest {
 	private static Protein F1NGJ7;
 	private static Protein P24270;
 	private static List<Protein> humanProts;
-	private static ThreadedInParanoidClient client;
+	private static ThreadedProteinOrthologClient client;
 	private static File testFolderOutput;
 	private static Double MINIMUM_ORTHOLOGY_SCORE;
 
 	@BeforeClass
 	public static void init() throws IOException {
-		testFolderOutput = TestUtils.createTestOutputFolder(InParanoidTest.class.getSimpleName());
+		testFolderOutput = TestUtils.createTestOutputFolder(InParanoidClientTest.class.getSimpleName());
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
-		client = new ThreadedInParanoidClient(3);
+		InParanoidClient simpleClient = new InParanoidClient();
+		simpleClient.setCache(PMBProteinOrthologCacheClient.getInstance());
+		client = new ThreadedProteinOrthologClientDecorator(simpleClient, new ExecutorServiceManager(3));
+
 		MINIMUM_ORTHOLOGY_SCORE = 0.85;
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
-		gallus = UserOrganismRepository.getInstance().getOrganismByTaxId(9031);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		gallus = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9031);
 
 		P04040 = new Protein("P04040", human);
 		P24270 = new Protein("P24270", mouse);

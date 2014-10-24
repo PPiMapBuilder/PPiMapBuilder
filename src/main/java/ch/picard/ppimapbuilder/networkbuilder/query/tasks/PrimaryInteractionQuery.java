@@ -1,5 +1,6 @@
-package ch.picard.ppimapbuilder.networkbuilder.query;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 
+import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
@@ -10,8 +11,11 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
+import org.cytoscape.work.TaskMonitor;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
@@ -28,22 +32,35 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 	private final UniProtEntrySet newInteractors;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
-	private final PMBQueryInteractionTask.ThreadedClientManager threadedClientManager;
+	private final ThreadedClientManager threadedClientManager;
+	private final TaskMonitor taskMonitor;
 
-	PrimaryInteractionQuery(
+	public PrimaryInteractionQuery(
 			Organism refOrganism, Organism organism, UniProtEntrySet POIproteinPool, UniProtEntrySet proteinPool,
-			PMBQueryInteractionTask.ThreadedClientManager threadedClientManager, Double minimum_orthology_score
+			ThreadedClientManager threadedClientManager, Double minimum_orthology_score
 	) {
+		this(
+				refOrganism, organism, POIproteinPool, proteinPool,
+				threadedClientManager, minimum_orthology_score,
+				null
+		);
+	}
 
+	public PrimaryInteractionQuery(
+			Organism refOrganism, Organism organism, UniProtEntrySet POIproteinPool, UniProtEntrySet proteinPool,
+			ThreadedClientManager threadedClientManager, Double minimum_orthology_score,
+			TaskMonitor taskMonitor
+	) {
 		this.refOrganism = refOrganism;
 		this.organism = organism;
 		this.POIproteinPool = POIproteinPool;
 		this.proteinPool = proteinPool;
 
 		this.threadedClientManager = threadedClientManager;
-		this.psicquicClient = threadedClientManager.registerPsicquicClient();
-		this.proteinOrthologClient =threadedClientManager.registerProteinOrthologClient();
-		this.uniProtClient = threadedClientManager.registerUniProtClient();
+		this.taskMonitor = taskMonitor;
+		this.psicquicClient = threadedClientManager.getOrCreatePsicquicClient();
+		this.proteinOrthologClient = threadedClientManager.getOrCreateProteinOrthologClient();
+		this.uniProtClient = threadedClientManager.getOrCreateUniProtClient();
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
@@ -52,33 +69,24 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 	public PrimaryInteractionQuery call() throws Exception {
 		// Get list of protein of interest's orthologs in this organism
-		Set<Protein> POIinOrg = POIproteinPool.getInOrg(organism).keySet();
-
-		// Generate MiQL query
-		final List<String> additionnalQueries = new ArrayList<String>();
-		for (final Protein protein : POIinOrg) {
-			additionnalQueries.add(
-					InteractionUtils.generateMiQLQueryIDTaxID(
-							protein.getUniProtId(),
-							organism.getTaxId()
-					)
-			);
-		}
+		Set<Protein> POIinOrg = POIproteinPool.getProteinInOrganismWithReferenceEntry(organism).keySet();
 
 		//Get primary interactors via interaction search
 		Set<Protein> interactors = ProteinUtils.newProteins(
-			InteractionUtils.getInteractors(
-					InteractionUtils.filter(
-							psicquicClient.getByQueries(additionnalQueries),
-							new InteractionUtils.UniProtInteractionFilter()
-					)
-			),
-			organism
+				InteractionUtils.getInteractors(
+						InteractionUtils.filter(
+								psicquicClient.getProteinsInteractor(POIinOrg),
+								new InteractionUtils.UniProtInteractionFilter()
+						)
+				),
+				organism
 		);
 		threadedClientManager.unRegister(psicquicClient);
 
 		//Remove POIs
 		interactors.removeAll(POIinOrg);
+
+		if (taskMonitor != null) taskMonitor.setProgress(0.66);
 
 		//Search new interactors
 		if (!interactors.isEmpty()) {
@@ -86,16 +94,9 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 			if (organism.equals(refOrganism)) {
 				for (UniProtEntry interactor :
 						uniProtClient.retrieveProteinsData(ProteinUtils.asIdentifiers(interactors)).values()
-				) {
-					if(
-							!interactor.getOrganism().equals(refOrganism) &&
-							interactor.getOrganism().sameSpecies(refOrganism)
-					) {
-						interactor = new UniProtEntry.Builder(interactor)
-								.setOrganism(refOrganism)
-								.build();
-					}
-					newInteractors.add(interactor);
+						) {
+					if (interactor.getOrganism().equals(organism))
+						newInteractors.add(ProteinUtils.correctEntryOrganism(interactor, refOrganism));
 				}
 			} else {
 				Map<Protein, Map<Organism, OrthologScoredProtein>> orthologs =
@@ -114,30 +115,27 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 					if (protInRefOrg == null)
 						continue;
 
-					if (!proteinPool.contains(protInRefOrg)) {
-						UniProtEntry proteinEntry = uniProtClient.retrieveProteinData(protInRefOrg.getUniProtId());
+					UniProtEntry entry = proteinPool.find(protInRefOrg.getUniProtId());
+					if (entry == null) entry = proteinPool.findWithAccessions(protInRefOrg.getUniProtId());
 
-						if(proteinEntry != null) {
-							if(
-									!proteinEntry.getOrganism().equals(refOrganism) &&
-											proteinEntry.getOrganism().sameSpecies(refOrganism)
-									) {
-								proteinEntry = new UniProtEntry.Builder(proteinEntry)
-										.setOrganism(refOrganism)
-										.build();
-							}
+					if (entry == null) {
+						entry = uniProtClient.retrieveProteinData(protInRefOrg.getUniProtId());
 
-							proteinEntry.addOrtholog(interactor);
+						if (entry == null || entry.getOrganism().equals(organism))
+							continue;
 
-							newInteractors.add(proteinEntry);
-						}
+						newInteractors.add(ProteinUtils.correctEntryOrganism(entry, refOrganism));
 					}
+
+					entry.addOrtholog(interactor);
 				}
 			}
 		}
 
 		threadedClientManager.unRegister(proteinOrthologClient);
 		threadedClientManager.unRegister(uniProtClient);
+
+		if (taskMonitor != null) taskMonitor.setProgress(1);
 
 		return this;
 	}

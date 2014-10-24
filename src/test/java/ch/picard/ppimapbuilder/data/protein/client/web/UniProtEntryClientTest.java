@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.client.web;
 
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,7 +18,7 @@ public class UniProtEntryClientTest {
 
 	@BeforeClass
 	public static void init() {
-		uniProtEntryClient = new UniProtEntryClient(6);
+		uniProtEntryClient = new UniProtEntryClient(new ExecutorServiceManager(6));
 		prots = Arrays.asList("P04040", "P61106", "Q70EK8", "Q96RU2", "Q92621", "Q9BRV8", "Q92624", "Q9NV70", "P13804",
 				"Q9UMJ3", "Q8ZAB3", "P13807", "Q5Y7A7", "O00629", "O00628", "Q96S59", "O00623", "P22455", "P04637", "Q8TDI0", "Q92633",
 				"P04632", "Q8WVM8", "Q5NH30", "Q8ZAC2");

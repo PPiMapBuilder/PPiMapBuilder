@@ -18,7 +18,6 @@ import java.util.*;
 public class InteractionUtils {
 
 
-
 	/**
 	 * Uses to cluster interaction using MiCluster
 	 */
@@ -38,14 +37,22 @@ public class InteractionUtils {
 		HashSet<String> interactors = new HashSet<String>();
 
 		for (BinaryInteraction interaction : interactions) {
-			String idA = ProteinUtils.UniProtId.extractStrictUniProtId(
-					interaction.getInteractorA().getIdentifiers().get(0).getIdentifier()
-			);
-			String idB = ProteinUtils.UniProtId.extractStrictUniProtId(
-					interaction.getInteractorB().getIdentifiers().get(0).getIdentifier()
-			);
+			String idA = null, idB = null;
 
-			if(idA != null && idB != null) {
+			for (CrossReference referenceA : interaction.getInteractorA().getIdentifiers()) {
+				if (referenceA.getDatabase().equals("uniprotkb")) {
+					idA = referenceA.getIdentifier();
+					break;
+				}
+			}
+			for (CrossReference referenceB : interaction.getInteractorB().getIdentifiers()) {
+				if (referenceB.getDatabase().equals("uniprotkb")) {
+					idB = referenceB.getIdentifier();
+					break;
+				}
+			}
+
+			if (idA != null && idB != null) {
 				interactors.add(idA);
 				interactors.add(idB);
 			}
@@ -55,7 +62,7 @@ public class InteractionUtils {
 	}
 
 	public static abstract class InteractionFilter {
-		public boolean isValidInteraction(BinaryInteraction ignored) {
+		public boolean isValidInteraction(BinaryInteraction interaction) {
 			return true;
 		}
 
@@ -75,7 +82,6 @@ public class InteractionUtils {
 		public boolean isValidInteractor(Interactor interactor) {
 			return interactor.getOrganism().getTaxid().equals(String.valueOf(organism.getTaxId()));
 		}
-
 	}
 
 	public static final class UniProtInteractionFilter extends InteractionFilter {
@@ -92,6 +98,7 @@ public class InteractionUtils {
 			for (CrossReference ref : ids) {
 				boolean isUniprot = ref.getDatabase().equals("uniprotkb");
 				boolean idValid = ProteinUtils.UniProtId.isValid(ref.getIdentifier());
+
 				hasUniprot = hasUniprot || (isUniprot && idValid);
 				if (hasUniprot) {
 					uniprot = ref;
@@ -114,17 +121,19 @@ public class InteractionUtils {
 
 	/**
 	 * Filter a List of BinaryInteraction to keep only the interaction satisfying the filters InteractionFilter
+	 *
 	 * @param interactions
 	 * @param filters
 	 */
 	public static ArrayList<BinaryInteraction> filter(List<BinaryInteraction> interactions, InteractionFilter... filters) {
 		ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
-		interactionLoop : for (BinaryInteraction interaction : interactions) {
+		interactionLoop:
+		for (BinaryInteraction interaction : interactions) {
 			boolean valid = true;
 
 			for (InteractionFilter filter : filters) {
 				valid = valid && filter.isValidInteraction(interaction);
-				if(!valid) continue  interactionLoop;
+				if (!valid) continue interactionLoop;
 			}
 
 			for (Interactor interactor : new Interactor[]{interaction.getInteractorA(),
@@ -132,11 +141,11 @@ public class InteractionUtils {
 
 				for (InteractionFilter filter : filters) {
 					valid = valid && filter.isValidInteractor(interactor);
-					if(!valid) continue  interactionLoop;
+					if (!valid) continue interactionLoop;
 				}
 			}
 
-			if(valid) validInteractions.add(interaction);
+			if (valid) validInteractions.add(interaction);
 		}
 		return validInteractions;
 	}
@@ -154,7 +163,7 @@ public class InteractionUtils {
 
 	public static List<String> psicquicServicesToStrings(List<PsicquicService> services) {
 		ArrayList<String> out = new ArrayList<String>();
-		for(PsicquicService service : services) {
+		for (PsicquicService service : services) {
 			out.add(service.getName());
 		}
 		return out;

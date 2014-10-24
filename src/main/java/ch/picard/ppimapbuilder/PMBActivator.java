@@ -40,7 +40,10 @@ import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 
 import java.awt.*;
+import java.io.*;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The starting point of the plug-in
@@ -48,6 +51,10 @@ import java.util.Properties;
 public class PMBActivator extends AbstractCyActivator {
 
 	public static BundleContext context;
+
+	public static final String version = PMBActivator.class.getPackage().getImplementationVersion();
+	public static final boolean isSnapshot = version != null && version.contains("SNAPSHOT");
+	public static final String buildTimestamp = getBuildTimestamp();
 
 	public PMBActivator() {
 		super();
@@ -133,8 +140,6 @@ public class PMBActivator extends AbstractCyActivator {
 
 			// Create a new Visual style
 			VisualStyle vs = visualStyleFactoryServiceRef.createVisualStyle("PPiMapBuilder Visual Style");
-			VisualStyle vsDefault = visualMappingManager.getDefaultVisualStyle();
-
 
 			//NODE
 			//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
@@ -162,16 +167,13 @@ public class PMBActivator extends AbstractCyActivator {
 
 			visualMappingManager.addVisualStyle(vs);
 
-
-			// Data Table management
-			CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
-			MapTableToNetworkTablesTaskFactory mapTableToNetworkTablesTaskFactory = getService(bc, MapTableToNetworkTablesTaskFactory.class);
-
 			// Network creation task factory
-			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef, cyNetworkManagerServiceRef,
-					cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef, visualMappingManager, queryWindow, tableFactory,
-					mapTableToNetworkTablesTaskFactory);
-			queryWindow.setCreateNetworkfactory(createNetworkfactory);
+			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(
+					cyNetworkManagerServiceRef, cyNetworkNamingServiceRef, cyNetworkFactoryServiceRef,
+					cyNetworkViewFactoryServiceRef, cyNetworkViewManagerServiceRef, layoutManagerServiceRef,
+					visualMappingManager, queryWindow
+			);
+			queryWindow.setCreateNetworkFactory(createNetworkfactory);
 			registerService(bc, createNetworkfactory, TaskFactory.class, new Properties());
 			queryWindow.setTaskManager(networkBuildTaskManager);
 
@@ -184,10 +186,7 @@ public class PMBActivator extends AbstractCyActivator {
 			// Credit task factory
 			creditMenuFactory = new PMBCreditMenuTaskFactory(creditWindow);
 			registerService(bc, creditMenuFactory, TaskFactory.class, new Properties());
-
 		}
-		
-		
 
 		// Query window menu
 		PMBQueryMenuTaskFactory queryWindowTaskFactory = new PMBQueryMenuTaskFactory(queryWindow);
@@ -211,5 +210,21 @@ public class PMBActivator extends AbstractCyActivator {
 		registerService(bc, creditWindowTaskFactory, TaskFactory.class, props);
 
 		System.out.println("[PPiMapBuilder] Started.");
+	}
+
+	private static String getBuildTimestamp() {
+		BufferedReader br = new BufferedReader(new InputStreamReader(PMBActivator.class.getResourceAsStream("/META-INF/MANIFEST.MF")));
+
+		Pattern pattern = Pattern.compile("Build-Time:\\s+(.*)");
+		String line = null;
+		try {
+			while ((line = br.readLine()) != null) {
+				Matcher matcher = pattern.matcher(line);
+				if(matcher.matches())
+					return matcher.group(1);
+			}
+		} catch (IOException ignored) {}
+
+		return "";
 	}
 }

@@ -25,7 +25,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
-		System.out.println("PMB Layout Task");
+		//System.out.println("PMB Layout Task");
 		
 		// Generate list of major GO in the network
 		CyTable nodeTable = view.getModel().getDefaultNodeTable();

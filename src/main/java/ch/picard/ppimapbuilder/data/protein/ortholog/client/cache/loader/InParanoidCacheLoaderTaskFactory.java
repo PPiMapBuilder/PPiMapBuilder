@@ -17,13 +17,9 @@ public class InParanoidCacheLoaderTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		message = null;
 		error = null;
-		final TaskIterator taskIterator = new TaskIterator(
-				new InParanoidCacheLoaderTask(this)
+		return new TaskIterator(
+				new InParanoidCacheLoaderTask(this, callback)
 		);
-		if(callback != null)
-			taskIterator.append(callback);
-
-		return taskIterator;
 	}
 
 	public void setOrganisms(List<Organism> organisms) {

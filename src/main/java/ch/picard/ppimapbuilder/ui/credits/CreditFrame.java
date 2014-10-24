@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.ui.credits;
 
+import ch.picard.ppimapbuilder.PMBActivator;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.ui.util.EscapeCloseListener;
@@ -45,7 +46,7 @@ public class CreditFrame extends JFrame {
 		getContentPane().add(lblPpimapbuilder, "cell 0 2 3,alignx center");
 
 		// PPiMapBuilder Version
-		String version = "Version " + getClass().getPackage().getImplementationVersion();
+		String version = "Version " + PMBActivator.version;
 		JLabel lblVersion = new JLabel(version);
 		lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 12));
 		getContentPane().add(lblVersion, "cell 0 3 3,alignx center");
