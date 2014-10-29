@@ -5,17 +5,24 @@ import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.util.test.*;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.work.TaskIterator;
 import org.junit.Test;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 
 public class PMBInteractionNetworkBuildTaskFactoryTest {
 
-	Organism human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
-	Organism mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
+	static Organism human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+	static List<Organism> otherOrganisms = new ArrayList<Organism>() {{
+		add(InParanoidOrganismRepository.getInstance().getOrganismByTaxId(7227));
+		add(InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090));
+		add(InParanoidOrganismRepository.getInstance().getOrganismByTaxId(559292));
+		add(InParanoidOrganismRepository.getInstance().getOrganismByTaxId(6239));
+	}};
 
 	NetworkQueryParameters nqp = new DummyNetworkQueryParameters(
 			Arrays.asList(
@@ -28,42 +35,61 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 			Arrays.asList(
 					//"P04040"
 					"Q8VI75",
-					"B2RQC6"
+					"B2RQC6",
+					"O75153"
 			),
 			human,
-			Arrays.asList(
-					mouse,
-					InParanoidOrganismRepository.getInstance().getOrganismByTaxId(559292)
-			)
+			otherOrganisms
 	);
 
 	@Test
 	public void test() throws Exception {
+		DummyCyNetworkFactory networkFactory;
+
 		PMBInteractionNetworkBuildTaskFactory networkBuild = new PMBInteractionNetworkBuildTaskFactory(
-				new DummyCyNetworkManager(), new DummyCyNetworkNaming(), new DummyCyNetworkFactory(),
+				new DummyCyNetworkManager(), new DummyCyNetworkNaming(), networkFactory = new DummyCyNetworkFactory(),
 				new DummyCyNetworkViewFactory(), new DummyCyNetworkViewManager(), new DummyCyLayoutAlgorithmManager(),
 				new DummyVisualMappingManager(), nqp
 		);
 
+		// Execute the whole network generation process
 		TaskIterator taskIterator = networkBuild.createTaskIterator();
 		while (taskIterator.hasNext()) {
 			taskIterator.next().run(new DummyTaskMonitor());
 		}
 
-		System.out.println("\n");
+		{ // Display interactor count, interaction count and protein of interest count
+			System.out.println("\n");
+			System.out.println(networkBuild.getProteinOfInterestPool().size() + " POIs");
+			System.out.println(networkBuild.getInteractorPool().size() + " interactors");
 
-		System.out.println(networkBuild.getProteinOfInterestPool().size() + " POIs");
-		System.out.println(networkBuild.getInteractorPool().size() + " interactors");
+			int nbInteraction = 0;
+			for (Organism organism : networkBuild.getInteractionsByOrg().keySet()) {
+				Collection<EncoreInteraction> encoreInteractions = networkBuild.getInteractionsByOrg().get(organism);
+				nbInteraction += encoreInteractions.size();
+				System.out.println("ORG: " + organism + "  -> " + networkBuild.getInteractionsByOrg().get(organism).size() + " interactions");
+			}
 
-		int nbInteraction = 0;
-		for (Organism organism : networkBuild.getInteractionsByOrg().keySet()) {
-			Collection<EncoreInteraction> encoreInteractions = networkBuild.getInteractionsByOrg().get(organism);
-			nbInteraction += encoreInteractions.size();
-			System.out.println("ORG: " + organism + "  -> " + networkBuild.getInteractionsByOrg().get(organism).size() + " interactions");
-
+			System.out.println(nbInteraction + " interactions");
 		}
 
-		System.out.println(nbInteraction + " interactions");
+		{ // Display unlinked nodes
+			DummyCyNetwork network = networkFactory.getNetworks().get(0);
+			List<CyEdge> edges = network.getEdgeList();
+			Set<CyNode> nodes = new HashSet<CyNode>(network.getNodeList());
+			Set<CyNode> linkedNodes = new HashSet<CyNode>();
+			for (CyEdge edge : edges)
+				for (CyNode node : nodes)
+					if (edge.getSource() == node || edge.getTarget() == node)
+						linkedNodes.add(node);
+
+			System.out.println("\nEdges: "+ edges.size());
+			System.out.println("Nodes: "+ nodes.size());
+			System.out.println("Linked nodes: "+ linkedNodes.size());
+			System.out.println("Unlinked nodes:");
+			nodes.removeAll(linkedNodes);
+			System.out.println(nodes);
+		}
 	}
 
 }

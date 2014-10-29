@@ -2,25 +2,15 @@ package ch.picard.ppimapbuilder.data.protein.ortholog.client.web;
 
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.ProteinOrthologCacheClient;
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
+import ch.picard.ppimapbuilder.util.IOUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Simple Java client for InParanoid database
@@ -42,68 +32,15 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 		return cache == null;
 	}
 
-	private Document searchOrthologEntry(Protein protein, int timeout) throws IOException {
-		// Create request parameters
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("id", protein.getUniProtId());
-		params.put("idtype", "proteinid");
-		params.put("all_or_selection", "all");
-		params.put("rettype", "xml");
-
-		// Create JSoup connection
-		Connection connect = Jsoup.connect(BASE_URL);
-		connect.timeout(timeout);
-		connect.data(params);
-		return connect.get();
-	}
-
-	private Document searchOrthologEntryWithRetryAndCache(final Protein protein) throws IOException {
-		Document doc = null;
-
-		// Load xml response file (with multiple try)
-		final int MAX_TRY = 3;
-		int pos = 1;
-		//IOException lastError = null;
-		do {
-			try {
-				// sleep to temporize requests
-				if (pos > 1)
-					Thread.sleep(500);
-
-				final int timeout = 18000 + (18000 * pos) / 3;
-
-				System.out.print("inparanoid-");
-				doc = searchOrthologEntry(protein, timeout);
-
-				break;
-			} catch (HttpStatusException e) {
-				if (e.getStatusCode() == 500)
-					break; //no entry found or inParanoid server error
-				if (e.getStatusCode() == 503 || e.getStatusCode() == 504) {
-					throw e;
-				}
-
-				//lastError = new IOException(e);
-				//throw new IOException(e);
-			} catch (SocketTimeoutException e) {
-				//Connection response timeout
-				//lastError = new IOException(e);
-				throw new IOException(e);
-			} catch (InterruptedException ignored) {
-			}
-		} while (++pos <= MAX_TRY && doc == null);
-
-		System.out.print(protein.getUniProtId() + ":" + pos + "try");
-
-		//if(doc == null) throw lastError;
-		//System.out.println("done with "+(pos-1)+" try");
-
-		return doc;
-	}
-
 	@Override
 	public OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws Exception {
-		Document doc = searchOrthologEntryWithRetryAndCache(protein);
+		URIBuilder builder = new URIBuilder(BASE_URL)
+				.addParameter("id", protein.getUniProtId())
+				.addParameter("idtype", "proteinid")
+				.addParameter("all_or_selection", "all")
+				.addParameter("rettype", "xml");
+
+		Document doc = IOUtils.getDocumentWithRetry(builder.build().toString(), 1500, 3000, 3, 500);
 		if (doc == null) return null;
 
 		// For each species pair

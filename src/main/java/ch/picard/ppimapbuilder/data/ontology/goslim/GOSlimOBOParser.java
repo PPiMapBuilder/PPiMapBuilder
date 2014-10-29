@@ -1,6 +1,5 @@
 package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 
 import java.io.BufferedReader;
@@ -10,9 +9,8 @@ import java.io.InputStreamReader;
 
 public class GOSlimOBOParser {
 
-
-	public static GeneOntologySet parseOBOFile(InputStream inputStream, String name) {
-		final GeneOntologySet set = new GeneOntologySet(name);
+	public static GOSlim parseOBOFile(InputStream inputStream, String name) {
+		final GOSlim set = new GOSlim(name);
 		BufferedReader reader = null;
 
 		try {

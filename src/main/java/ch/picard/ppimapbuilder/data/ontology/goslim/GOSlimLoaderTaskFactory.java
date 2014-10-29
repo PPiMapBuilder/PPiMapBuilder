@@ -1,6 +1,5 @@
 package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
 import org.apache.commons.io.FilenameUtils;
 import org.cytoscape.work.*;
 
@@ -71,7 +70,7 @@ public class GOSlimLoaderTaskFactory extends AbstractTaskFactory {
 				error = "Please enter a GO slim name.";
 				return;
 			}
-			if (name.equals(GeneOntologySet.DEFAULT)) {
+			if (name.equals(GOSlim.DEFAULT)) {
 				error = "The GO slim name '" + name + "' is already taken. Please choose an other one";
 				return;
 			}
@@ -84,7 +83,7 @@ public class GOSlimLoaderTaskFactory extends AbstractTaskFactory {
 				return;
 			}
 
-			GeneOntologySet goSlim = GOSlimOBOParser.parseOBOFile(new FileInputStream(file), name);
+			GOSlim goSlim = GOSlimOBOParser.parseOBOFile(new FileInputStream(file), name);
 
 			if (goSlim == null || goSlim.isEmpty()) {
 				error = "GO slim could not be read. Please check your OBO file is readable.";

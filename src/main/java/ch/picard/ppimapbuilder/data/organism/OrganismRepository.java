@@ -17,6 +17,14 @@ class OrganismRepository {
         this.organisms = new ArrayList<Organism>(organisms);
     }
 
+	public Organism getOrganismByGenusAndSpecies(String genus, String species) {
+		for (Organism organism : organisms) {
+			if(organism.getGenus().equalsIgnoreCase(genus) && organism.getSpecies().equalsIgnoreCase(species))
+				return organism;
+		}
+		return null;
+	}
+
     public Organism getOrganismBySimpleName(String simpleName) {
         for (Organism org : organisms)
             if (simpleName.startsWith(org.getSimpleScientificName()))

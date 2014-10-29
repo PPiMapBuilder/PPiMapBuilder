@@ -153,4 +153,9 @@ public class DummyCyNetwork implements CyNetwork {
 	public Long getSUID() {
 		return null;
 	}
+
+	public List<CyNode> getNodes() {
+		return nodes;
+	}
+
 }

@@ -26,7 +26,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 	@Override
 	public final void run() {
-		if (executorService == null) {
+		if (executorService == null || nbRequests <= 1) {
 			for (int i = 0; i < nbRequests; i++) {
 				try {
 					processResult(submitRequests(i).call(), i);

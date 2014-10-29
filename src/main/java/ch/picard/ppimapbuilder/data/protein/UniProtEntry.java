@@ -1,5 +1,7 @@
 package ch.picard.ppimapbuilder.data.protein;
 
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyCategory;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import com.eclipsesource.json.JsonObject;
@@ -14,12 +16,10 @@ public class UniProtEntry extends Protein {
 	transient private final String proteinName;
 	transient private final String ecNumber;
 	transient private final boolean reviewed;
-	transient private final Set<GeneOntologyTerm> cellularComponents;
-	transient private final Set<GeneOntologyTerm> biologicalProcesses;
-	transient private final Set<GeneOntologyTerm> molecularFunctions;
-	transient private final HashMap<Organism, Protein> orthologs = new HashMap<Organism, Protein>();
+	transient private final GeneOntologyTermSet geneOntologyTerms;
+	transient private final HashMap<Organism, Protein> orthologs;
 
-	public UniProtEntry(
+	private UniProtEntry(
 			String uniprotId,
 			LinkedHashSet<String> accessions,
 			String geneName,
@@ -28,9 +28,8 @@ public class UniProtEntry extends Protein {
 			String proteinName,
 			boolean reviewed,
 			Set<String> synonymGeneNames,
-			Set<GeneOntologyTerm> biologicalProcesses,
-			Set<GeneOntologyTerm> cellularComponents,
-			Set<GeneOntologyTerm> molecularFunctions
+			GeneOntologyTermSet geneOntologyTerms,
+			HashMap<Organism, Protein> orthologs
 	) {
 		super(uniprotId, organism);
 		this.accessions = accessions;
@@ -39,9 +38,8 @@ public class UniProtEntry extends Protein {
 		this.geneName = geneName;
 		this.reviewed = reviewed;
 		this.synonymGeneNames = synonymGeneNames;
-		this.cellularComponents = cellularComponents;
-		this.biologicalProcesses = biologicalProcesses;
-		this.molecularFunctions = molecularFunctions;
+		this.geneOntologyTerms = geneOntologyTerms;
+		this.orthologs = orthologs;
 	}
 
 	public Protein getOrtholog(Organism organism) {
@@ -56,38 +54,8 @@ public class UniProtEntry extends Protein {
 		return orthologs.put(prot.getOrganism(), prot);
 	}
 
-	public Set<GeneOntologyTerm> getCellularComponents() {
-		return cellularComponents;
-	}
-
-	public Set<GeneOntologyTerm> getBiologicalProcesses() {
-		return biologicalProcesses;
-	}
-
-	public Set<GeneOntologyTerm> getMolecularFunctions() {
-		return molecularFunctions;
-	}
-
-	public List<String> getCellularComponentsAsSringList() {
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyTerm go : this.cellularComponents)
-			list.add(go.toString());
-		return list;
-	}
-
-	public List<String> getBiologicalProcessesAsStringList() {
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyTerm go : this.biologicalProcesses)
-			list.add(go.toString());
-		return list;
-	}
-
-	public List<String> getMolecularFunctionsAsStringList() {
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyTerm go : this.molecularFunctions) {
-			list.add(go.toString());
-		}
-		return list;
+	public GeneOntologyTermSet getGeneOntologyTerms() {
+		return geneOntologyTerms;
 	}
 
 	public Set<String> getSynonymGeneNames() {
@@ -111,14 +79,11 @@ public class UniProtEntry extends Protein {
 	}
 
 	public boolean isIdentical(UniProtEntry entry) {
-		return uniProtId.equals(entry.uniProtId)
+		return accessions.equals(entry.accessions)
 				&& organism.equals(entry.organism)
-				&& accessions.equals(entry.accessions)
 				&& orthologs.equals(entry.orthologs)
 				&& synonymGeneNames.equals(entry.synonymGeneNames)
-				&& biologicalProcesses.equals(entry.biologicalProcesses)
-				&& cellularComponents.equals(entry.cellularComponents)
-				&& molecularFunctions.equals(entry.molecularFunctions)
+				&& geneOntologyTerms.equals(entry.geneOntologyTerms)
 				&& geneName.equals(entry.geneName)
 				&& ecNumber.equals(entry.ecNumber)
 				&& proteinName.equals(entry.proteinName)
@@ -155,8 +120,6 @@ public class UniProtEntry extends Protein {
 	 */
 	public static class Builder {
 
-		private final UniProtEntry template;
-
 		private String uniprotId = null;
 		private LinkedHashSet<String> accessions = null;
 		private Organism organism = null;
@@ -165,9 +128,7 @@ public class UniProtEntry extends Protein {
 		private String proteinName = null;
 		private String ecNumber = null;
 		private Boolean reviewed = null;
-		private Set<GeneOntologyTerm> cellularComponents = null;
-		private Set<GeneOntologyTerm> biologicalProcesses = null;
-		private Set<GeneOntologyTerm> molecularFunctions = null;
+		private GeneOntologyTermSet geneOntologyTerms = null;
 		private HashMap<Organism, Protein> orthologs = null;
 
 		public Builder() {
@@ -175,32 +136,30 @@ public class UniProtEntry extends Protein {
 		}
 
 		public Builder(UniProtEntry entry) {
-			this.template = entry;
+			if(entry != null) {
+				uniprotId = entry.uniProtId;
+				accessions = new LinkedHashSet<String>(entry.accessions);
+				organism = entry.organism;
+				geneName = entry.geneName;
+				synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
+				proteinName = entry.proteinName;
+				ecNumber = entry.ecNumber;
+				reviewed = entry.reviewed;
+				geneOntologyTerms = new GeneOntologyTermSet(entry.geneOntologyTerms);
+				orthologs = new HashMap<Organism, Protein>(entry.orthologs);
+			}
 		}
 
-		public Builder(UniProtEntry... entries) {
-			boolean first = true;
-			for (UniProtEntry entry : entries) {
-				if (first) {
-					first = false;
-					accessions = new LinkedHashSet<String>(entry.accessions);
-					synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
-					cellularComponents = new HashSet<GeneOntologyTerm>(entry.cellularComponents);
-					biologicalProcesses = new HashSet<GeneOntologyTerm>(entry.biologicalProcesses);
-					molecularFunctions = new HashSet<GeneOntologyTerm>(entry.molecularFunctions);
-					orthologs = new HashMap<Organism, Protein>(entry.orthologs);
-				} else {
-					accessions.addAll(entry.accessions);
-					accessions.add(entry.uniProtId);
-					synonymGeneNames.addAll(entry.synonymGeneNames);
-					cellularComponents.addAll(entry.cellularComponents);
-					biologicalProcesses.addAll(entry.biologicalProcesses);
-					molecularFunctions.addAll(entry.molecularFunctions);
-					orthologs.putAll(entry.orthologs);
-				}
-			}
+		public Builder(UniProtEntry referenceEntry, UniProtEntry... entries) {
+			this(referenceEntry);
 
-			this.template = entries[0];
+			for (UniProtEntry entry : entries) {
+				accessions.addAll(entry.accessions);
+				accessions.add(entry.uniProtId);
+				synonymGeneNames.addAll(entry.synonymGeneNames);
+				geneOntologyTerms.addAll(entry.geneOntologyTerms);
+				orthologs.putAll(entry.orthologs);
+			}
 		}
 
 		public Builder setUniprotId(String uniprotId) {
@@ -208,8 +167,18 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder setAccessions(LinkedHashSet<String> accessions) {
-			this.accessions = accessions;
+		private LinkedHashSet<String> getOrCreateAccessions() {
+			if(accessions != null) return accessions;
+			return accessions = new LinkedHashSet<String>();
+		}
+
+		public Builder addAccession(String accession) {
+			getOrCreateAccessions().add(accession);
+			return this;
+		}
+
+		public Builder addAccessions(LinkedHashSet<String> accessions) {
+			getOrCreateAccessions().addAll(accessions);
 			return this;
 		}
 
@@ -223,8 +192,18 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder setSynonymGeneNames(Set<String> synonymGeneNames) {
-			this.synonymGeneNames = synonymGeneNames;
+		private Set<String> getOrCreateSynonymGeneNames() {
+			if(synonymGeneNames != null) return synonymGeneNames;
+			return synonymGeneNames = new HashSet<String>();
+		}
+
+		public Builder addSynonymGeneNames(String synonymGeneName) {
+			getOrCreateSynonymGeneNames().add(synonymGeneName);
+			return this;
+		}
+
+		public Builder addSynonymGeneNames(Set<String> synonymGeneNames) {
+			getOrCreateSynonymGeneNames().addAll(synonymGeneNames);
 			return this;
 		}
 
@@ -243,47 +222,49 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder setCellularComponents(Set<GeneOntologyTerm> cellularComponents) {
-			this.cellularComponents = cellularComponents;
+		private GeneOntologyTermSet getOrCreateGeneOntologyTerms() {
+			if(geneOntologyTerms != null) return geneOntologyTerms;
+			return geneOntologyTerms = new GeneOntologyTermSet();
+		}
+
+		public Builder addGeneOntologyTerms(Set<GeneOntologyTerm> terms) {
+			getOrCreateGeneOntologyTerms().addAll(terms);
 			return this;
 		}
 
-		public Builder setBiologicalProcesses(Set<GeneOntologyTerm> biologicalProcesses) {
-			this.biologicalProcesses = biologicalProcesses;
+		public Builder addGeneOntologyTerm(GeneOntologyTerm term) {
+			getOrCreateGeneOntologyTerms().add(term);
 			return this;
 		}
 
-		public Builder setMolecularFunctions(Set<GeneOntologyTerm> molecularFunctions) {
-			this.molecularFunctions = molecularFunctions;
+		private HashMap<Organism, Protein> getOrCreateOrthologs() {
+			if(orthologs != null) return orthologs;
+			return orthologs = new HashMap<Organism, Protein>();
+		}
+
+		public Builder addOrthologs(HashMap<Organism, Protein> orthologs) {
+			getOrCreateOrthologs().putAll(orthologs);
 			return this;
 		}
 
-		public Builder setOrthologs(HashMap<Organism, Protein> orthologs) {
-			this.orthologs = orthologs;
+		public Builder addOrtholog(Organism organism, Protein protein) {
+			getOrCreateOrthologs().put(organism, protein);
 			return this;
 		}
 
 		public UniProtEntry build() {
-			UniProtEntry uniProtEntry = new UniProtEntry(
-				template != null && uniprotId == null           ? template.uniProtId           : uniprotId,
-				template != null && accessions == null          ? template.accessions          : accessions,
-				template != null && geneName == null            ? template.geneName            : geneName,
-				template != null && ecNumber == null            ? template.ecNumber            : ecNumber,
-				template != null && organism == null            ? template.organism            : organism,
-				template != null && proteinName == null         ? template.proteinName         : proteinName,
-				template != null && reviewed == null            ? template.reviewed            : reviewed,
-				template != null && synonymGeneNames == null    ? template.synonymGeneNames    : synonymGeneNames,
-				template != null && biologicalProcesses == null ? template.biologicalProcesses : biologicalProcesses,
-				template != null && cellularComponents == null  ? template.cellularComponents  : cellularComponents,
-				template != null && molecularFunctions == null  ? template.molecularFunctions  : molecularFunctions
+			return new UniProtEntry(
+					uniprotId,
+					getOrCreateAccessions(),
+					geneName,
+					ecNumber,
+					organism,
+					proteinName,
+					reviewed,
+					getOrCreateSynonymGeneNames(),
+					getOrCreateGeneOntologyTerms(),
+					getOrCreateOrthologs()
 			);
-
-			if (template != null && orthologs == null)
-				orthologs = template.orthologs;
-			for (Protein ortholog : orthologs.values()) {
-				uniProtEntry.addOrtholog(ortholog);
-			}
-			return uniProtEntry;
 		}
 
 	}

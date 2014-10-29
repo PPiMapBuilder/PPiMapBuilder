@@ -2,7 +2,10 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
+import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
@@ -11,6 +14,8 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Group of method useful for manipulation of interaction list
@@ -33,28 +38,43 @@ public class InteractionUtils {
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static Set<String> getInteractors(List<BinaryInteraction> interactions) {
-		HashSet<String> interactors = new HashSet<String>();
+	public static Set<Protein> getInteractors(List<BinaryInteraction> interactions) {
+		HashSet<Protein> interactors = new HashSet<Protein>();
+
+		Pattern pattern = Pattern.compile("\\(.*\\)");
 
 		for (BinaryInteraction interaction : interactions) {
+			Interactor interactorA = interaction.getInteractorA();
+			Interactor interactorB = interaction.getInteractorB();
 			String idA = null, idB = null;
+			Organism orgA = null, orgB = null;
 
-			for (CrossReference referenceA : interaction.getInteractorA().getIdentifiers()) {
+			for (CrossReference referenceA : interactorA.getIdentifiers()) {
 				if (referenceA.getDatabase().equals("uniprotkb")) {
 					idA = referenceA.getIdentifier();
 					break;
 				}
 			}
-			for (CrossReference referenceB : interaction.getInteractorB().getIdentifiers()) {
+			for (CrossReference referenceB : interactorB.getIdentifiers()) {
 				if (referenceB.getDatabase().equals("uniprotkb")) {
 					idB = referenceB.getIdentifier();
 					break;
 				}
 			}
 
-			if (idA != null && idB != null) {
-				interactors.add(idA);
-				interactors.add(idB);
+			orgA = OrganismUtils.findOgranismInMITABTaxId(
+					InParanoidOrganismRepository.getInstance(),
+					interactorA.getOrganism().getTaxid()
+			);
+
+			orgB = OrganismUtils.findOgranismInMITABTaxId(
+					InParanoidOrganismRepository.getInstance(),
+					interactorB.getOrganism().getTaxid()
+			);
+
+			if (idA != null && idB != null && orgA != null && orgB != null) {
+				interactors.add(new Protein(idA, orgA));
+				interactors.add(new Protein(idB, orgB));
 			}
 		}
 
@@ -80,7 +100,12 @@ public class InteractionUtils {
 
 		@Override
 		public boolean isValidInteractor(Interactor interactor) {
-			return interactor.getOrganism().getTaxid().equals(String.valueOf(organism.getTaxId()));
+			return organism.equals(
+					OrganismUtils.findOgranismInMITABTaxId(
+							InParanoidOrganismRepository.getInstance(),
+							interactor.getOrganism().getTaxid()
+					)
+			);
 		}
 	}
 

@@ -1,6 +1,6 @@
 package ch.picard.ppimapbuilder.data.settings;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlim;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 
@@ -14,12 +14,12 @@ public final class PMBSettings {
 	private File orthologCacheFolder;
 	private List<String> databaseList;
 	private List<Organism> organismList;
-	private List<GeneOntologySet> goSlimList;
+	private List<GOSlim> goSlimList;
 
 	private PMBSettings(
 			List<String> databaseList,
 			List<Organism> organismList,
-			List<GeneOntologySet> goSlimList
+			List<GOSlim> goSlimList
 	) {
 		this.orthologCacheFolder = new File(pmbSettingsHandler.ppiMapBuilderConfigurationFolder, "ortholog-cache");
 		if (!orthologCacheFolder.exists())
@@ -46,7 +46,7 @@ public final class PMBSettings {
 
 		this.goSlimList = goSlimList == null ?
 				// Default GO slim list
-				Arrays.asList(GeneOntologySet.getDefaultGOslim()) :
+				Arrays.asList(GOSlim.getDefaultGOslim()) :
 				// Existing GO slim list
 				goSlimList;
 	}
@@ -76,11 +76,11 @@ public final class PMBSettings {
 		this.orthologCacheFolder = orthologCacheFolder;
 	}
 
-	public List<GeneOntologySet> getGoSlimList() {
+	public List<GOSlim> getGoSlimList() {
 		return goSlimList;
 	}
 
-	public void setGoSlimList(List<GeneOntologySet> goSlimList) {
+	public void setGoSlimList(List<GOSlim> goSlimList) {
 		this.goSlimList = goSlimList;
 	}
 
@@ -172,14 +172,20 @@ public final class PMBSettings {
 		PMBSettings loadV010Settings() {
 			List<String> databaseList = null;
 			List<Organism> organismList = null;
-			List<GeneOntologySet> goSlimList = null;
+			List<GOSlim> goSlimList = null;
 
 			ObjectInputStream fileIn = null;
 			try {
 				fileIn = new ObjectInputStream(new FileInputStream(pmbSettingFile));
-				databaseList = (List<String>) fileIn.readObject();
-				organismList = (List<Organism>) fileIn.readObject();
-				goSlimList = (List<GeneOntologySet>) fileIn.readObject();
+				try {
+					databaseList = (List<String>) fileIn.readObject();
+				} catch (Exception ignored) {}
+				try {
+					organismList = (List<Organism>) fileIn.readObject();
+				} catch (Exception ignored) {}
+				try {
+					goSlimList = (List<GOSlim>) fileIn.readObject();
+				} catch (Exception ignored) {}
 			} catch (Exception e) {
 				e.printStackTrace();
 				//return saveSettings(newSettings());

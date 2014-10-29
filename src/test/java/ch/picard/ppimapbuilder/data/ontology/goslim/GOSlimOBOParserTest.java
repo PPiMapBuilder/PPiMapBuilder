@@ -1,6 +1,6 @@
 package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -11,7 +11,7 @@ public class GOSlimOBOParserTest {
 
 	@Test
 	public void testParseOBOFile() throws Exception {
-		GeneOntologySet expected = new GeneOntologySet("oboFileTest");
+		GOSlim expected = new GOSlim("oboFileTest");
 		expected.add(new GeneOntologyTerm("GO:0005975", "carbohydrate metabolic process", 'P'));
 		expected.add(new GeneOntologyTerm("GO:0006091", "generation of precursor metabolites and energy", 'P'));
 		expected.add(new GeneOntologyTerm("GO:0006260", "DNA replication", 'P'));
@@ -35,7 +35,7 @@ public class GOSlimOBOParserTest {
 		expected.add(new GeneOntologyTerm("GO:0016071", "mRNA metabolic process", 'P'));
 
 		InputStream oboFile = getClass().getResourceAsStream("oboFileTest.obo");
-		GeneOntologySet actual = GOSlimOBOParser.parseOBOFile(oboFile, "oboFileTest");
+		GeneOntologyTermSet actual = GOSlimOBOParser.parseOBOFile(oboFile, "oboFileTest");
 
 		Assert.assertEquals(expected, actual);
 	}

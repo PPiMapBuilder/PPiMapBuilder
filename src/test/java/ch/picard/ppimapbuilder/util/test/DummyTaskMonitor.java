@@ -1,8 +1,9 @@
 package ch.picard.ppimapbuilder.util.test;
 
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import org.cytoscape.work.TaskMonitor;
 
-public class DummyTaskMonitor implements TaskMonitor {
+public class DummyTaskMonitor implements TaskMonitor, ProgressMonitor {
 
 	@Override
 	public void setTitle(String s) {

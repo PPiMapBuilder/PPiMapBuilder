@@ -37,7 +37,7 @@ public class FetchDirectInteractorOrtherOrganismsTask extends AbstractInteractio
 	public void run(final TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetch interactors of input proteins in other organisms...");
 
-		final UniProtEntrySet newInteractors = new UniProtEntrySet();
+		final UniProtEntrySet newInteractors = new UniProtEntrySet(referenceOrganism);
 		final int[] i = new int[]{0};
 		new ConcurrentExecutor<PrimaryInteractionQuery>(threadedClientManager.getExecutorServiceManager(), otherOrganisms.size()) {
 

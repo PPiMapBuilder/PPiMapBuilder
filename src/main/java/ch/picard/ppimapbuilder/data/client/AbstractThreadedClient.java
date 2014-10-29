@@ -16,10 +16,6 @@ public abstract class AbstractThreadedClient {
         this.executorServiceManager = executorServiceManager;
     }
 
-    public List<ExecutorService> getExecutorServices() {
-        return executorServiceManager.getExecutorServices();
-    }
-
     public ExecutorService getOrCreateThreadPool() {
         return executorServiceManager.getOrCreateThreadPool();
     }

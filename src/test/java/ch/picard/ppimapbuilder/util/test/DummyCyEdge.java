@@ -32,4 +32,5 @@ public class DummyCyEdge implements CyEdge {
 	public Long getSUID() {
 		return null;
 	}
+
 }

@@ -26,7 +26,7 @@ public class PairUtils {
 			for (int j = i + 1; j < length; j++) {
 				B = list.get(j);
 
-				if(orderedPairs && A instanceof Comparable && ((Comparable) A).compareTo(B) > 0)
+				if(orderedPairs && A instanceof Comparable && ((Comparable<T>) A).compareTo(B) > 0)
 					combinations.add(new Pair<T>(B, A));
 				else
 					combinations.add(new Pair<T>(A, B));

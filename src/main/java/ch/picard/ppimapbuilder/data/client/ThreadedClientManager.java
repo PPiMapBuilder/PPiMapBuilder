@@ -95,6 +95,7 @@ public class ThreadedClientManager {
 		proteinOrthologCacheClient.clearMemoryCache();
 		inUseClients.clear();
 		notInUseClients.clear();
+		executorServiceManager.clear();
 	}
 
 	public void shutdown() {

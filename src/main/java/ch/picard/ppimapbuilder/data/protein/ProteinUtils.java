@@ -17,6 +17,10 @@ public class ProteinUtils {
 		return out;
 	}
 
+	public static Collection<String> asIdentifiers(final Collection<Protein> proteins) {
+		return asIdentifiers(new HashSet<Protein>(proteins));
+	}
+
 	public static Collection<String> asIdentifiers(final Set<Protein> proteins) {
 		final Set<String> out = new HashSet<String>();
 		for(Protein protein: proteins)

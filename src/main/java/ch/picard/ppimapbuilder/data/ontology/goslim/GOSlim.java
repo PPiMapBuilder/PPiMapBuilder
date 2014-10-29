@@ -1,8 +1,12 @@
-package ch.picard.ppimapbuilder.data.ontology;
+package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import java.util.HashSet;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 
-public class GeneOntologySet extends HashSet<GeneOntologyTerm> {
+/**
+ * Representation of a GO slim by a Set of Gene Ontology terms and a name.
+ */
+public class GOSlim extends GeneOntologyTermSet {
 
 	private static final long serialVersionUID = 1L;
 
@@ -10,12 +14,16 @@ public class GeneOntologySet extends HashSet<GeneOntologyTerm> {
 
 	private final String name;
 
-	public GeneOntologySet(String name) {
+	public GOSlim(String name) {
 		this.name = name;
 	}
 
-	public static GeneOntologySet getDefaultGOslim() {
-		GeneOntologySet geneOntologyTerms = new GeneOntologySet(DEFAULT);
+	public String getName() {
+		return name;
+	}
+
+	public static GOSlim getDefaultGOslim() {
+		GOSlim geneOntologyTerms = new GOSlim(DEFAULT);
 		geneOntologyTerms.add(new GeneOntologyTerm("GO:0006366", "transcription from RNA polymerase II promoter", 'P'));
 		geneOntologyTerms.add(new GeneOntologyTerm("GO:0001932", "regulation of protein phosphorylation", 'P'));
 		geneOntologyTerms.add(new GeneOntologyTerm("GO:0048666", "neuron development", 'P'));
@@ -69,7 +77,4 @@ public class GeneOntologySet extends HashSet<GeneOntologyTerm> {
 		return geneOntologyTerms;
 	}
 
-	public String getName() {
-		return name;
-	}
 }

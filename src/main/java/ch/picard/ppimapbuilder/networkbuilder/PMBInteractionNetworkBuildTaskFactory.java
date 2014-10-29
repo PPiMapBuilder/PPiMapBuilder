@@ -65,8 +65,8 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.networkQueryParameters = networkQueryParameters;
 
 		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
-		this.interactorPool = new UniProtEntrySet();
-		this.proteinOfInterestPool = new UniProtEntrySet();
+		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
+		this.proteinOfInterestPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
 
 		this.errorMessage = null;
 	}

@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlim;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimLoaderTaskFactory;
 import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
@@ -90,23 +91,23 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 				switchPanel(null);
 				goSlimListPanel.removeAllRow();
 
-				List<GeneOntologySet> goSlims = GOSlimRepository.getInstance().getGOSlims();
-				Collections.sort(goSlims, new Comparator<GeneOntologySet>() {
+				List<GOSlim> goSlims = GOSlimRepository.getInstance().getGOSlims();
+				Collections.sort(goSlims, new Comparator<GOSlim>() {
 					@Override
-					public int compare(GeneOntologySet o1, GeneOntologySet o2) {
-						return o1.getName().equals(GeneOntologySet.DEFAULT) ?
+					public int compare(GOSlim o1, GOSlim o2) {
+						return o1.getName().equals(GOSlim.DEFAULT) ?
 								-1 :
-									o2.getName().equals(GeneOntologySet.DEFAULT) ?
+									o2.getName().equals(GOSlim.DEFAULT) ?
 									1 :
 									0;
 					}
 				});
 
-				for (final GeneOntologySet set : goSlims) {
+				for (final GOSlim set : goSlims) {
 					ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
 							.addButton(newViewButton(set.getName()));
 
-					if (!set.getName().equals(GeneOntologySet.DEFAULT)) {
+					if (!set.getName().equals(GOSlim.DEFAULT)) {
 						listRow.addDeleteButton(new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
@@ -165,7 +166,7 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 
 			JTable table;
 			{ // Load GO terms into JTable
-				GeneOntologySet goSlim = GOSlimRepository.getInstance().getGOSlim(goSlimName);
+				GeneOntologyTermSet goSlim = GOSlimRepository.getInstance().getGOSlim(goSlimName);
 
 				String[][] rows = new String[goSlim.size()][3];
 				int i = 0;

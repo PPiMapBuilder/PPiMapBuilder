@@ -1,64 +1,71 @@
 package ch.picard.ppimapbuilder.util.concurrency;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ExecutorServiceManager {
 
-    protected final Integer maxNumberThread;
+	public static final Integer DEFAULT_NB_THREAD = Runtime.getRuntime().availableProcessors()+1;
+	protected final Integer maxNumberThread;
 
+	private final Set<ExecutorService> allExecutorServices;
     private final Set<ExecutorService> inUseExecutorServices;
-    private final Set<ExecutorService> notInUseExecutorServices;
+    private final Set<ExecutorService> freeExecutorServices;
+
+	public ExecutorServiceManager() {
+		this(DEFAULT_NB_THREAD);
+	}
 
     public ExecutorServiceManager(Integer maxNumberThread) {
+	    this.allExecutorServices = new HashSet<ExecutorService>();
         this.inUseExecutorServices = new HashSet<ExecutorService>();
-        this.notInUseExecutorServices = new HashSet<ExecutorService>();
+        this.freeExecutorServices = new HashSet<ExecutorService>();
         this.maxNumberThread = maxNumberThread;
     }
 
-    public synchronized List<ExecutorService> getExecutorServices() {
-        List<ExecutorService> services = new ArrayList<ExecutorService>();
-        services.addAll(inUseExecutorServices);
-        services.addAll(notInUseExecutorServices);
-        return services;
+    public synchronized ExecutorService getOrCreateThreadPool() {
+        if(maxNumberThread == null) return null;
+	    for (ExecutorService service : freeExecutorServices)
+		    return register(service);
+	    return createThreadPool(maxNumberThread);
     }
 
-    public synchronized ExecutorService getOrCreateThreadPool() {
-        return maxNumberThread != null ?
-                getOrCreateThreadPool(maxNumberThread) :
-                null;
-    }
+	public synchronized ExecutorService createThreadPool(int nbThread) {
+		return register(Executors.newFixedThreadPool(nbThread));
+	}
 
     public synchronized void unRegister(ExecutorService service) {
         inUseExecutorServices.remove(service);
-        notInUseExecutorServices.add(service);
-    }
-
-    private ExecutorService getOrCreateThreadPool(int nbThread) {
-        for (ExecutorService service : notInUseExecutorServices)
-            return register(service);
-        return register(Executors.newFixedThreadPool(nbThread));
+        freeExecutorServices.add(service);
     }
 
     private ExecutorService register(ExecutorService service) {
-        notInUseExecutorServices.remove(service);
+	    allExecutorServices.add(service);
+        freeExecutorServices.remove(service);
         inUseExecutorServices.add(service);
         return service;
     }
+
+	public synchronized void remove(ExecutorService service) {
+		allExecutorServices.remove(service);
+		inUseExecutorServices.remove(service);
+		freeExecutorServices.remove(service);
+	}
 
 	public Integer getMaxNumberThread() {
 		return maxNumberThread;
 	}
 
 	public void shutdown() {
-		for (ExecutorService service : getExecutorServices()) {
+		for (ExecutorService service : allExecutorServices)
 			if (!service.isShutdown() || !service.isTerminated())
 				service.shutdownNow();
-		}
 	}
 
+	public void clear() {
+		allExecutorServices.clear();
+		inUseExecutorServices.clear();
+		freeExecutorServices.clear();
+	}
 }

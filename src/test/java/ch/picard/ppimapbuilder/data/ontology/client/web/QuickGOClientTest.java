@@ -4,6 +4,8 @@ import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.test.DummyTaskMonitor;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,7 +39,9 @@ public class QuickGOClientTest {
 
 	@Test
 	public void testGetSlimmedTermList() throws Exception {
-		QuickGOClient.GOSlimClient client = new QuickGOClient.GOSlimClient();
+		QuickGOClient.GOSlimClient client = new QuickGOClient.GOSlimClient(
+			new ExecutorServiceManager()
+		);
 
 		HashMap<Protein, Set<GeneOntologyTerm>> expected = new HashMap<Protein, Set<GeneOntologyTerm>>() {{
 			put(Q12018, new HashSet<GeneOntologyTerm>() {{
@@ -54,7 +58,7 @@ public class QuickGOClientTest {
 			}});
 		}};
 
-		HashMap<Protein, Set<GeneOntologyTerm>> actual = client.searchProteinGOSlim(terms, proteins);
+		HashMap<Protein, Set<GeneOntologyTerm>> actual = client.searchProteinGOSlim(terms, proteins, new DummyTaskMonitor());
 
 		Assert.assertEquals(expected, actual);
 	}

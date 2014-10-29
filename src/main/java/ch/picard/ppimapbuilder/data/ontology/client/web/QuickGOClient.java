@@ -1,21 +1,23 @@
 package ch.picard.ppimapbuilder.data.ontology.client.web;
 
 import au.com.bytecode.opencsv.CSVReader;
+import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.util.IOUtils;
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 /**
  * A simple implementation of a Java client for the QuickGO web service : http://www.ebi.ac.uk/QuickGO/ .<br/>
@@ -23,90 +25,104 @@ import java.util.*;
  */
 public class QuickGOClient {
 
-	protected static final int MAX_URL_LENGTH = 4000; // Apache client max URL length
+	protected static final int MAX_URL_LENGTH = 2000; // client max URL length
 
-	private QuickGOClient() {}
+	public static class GOSlimClient extends AbstractThreadedClient {
+		public GOSlimClient(ExecutorServiceManager executorServiceManager) {
+			super(executorServiceManager);
+		}
 
-	static public class GOSlimClient {
+		public HashMap<Protein, Set<GeneOntologyTerm>> searchProteinGOSlim(
+				final Set<GeneOntologyTerm> GOSlimTerms,
+				final Set<Protein> proteinSet
+		) {
+			return searchProteinGOSlim(GOSlimTerms, proteinSet, null);
+		}
+
 		/**
 		 * Uses the "GAnnotation" service to retrieved a list of slimmed GO terms for a set of protein.
 		 *
 		 * @param GOSlimTerms a Set of GeneOntology term used as a GO slim
 		 * @param proteinSet  a Set of Protein
 		 */
-		public HashMap<Protein, Set<GeneOntologyTerm>> searchProteinGOSlim(Set<GeneOntologyTerm> GOSlimTerms, Set<Protein> proteinSet) {
-			final HashMap<Protein, Set<GeneOntologyTerm>> out = new HashMap<Protein, Set<GeneOntologyTerm>>();
-
-			CloseableHttpClient httpClient = null;
-			HttpRequestBase request = null;
-			CloseableHttpResponse response = null;
+		public HashMap<Protein, Set<GeneOntologyTerm>> searchProteinGOSlim(
+				final Set<GeneOntologyTerm> GOSlimTerms,
+				final Set<Protein> proteinSet,
+				final ProgressMonitor progressMonitor
+		) {
+			final HashMap<Protein, Set<GeneOntologyTerm>> results = new HashMap<Protein, Set<GeneOntologyTerm>>();
 
 			try {
-				// Construct request URL
-				for (URI requestURL : generateRequests(
+				final List<URI> URIs = generateRequests(
 						new ArrayList<GeneOntologyTerm>(GOSlimTerms),
 						new ArrayList<Protein>(proteinSet)
-					)
-				) {
-					//System.out.println(requestURL.toString());
-					//System.out.println("Request length : " + requestURL.toString().length());
+				);
+				final int[] i = new int[]{0};
+				new ConcurrentExecutor<HashMap<Protein, Set<GeneOntologyTerm>>>(getExecutorServiceManager(), URIs.size()) {
+					@Override
+					public Callable<HashMap<Protein, Set<GeneOntologyTerm>>> submitRequests(final int index) {
+						return new Callable<HashMap<Protein, Set<GeneOntologyTerm>>>() {
+							@Override
+							public HashMap<Protein, Set<GeneOntologyTerm>> call() throws Exception {
+								final HashMap<Protein, Set<GeneOntologyTerm>> result =
+										new HashMap<Protein, Set<GeneOntologyTerm>>();
 
-					// Prepare HTTP client, request and response
-					httpClient = HttpClientBuilder.create().build();
-					request = new HttpGet(requestURL);
-					response = httpClient.execute(request);
+								IOUtils.InputStreamConsumer consumer = new IOUtils.InputStreamConsumer() {
+									@Override
+									public void accept(InputStream inputStream) throws IOException {
+										final InputStreamReader input = new InputStreamReader(inputStream);
+										CSVReader reader = new CSVReader(input, '\t', '"', 1);
 
-					int statusCode = response.getStatusLine().getStatusCode();
+										String[] line;
 
-					if (200 <= statusCode && statusCode < 300) {
-						final InputStreamReader input = new InputStreamReader(response.getEntity().getContent());
+										// Parse TSV response and create the HashMap output
+										while ((line = reader.readNext()) != null) {
+											if (line[0].isEmpty())
+												break;
 
-						CSVReader reader = new CSVReader(input, '\t', '"', 1);
+											final GeneOntologyTerm GOTerm = new GeneOntologyTerm(line[1], line[2], line[3].charAt(0));
 
-						String[] line;
-
-						// Parse TSV response and create the HashMap output
-						while ((line = reader.readNext()) != null) {
-							if (line[0].isEmpty())
-								break;
-
-							final GeneOntologyTerm GOTerm = new GeneOntologyTerm(line[1], line[2], line[3].charAt(0));
-
-							for (Protein protein : proteinSet) {
-								if (protein.getUniProtId().equals(line[0])) {
-									Set<GeneOntologyTerm> ontologyTerms = out.get(protein);
-									if (ontologyTerms == null) {
-										ontologyTerms = new HashSet<GeneOntologyTerm>();
-										out.put(protein, ontologyTerms);
+											for (Protein protein : proteinSet) {
+												if (protein.getUniProtId().equals(line[0])) {
+													Set<GeneOntologyTerm> ontologyTerms = result.get(protein);
+													if (ontologyTerms == null) {
+														ontologyTerms = new HashSet<GeneOntologyTerm>();
+														result.put(protein, ontologyTerms);
+													}
+													ontologyTerms.add(GOTerm);
+													break;
+												}
+											}
+										}
 									}
-									ontologyTerms.add(GOTerm);
-									break;
-								}
+								};
+
+								// Launch HTTP request with retry
+								IOUtils.fetchURLWithRetryAsInputStream(
+										URIs.get(index).toString(),
+										consumer,
+										6000,
+										4000,
+										5,
+										100
+								);
+								return result;
 							}
-						}
+						};
 					}
-				}
 
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (response != null)
-						response.close();
-					if (request != null)
-						request.releaseConnection();
-					if (httpClient != null)
-						httpClient.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+					@Override
+					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> result, Integer index) {
+						if(progressMonitor != null)
+							progressMonitor.setProgress(((double)++i[0])/((double)URIs.size()));
+						results.putAll(result);
+					}
+				}.run();
 
-			return out;
+			} catch (URISyntaxException ignored) {}
+
+			return results;
 		}
-
 
 		/**
 		 * Generates request URLs so that they can not exceed the URL maximum length.
@@ -135,10 +151,10 @@ public class QuickGOClient {
 						GOTermsStepLength * GeneOntologyTerm.TERM_LENGTH +
 						ProteinStepLength * Protein.ID_LENGTH;
 
-				if(estimatedLength > MAX_URL_LENGTH) {
-					if(GOTermsStepLength > ProteinStepLength)
+				if (estimatedLength > MAX_URL_LENGTH) {
+					if (GOTermsStepLength > ProteinStepLength)
 						numberOfGOTermsSubLists++;
-					else if(ProteinStepLength > GOTermsStepLength)
+					else if (ProteinStepLength > GOTermsStepLength)
 						numberOfProteinSubLists++;
 					else {
 						numberOfGOTermsSubLists++;

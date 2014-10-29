@@ -73,15 +73,15 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologClie
 	 */
 	@Override
 	public synchronized OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
-		if (!cacheDataFile.exists())
-			return null;
-
 		OrthologGroup result = null;
 
 		// Create or Check in memory cache before reading file cache
-		if (readCache == null || readCache.size() == 0 || (result = readCache.get(protein)) == null) {
+		if (readCache == null || readCache.size() == 0) {
 			if(readCache == null)
 				readCache = new HashMap<Protein, OrthologGroup>();
+
+			if (!cacheDataFile.exists())
+				return null;
 
 			ObjectInputStream in = null;
 			try {

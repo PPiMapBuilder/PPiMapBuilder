@@ -1,6 +1,6 @@
 package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologySet;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 import java.util.ArrayList;
@@ -18,22 +18,22 @@ public class GOSlimRepository {
 		return _instance;
 	}
 
-	private final Map<String, GeneOntologySet> goSlims;
+	private final Map<String, GOSlim> goSlims;
 
 	private GOSlimRepository() {
-		this.goSlims = new HashMap<String, GeneOntologySet>();
-		for(GeneOntologySet geneOntologySet : PMBSettings.getInstance().getGoSlimList())
-			this.goSlims.put(geneOntologySet.getName(), geneOntologySet);
+		this.goSlims = new HashMap<String, GOSlim>();
+		for(GOSlim geneOntologyTermSet : PMBSettings.getInstance().getGoSlimList())
+			this.goSlims.put(geneOntologyTermSet.getName(), geneOntologyTermSet);
 	}
 
-	public boolean addGOSlim(GeneOntologySet geneOntologySet) {
-		if(goSlims.containsKey(geneOntologySet.getName()))
+	public boolean addGOSlim(GOSlim goSlim) {
+		if(goSlims.containsKey(goSlim.getName()))
 			return false;
-		goSlims.put(geneOntologySet.getName(), geneOntologySet);
+		goSlims.put(goSlim.getName(), goSlim);
 		return true;
 	}
 
-	public GeneOntologySet getGOSlim(String name) {
+	public GeneOntologyTermSet getGOSlim(String name) {
 		return goSlims.get(name);
 	}
 
@@ -45,8 +45,8 @@ public class GOSlimRepository {
 		_instance = new GOSlimRepository();
 	}
 
-	public List<GeneOntologySet> getGOSlims() {
-		return new ArrayList<GeneOntologySet>(goSlims.values());
+	public List<GOSlim> getGOSlims() {
+		return new ArrayList<GOSlim>(goSlims.values());
 	}
 
 	public void remove(String name) {

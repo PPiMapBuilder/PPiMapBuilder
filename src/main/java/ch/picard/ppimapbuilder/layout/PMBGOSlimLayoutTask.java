@@ -11,7 +11,7 @@ import org.cytoscape.work.TaskMonitor;
 
 import java.util.*;
 
-public class PMBGOSlimLayoutTask extends AbstractTask {
+class PMBGOSlimLayoutTask extends AbstractTask {
 
 	private final CyNetworkView view;
 	private final CyNetwork network;
@@ -72,22 +72,21 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 		
 	}
-			
 
+	class ValueComparator implements Comparator<String> {
+
+		LinkedHashMap<String, Integer> base;
+		public ValueComparator(LinkedHashMap<String, Integer> base) {
+			this.base = base;
+		}
+
+		public int compare(String a, String b) {
+			if (base.get(a) >= base.get(b)) {
+				return -1;
+			} else {
+				return 1;
+			}
+		}
+	}
 }
 
-class ValueComparator implements Comparator<String> {
-
-	LinkedHashMap<String, Integer> base;
-    public ValueComparator(LinkedHashMap<String, Integer> base) {
-        this.base = base;
-    }
-   
-    public int compare(String a, String b) {
-        if (base.get(a) >= base.get(b)) {
-            return -1;
-        } else {
-            return 1;
-        }
-    }
-}

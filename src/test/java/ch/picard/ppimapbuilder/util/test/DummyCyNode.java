@@ -2,7 +2,6 @@ package ch.picard.ppimapbuilder.util.test;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class DummyCyNode implements CyNode {
 	private CyNetwork cyNetwork;
@@ -29,5 +28,10 @@ public class DummyCyNode implements CyNode {
 	@Override
 	public Long getSUID() {
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return name;
 	}
 }
