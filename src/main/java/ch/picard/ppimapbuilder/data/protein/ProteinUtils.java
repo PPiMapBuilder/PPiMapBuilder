@@ -4,6 +4,7 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,13 +18,19 @@ public class ProteinUtils {
 		return out;
 	}
 
-	public static Collection<String> asIdentifiers(final Collection<Protein> proteins) {
+	/**
+	 * Transform a Collection of Protein to a Collection of UniProt ID
+	 */
+	public static Collection<String> asIdentifiers(final Collection<? extends Protein> proteins) {
 		return asIdentifiers(new HashSet<Protein>(proteins));
 	}
 
-	public static Collection<String> asIdentifiers(final Set<Protein> proteins) {
+	/**
+	 * Transform a Set of Protein to a Collection of UniProt ID
+	 */
+	public static Collection<String> asIdentifiers(final Set<? extends Protein> proteins) {
 		final Set<String> out = new HashSet<String>();
-		for(Protein protein: proteins)
+		for (Protein protein : proteins)
 			out.add(protein.getUniProtId());
 		return out;
 	}

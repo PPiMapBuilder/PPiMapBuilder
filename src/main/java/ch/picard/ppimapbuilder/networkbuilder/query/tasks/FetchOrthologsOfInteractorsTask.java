@@ -1,13 +1,18 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import org.cytoscape.work.TaskMonitor;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTask {
 
@@ -41,7 +46,7 @@ public class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTas
 		for (int i = 0; i < otherOrganisms.size(); i += step) {
 			taskMonitor.setProgress(((double)i)/((double)otherOrganisms.size()));
 
-			proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
+			final Map<Protein, Map<Organism, OrthologScoredProtein>> map = proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
 					interactorPool,
 					otherOrganisms.subList(
 							i,
@@ -52,6 +57,13 @@ public class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTas
 					),
 					MINIMUM_ORTHOLOGY_SCORE
 			);
+
+			for (UniProtEntry entry : interactorPool) {
+				final Collection<OrthologScoredProtein> orthologs = map.get(entry).values();
+				if(!orthologs.isEmpty()) {
+					entry.addOrthologs(orthologs);
+				}
+			}
 		}
 
 		threadedClientManager.unRegister(proteinOrthologClient);

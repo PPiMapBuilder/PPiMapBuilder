@@ -3,8 +3,6 @@ package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
@@ -17,31 +15,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 
 public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 	// Input
 	private final List<Organism> allOrganisms;
 	private final UniProtEntrySet interactorPool;
+	private final UniProtEntrySet proteinOfInterestPool;
+	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
 
 	// Output
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 
 	public FetchInteractionsTask(
 			ThreadedClientManager threadedClientManager,
-			List<Organism> allOrganisms, UniProtEntrySet interactorPool,
-			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
+			List<Organism> allOrganisms, UniProtEntrySet interactorPool, UniProtEntrySet proteinOfInterestPool,
+			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg, HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
 	) {
 		super(threadedClientManager);
 		this.allOrganisms = allOrganisms;
 		this.interactorPool = interactorPool;
+		this.proteinOfInterestPool = proteinOfInterestPool;
+		this.directInteractionsByOrg = directInteractionsByOrg;
 		this.interactionsByOrg = interactionsByOrg;
 	}
 
 	@Override
 	public void run(final TaskMonitor taskMonitor) throws Exception {
-		taskMonitor.setStatusMessage("Fetch interactions in all organisms...");
+		taskMonitor.setStatusMessage("Fetch secondary interactions in all organisms...");
 
 		final int[] i = new int[]{0};
 		new ConcurrentExecutor<Collection<EncoreInteraction>>(threadedClientManager.getExecutorServiceManager(), allOrganisms.size()) {
@@ -53,7 +54,8 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 						final Organism organism = allOrganisms.get(index);
 
 						//Get proteins in the current organism
-						final Set<Protein> proteins = interactorPool.findProteinInOrganismWithReferenceEntry(organism).keySet();
+						final Set<String> proteins = interactorPool.identifiersInOrganism(organism).keySet();
+						proteins.removeAll(proteinOfInterestPool);
 
 						//Get secondary interactions
 						ThreadedPsicquicClient psicquicClient = threadedClientManager.getOrCreatePsicquicClient();
@@ -61,11 +63,15 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 						threadedClientManager.unRegister(psicquicClient);
 
 						//Filter non uniprot and non current organism
-						interactionsBinary = InteractionUtils.filter(
+						interactionsBinary = InteractionUtils.filterConcurrently(
+								threadedClientManager.getExecutorServiceManager(),
 								interactionsBinary,
 								new InteractionUtils.UniProtInteractionFilter(),
 								new InteractionUtils.OrganismInteractionFilter(organism)
 						);
+
+						//Add primary interactions
+						interactionsBinary.addAll(directInteractionsByOrg.get(organism));
 
 						//Cluster
 						return InteractionUtils.clusterInteraction(

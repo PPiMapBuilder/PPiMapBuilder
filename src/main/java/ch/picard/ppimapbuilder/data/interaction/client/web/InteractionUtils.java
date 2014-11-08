@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.interaction.client.web;
 
+import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
@@ -7,6 +8,8 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
@@ -14,8 +17,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.Callable;
 
 /**
  * Group of method useful for manipulation of interaction list
@@ -35,63 +37,66 @@ public class InteractionUtils {
 		return cluster.getInteractionMapping().values();
 	}
 
+	public static Protein getProteinInteractor(Interactor interactor) {
+		String id = null;
+
+		for (CrossReference reference : interactor.getIdentifiers()) {
+			if (reference.getDatabase().equals("uniprotkb")) {
+				id = reference.getIdentifier();
+				break;
+			}
+		}
+
+		Organism org = OrganismUtils.findOgranismInMITABTaxId(
+				InParanoidOrganismRepository.getInstance(),
+				interactor.getOrganism().getTaxid()
+		);
+
+		if(id != null && org != null)
+			return new Protein(id, org);
+		return null;
+	}
+
+	public static Pair<Protein> getInteractors(BinaryInteraction interaction) {
+		Interactor interactorA = interaction.getInteractorA();
+		Interactor interactorB = interaction.getInteractorB();
+
+		return new Pair<Protein>(
+				getProteinInteractor(interactorA),
+				getProteinInteractor(interactorB)
+		);
+	}
+
 	/**
 	 * Retrieve only interactors from list of interactions
 	 */
-	public static Set<Protein> getInteractors(List<BinaryInteraction> interactions) {
+	public static HashSet<Protein> getInteractors(Collection<BinaryInteraction> interactions) {
 		HashSet<Protein> interactors = new HashSet<Protein>();
 
-		Pattern pattern = Pattern.compile("\\(.*\\)");
-
 		for (BinaryInteraction interaction : interactions) {
-			Interactor interactorA = interaction.getInteractorA();
-			Interactor interactorB = interaction.getInteractorB();
-			String idA = null, idB = null;
-			Organism orgA = null, orgB = null;
-
-			for (CrossReference referenceA : interactorA.getIdentifiers()) {
-				if (referenceA.getDatabase().equals("uniprotkb")) {
-					idA = referenceA.getIdentifier();
-					break;
-				}
-			}
-			for (CrossReference referenceB : interactorB.getIdentifiers()) {
-				if (referenceB.getDatabase().equals("uniprotkb")) {
-					idB = referenceB.getIdentifier();
-					break;
-				}
-			}
-
-			orgA = OrganismUtils.findOgranismInMITABTaxId(
-					InParanoidOrganismRepository.getInstance(),
-					interactorA.getOrganism().getTaxid()
-			);
-
-			orgB = OrganismUtils.findOgranismInMITABTaxId(
-					InParanoidOrganismRepository.getInstance(),
-					interactorB.getOrganism().getTaxid()
-			);
-
-			if (idA != null && idB != null && orgA != null && orgB != null) {
-				interactors.add(new Protein(idA, orgA));
-				interactors.add(new Protein(idB, orgB));
+			final Pair<Protein> interactorPair = getInteractors(interaction);
+			if(interactorPair.isNotNull()){
+				interactors.add(interactorPair.getFirst());
+				interactors.add(interactorPair.getSecond());
 			}
 		}
 
 		return interactors;
 	}
 
-	public static abstract class InteractionFilter {
-		public boolean isValidInteraction(BinaryInteraction interaction) {
-			return true;
-		}
+	public static interface InteractionFilter {
+		public boolean isValidInteraction(BinaryInteraction interaction);
+	}
+	public static abstract class InteractorFilter implements InteractionFilter {
+		public abstract boolean isValidInteractor(Interactor interactor);
 
-		public boolean isValidInteractor(Interactor interactor) {
-			return true;
+		@Override
+		public boolean isValidInteraction(BinaryInteraction interaction) {
+			return isValidInteractor(interaction.getInteractorA()) && isValidInteractor(interaction.getInteractorB());
 		}
 	}
 
-	public static final class OrganismInteractionFilter extends InteractionFilter {
+	public static final class OrganismInteractionFilter extends InteractorFilter {
 		private final Organism organism;
 
 		public OrganismInteractionFilter(Organism organism) {
@@ -109,7 +114,7 @@ public class InteractionUtils {
 		}
 	}
 
-	public static final class UniProtInteractionFilter extends InteractionFilter {
+	public static final class UniProtInteractionFilter extends InteractorFilter {
 		@Override
 		public boolean isValidInteractor(Interactor interactor) {
 			final List<CrossReference> ids = interactor.getIdentifiers();
@@ -121,10 +126,11 @@ public class InteractionUtils {
 			CrossReference uniprot = null;
 			boolean hasUniprot = false;
 			for (CrossReference ref : ids) {
-				boolean isUniprot = ref.getDatabase().equals("uniprotkb");
-				boolean idValid = ProteinUtils.UniProtId.isValid(ref.getIdentifier());
-
-				hasUniprot = hasUniprot || (isUniprot && idValid);
+				hasUniprot = hasUniprot || (
+						ref.getDatabase().equals("uniprotkb") // Is UniProt
+								&&
+								ProteinUtils.UniProtId.isValid(ref.getIdentifier()) // Valid UniProt
+				);
 				if (hasUniprot) {
 					uniprot = ref;
 					break;
@@ -144,6 +150,13 @@ public class InteractionUtils {
 		}
 	}
 
+	public static boolean isValidInteraction(BinaryInteraction interaction, InteractionFilter... filters) {
+		for (InteractionFilter filter : filters)
+			if (!filter.isValidInteraction(interaction))
+				return false;
+		return true;
+	}
+
 	/**
 	 * Filter a List of BinaryInteraction to keep only the interaction satisfying the filters InteractionFilter
 	 *
@@ -152,26 +165,34 @@ public class InteractionUtils {
 	 */
 	public static ArrayList<BinaryInteraction> filter(List<BinaryInteraction> interactions, InteractionFilter... filters) {
 		ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
-		interactionLoop:
-		for (BinaryInteraction interaction : interactions) {
-			boolean valid = true;
+		for (BinaryInteraction interaction : interactions)
+			if (isValidInteraction(interaction, filters))
+				validInteractions.add(interaction);
+		return validInteractions;
+	}
 
-			for (InteractionFilter filter : filters) {
-				valid = valid && filter.isValidInteraction(interaction);
-				if (!valid) continue interactionLoop;
+	public static ArrayList<BinaryInteraction> filterConcurrently(
+			ExecutorServiceManager executorServiceManager,
+			final List<BinaryInteraction> interactions,
+			final InteractionFilter... filters
+	) {
+		final ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
+		new ConcurrentExecutor<Boolean>(executorServiceManager, interactions.size()) {
+			@Override
+			public Callable<Boolean> submitRequests(final int index) {
+				return new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return isValidInteraction(interactions.get(index), filters);
+					}
+				};
 			}
 
-			for (Interactor interactor : new Interactor[]{interaction.getInteractorA(),
-					interaction.getInteractorB()}) {
-
-				for (InteractionFilter filter : filters) {
-					valid = valid && filter.isValidInteractor(interactor);
-					if (!valid) continue interactionLoop;
-				}
+			@Override
+			public void processResult(Boolean result, Integer index) {
+				if(result) validInteractions.add(interactions.get(index));
 			}
-
-			if (valid) validInteractions.add(interaction);
-		}
+		}.run();
 		return validInteractions;
 	}
 

@@ -86,7 +86,6 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 	}
 
 
-
 	public List<BinaryInteraction> getProteinInteractor(final Protein protein) throws Exception {
 		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), services.size()) {
@@ -229,12 +228,12 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 	/**
 	 * Retrieve all interactions with the given interactors (optimized and threaded)
 	 */
-	public List<BinaryInteraction> getInteractionsInProteinPool(Set<Protein> proteins, Organism sourceOrganism) throws Exception {
+	public List<BinaryInteraction> getInteractionsInProteinPool(Set<String> proteins, Organism sourceOrganism) throws Exception {
 
 		if (proteins.size() <= 1)
 			return new ArrayList<BinaryInteraction>();
 
-		List<Protein> sourceProteins = Lists.newArrayList(proteins);
+		List<String> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
 		baseQuery.setRoot(true);
 		baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
@@ -245,8 +244,7 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 		MiQLParameterBuilder idA, idB;
 		MiQLExpressionBuilder prots = new MiQLExpressionBuilder();
 		{
-			for (Protein protein : proteins)
-				prots.add(protein.getUniProtId());
+			prots.addAll(sourceProteins);
 			idA = new MiQLParameterBuilder("idA", prots);
 			idB = new MiQLParameterBuilder("idB", prots);
 		}
@@ -289,8 +287,7 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 					int to = Math.min(from + STEP_LENGTH, sourceProteins.size());
 
 					MiQLExpressionBuilder protsTruncated = new MiQLExpressionBuilder();
-					for (Protein protein : sourceProteins.subList(from, to))
-						protsTruncated.add(protein.getUniProtId());
+					protsTruncated.addAll(sourceProteins.subList(from, to));
 					protsExprs.add(protsTruncated);
 
 					pos = to;

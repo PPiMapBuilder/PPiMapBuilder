@@ -55,7 +55,7 @@ public class PMBGOSlimQueryTask extends AbstractTask {
 			for (CyNode node : network.getNodeList()) {
 				networkProteins.add(
 						new Protein(
-								network.getRow(node).get("uniprot_id", String.class),
+								network.getRow(node).get("Uniprot_id", String.class),
 								null
 						)
 				);
@@ -80,7 +80,7 @@ public class PMBGOSlimQueryTask extends AbstractTask {
 			for (CyNode node : nodeList) {
 				final CyRow row = network.getRow(node);
 				final Protein protein = new Protein(
-						row.get("uniprot_id", String.class),
+						row.get("Uniprot_id", String.class),
 						null
 				);
 
@@ -88,7 +88,7 @@ public class PMBGOSlimQueryTask extends AbstractTask {
 					ArrayList<String> terms = new ArrayList<String>();
 					for (GeneOntologyTerm term : proteinGoSlim.get(protein))
 						terms.add(term.getIdentifier());
-					row.set("go_slim", terms);
+					row.set("Go_slim", terms);
 				}
 			}
 		}

@@ -2,7 +2,6 @@ package ch.picard.ppimapbuilder.util.test;
 
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class DummyCyEdge implements CyEdge {
 	private final CyNode target;

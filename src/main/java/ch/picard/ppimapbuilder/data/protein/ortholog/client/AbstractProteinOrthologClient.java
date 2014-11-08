@@ -21,13 +21,11 @@ public abstract class AbstractProteinOrthologClient implements ProteinOrthologCl
 
 		if (group != null) {
 			OrthologScoredProtein ortholog = group.getBestOrthologInOrganism(organism);
+			OrthologScoredProtein originalProtein = group.find(protein);
 
-			if (ortholog != null && ortholog.getScore() >= score) {
-				if (protein instanceof UniProtEntry) {
-					((UniProtEntry) protein).addOrtholog(ortholog);
-				}
+			if (ortholog != null && ortholog.getScore() >= score
+					&& originalProtein != null && originalProtein.getScore() >= score)
 				return ortholog;
-			}
 		}
 		return null;
 	}

@@ -118,7 +118,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 					if (f.attr("type").equals("primary")) { // If the type is primary, this is the main name (sometimes there is no primary gene name :s)
 						builder.setGeneName(f.text());
 					} else { // Else, we organism the names as synonyms
-						builder.addSynonymGeneNames(f.text());
+						builder.addSynonymGeneName(f.text());
 					}
 				}
 			}

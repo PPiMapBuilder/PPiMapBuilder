@@ -5,57 +5,51 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntryCollection;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import org.cytoscape.work.TaskMonitor;
+import psidev.psi.mi.tab.model.BinaryInteraction;
+import psidev.psi.mi.tab.model.Interactor;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
-	private final Organism referenceOrganism;
-	private final Organism organism;
-	private final UniProtEntrySet proteinOfInterestPool;
-	private final UniProtEntrySet proteinPool;
-
-	private final ThreadedPsicquicClient psicquicClient;
-	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
-	private final UniProtEntryClient uniProtClient;
-
-	private final UniProtEntrySet newInteractors;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
 	private final ThreadedClientManager threadedClientManager;
 	private final TaskMonitor taskMonitor;
 
-	public PrimaryInteractionQuery(
-			Organism referenceOrganism, Organism organism, UniProtEntrySet proteinOfInterestPool, UniProtEntrySet proteinPool,
-			ThreadedClientManager threadedClientManager, Double minimum_orthology_score
-	) {
-		this(
-				referenceOrganism, organism, proteinOfInterestPool, proteinPool,
-				threadedClientManager, minimum_orthology_score,
-				null
-		);
-	}
+	private final Organism referenceOrganism;
+	private final Organism organism;
+	private final boolean inReferenceOrgansim;
+	private final UniProtEntrySet proteinOfInterestPool;
+	private final UniProtEntrySet interactorPool;
+
+	private final ThreadedPsicquicClient psicquicClient;
+	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
+	private final UniProtEntryClient uniProtClient;
+
+	// Ouput
+	private final UniProtEntryCollection newInteractors;
+	private final Collection<BinaryInteraction> newInteractions;
 
 	public PrimaryInteractionQuery(
-			Organism referenceOrganism, Organism organism, UniProtEntrySet proteinOfInterestPool, UniProtEntrySet proteinPool,
+			Organism referenceOrganism, Organism organism, UniProtEntrySet proteinOfInterestPool, UniProtEntrySet interactorPool,
 			ThreadedClientManager threadedClientManager, Double minimum_orthology_score,
 			TaskMonitor taskMonitor
 	) {
 		this.referenceOrganism = referenceOrganism;
 		this.organism = organism;
+		this.inReferenceOrgansim = organism.equals(referenceOrganism);
+
 		this.proteinOfInterestPool = proteinOfInterestPool;
-		this.proteinPool = proteinPool;
+		this.interactorPool = interactorPool;
 
 		this.threadedClientManager = threadedClientManager;
 		this.taskMonitor = taskMonitor;
@@ -65,94 +59,103 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
-		this.newInteractors = new UniProtEntrySet(organism);
+		this.newInteractors = new UniProtEntryCollection(referenceOrganism);
+		this.newInteractions = new ArrayList<BinaryInteraction>();
 	}
 
 	public PrimaryInteractionQuery call() throws Exception {
 		// Get list of protein of interest's orthologs in this organism
-		Set<Protein> POIinOrg = proteinOfInterestPool.findProteinInOrganismWithReferenceEntry(organism).keySet();
+		Set<String> proteinOfInterestInOrganism = proteinOfInterestPool.identifiersInOrganism(organism).keySet();
 
-		//Get primary interactors via interaction search
+		// Prepare MiQL queries
 		ArrayList<String> queries = new ArrayList<String>();
-		for (Protein protein : POIinOrg) {
+		for (String id : proteinOfInterestInOrganism) {
 			queries.add(
-					InteractionUtils.generateMiQLQueryIDTaxID(protein.getUniProtId(), protein.getOrganism().getTaxId())
+					InteractionUtils.generateMiQLQueryIDTaxID(
+							id,
+							organism.getTaxId()
+					)
 			);
 		}
 
-		final List<Protein> interactors = new ArrayList<Protein>(InteractionUtils.getInteractors(
-				InteractionUtils.filter(
-						psicquicClient.getByQueries(queries),
-						new InteractionUtils.UniProtInteractionFilter(),
-						new InteractionUtils.OrganismInteractionFilter(organism)
-				)
-		));
+		// Fetch primary interactions
+		List<BinaryInteraction> interactions = psicquicClient.getByQueries(queries);
 		threadedClientManager.unRegister(psicquicClient);
 
-		//Remove POIs
-		interactors.removeAll(POIinOrg);
+		// Filter interaction and extract interactors in the reference organism
+		final Double[] i = new Double[]{0d, 0d};
+		final double size = interactions.size();
+		newInteractions.addAll(InteractionUtils.filterConcurrently(
+				threadedClientManager.getExecutorServiceManager(),
+				interactions,
 
-		if (taskMonitor != null) taskMonitor.setProgress(0.66);
+				new InteractionUtils.UniProtInteractionFilter(),
+				new InteractionUtils.OrganismInteractionFilter(organism),
 
-		//Search new interactors
-		if (!interactors.isEmpty()) {
-			if (organism.equals(referenceOrganism)) {
-				UniProtEntryClient uniProtClient = threadedClientManager.getOrCreateUniProtClient();
-				newInteractors.addAll(
-						uniProtClient.retrieveProteinsData(
-								ProteinUtils.asIdentifiers(interactors)
-						).values(),
-						false
-				);
-				threadedClientManager.unRegister(uniProtClient);
-			} else {
-				ExecutorService service = threadedClientManager.getExecutorServiceManager().createThreadPool(
-						threadedClientManager.getExecutorServiceManager().getMaxNumberThread() * 2
-				);
-				new ConcurrentExecutor<UniProtEntry>(service, interactors.size()) {
+				// Filter that rejects interactions with at least one interactor not found in the reference organism (even with orthology)
+				// This filters also extracts the interactor UniProt entry to be stored in the newInteractors UniProtEntrySet
+				new InteractionUtils.InteractorFilter() {
 					@Override
-					public Callable<UniProtEntry> submitRequests(final int index) {
-						return new Callable<UniProtEntry>() {
-							@Override
-							public UniProtEntry call() throws Exception {
-								Protein interactor = interactors.get(index);
+					public boolean isValidInteractor(Interactor interactor) {
+						final Protein interactorProtein = InteractionUtils.getProteinInteractor(interactor);
 
-								Protein orthologInReferenceOrganism =
-										proteinOrthologClient.getOrtholog(interactor, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
+						Protein proteinInReferenceOrganism = null;
+						if (inReferenceOrgansim)
+							proteinInReferenceOrganism = interactorProtein;
+						else try {
+							proteinInReferenceOrganism = proteinOrthologClient.getOrtholog(interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
+						} catch (Exception ignored) {}
 
-								UniProtEntry entry = null;
-								if (orthologInReferenceOrganism != null) {
+						if (proteinInReferenceOrganism != null) {
+							String uniProtId = proteinInReferenceOrganism.getUniProtId();
 
-									String uniProtId = orthologInReferenceOrganism.getUniProtId();
-									entry = proteinPool.find(uniProtId);
-
-									boolean found = entry != null;
-									if (!found)
-										entry = uniProtClient.retrieveProteinData(uniProtId);
-
-									if (entry != null)
-										entry.addOrtholog(interactor);
-
-									if (found) entry = null;
-								}
-								return entry;
+							// Find in existing protein pools
+							UniProtEntry entry = proteinOfInterestPool.find(uniProtId);
+							if (entry == null) synchronized (interactorPool) {
+								entry = interactorPool.find(uniProtId);
 							}
-						};
+							if (entry == null) synchronized (newInteractors) {
+								entry = newInteractors.find(uniProtId);
+							}
+							if (entry != null) {
+								if (!inReferenceOrgansim)
+									entry.addOrtholog(interactorProtein);
+								return true;
+							}
+
+							// Find on UniProt
+							try {
+								entry = uniProtClient.retrieveProteinData(uniProtId);
+							} catch (IOException ignored) {}
+
+							if (entry != null) {
+								if (!inReferenceOrgansim)
+									entry.addOrtholog(interactorProtein);
+								synchronized (newInteractors) {
+									newInteractors.add(entry);
+								}
+								return true;
+							}
+						}
+						return false;
 					}
 
 					@Override
-					public void processResult(UniProtEntry result, Integer index) {
-						if (result != null) newInteractors.add(result, false);
+					public boolean isValidInteraction(BinaryInteraction interaction) {
+						synchronized (i[0]) {
+							double percent = Math.floor((++i[0] / size) * 100) / 100;
+							if (percent > i[1])
+								taskMonitor.setProgress(i[1] = percent);
+						}
+						return super.isValidInteraction(interaction);
 					}
-				}.run();
-				threadedClientManager.getExecutorServiceManager().remove(service);
-			}
-		}
+				}
+		));
 
 		threadedClientManager.unRegister(proteinOrthologClient);
 		threadedClientManager.unRegister(uniProtClient);
 
-		if (taskMonitor != null) taskMonitor.setProgress(1);
+		if(i[1] < 1.0) taskMonitor.setProgress(1.0);
 
 		return this;
 	}
@@ -161,7 +164,11 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		return organism;
 	}
 
-	public UniProtEntrySet getNewInteractors() {
+	public Collection<UniProtEntry> getNewInteractors() {
 		return newInteractors;
+	}
+
+	public Collection<BinaryInteraction> getNewInteractions() {
+		return newInteractions;
 	}
 }

@@ -21,8 +21,8 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		CyNetwork network = view.getModel();
 		CyTable nodeTable = network.getDefaultNodeTable();
 		
-		if (nodeTable.getColumn("go_slim") == null) {
-			nodeTable.createListColumn("go_slim", String.class, false);
+		if (nodeTable.getColumn("Go_slim") == null) {
+			nodeTable.createListColumn("Go_slim", String.class, false);
 		}
 
 		return new TaskIterator(

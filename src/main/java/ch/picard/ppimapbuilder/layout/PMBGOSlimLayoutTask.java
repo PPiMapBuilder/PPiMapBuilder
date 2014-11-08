@@ -32,7 +32,7 @@ class PMBGOSlimLayoutTask extends AbstractTask {
 		
 		ArrayList<String> fullListOfGOs = new ArrayList<String>(); // Stores every GO from the network
 		for (CyNode n : network.getNodeList()) {
-			List<String> go_slim = network.getRow(n).getList("go_slim", String.class);
+			List<String> go_slim = network.getRow(n).getList("Go_slim", String.class);
 			if(go_slim != null)
 				fullListOfGOs.addAll(go_slim);
 		}
@@ -49,16 +49,16 @@ class PMBGOSlimLayoutTask extends AbstractTask {
         
 		
 		// Assign one major GO for each prot
-		if (nodeTable.getColumn("go_slim_group") == null) { // Create node attribute to store the cluster assignement
-			nodeTable.createColumn("go_slim_group", String.class, false);
+		if (nodeTable.getColumn("Go_slim_group") == null) { // Create node attribute to store the cluster assignement
+			nodeTable.createColumn("Go_slim_group", String.class, false);
 		}
 		for (CyNode n : network.getNodeList()) {
-			List<String> tempGOList = network.getRow(n).getList("go_slim", String.class);
+			List<String> tempGOList = network.getRow(n).getList("Go_slim", String.class);
 			if(tempGOList == null) continue;
 			for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
 				if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node 
 					//System.out.print(key);
-					network.getRow(n).set("go_slim_group", key); // We consider this GO as the major to cluster this node
+					network.getRow(n).set("Go_slim_group", key); // We consider this GO as the major to cluster this node
 					break;
 				}
 			}
@@ -68,7 +68,7 @@ class PMBGOSlimLayoutTask extends AbstractTask {
 		// Call attribute layout
 		CyLayoutAlgorithm layout = layoutManager.getLayout("attributes-layout");
 		Object context = layout.createLayoutContext();
-		String layoutAttribute = "go_slim_group";
+		String layoutAttribute = "Go_slim_group";
 		insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 		
 	}

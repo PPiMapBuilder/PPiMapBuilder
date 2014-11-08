@@ -36,8 +36,12 @@ public class ExecutorServiceManager {
 	}
 
     public synchronized void unRegister(ExecutorService service) {
-        inUseExecutorServices.remove(service);
-        freeExecutorServices.add(service);
+	    if(freeExecutorServices.size() >= Math.pow(DEFAULT_NB_THREAD, 2)+1)
+		    remove(service);
+	    else {
+		    inUseExecutorServices.remove(service);
+		    freeExecutorServices.add(service);
+	    }
     }
 
     private ExecutorService register(ExecutorService service) {

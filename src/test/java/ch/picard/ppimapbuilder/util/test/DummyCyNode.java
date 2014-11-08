@@ -15,6 +15,10 @@ public class DummyCyNode implements CyNode {
 		this.name = name;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	@Override
 	public CyNetwork getNetworkPointer() {
 		return cyNetwork;

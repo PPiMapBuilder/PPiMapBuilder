@@ -3,7 +3,6 @@ package ch.picard.ppimapbuilder.networkbuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.util.test.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
@@ -12,7 +11,6 @@ import org.junit.Test;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.*;
-import java.util.concurrent.CyclicBarrier;
 
 public class PMBInteractionNetworkBuildTaskFactoryTest {
 
@@ -33,10 +31,21 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 					//, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			),
 			Arrays.asList(
-					//"P04040"
+					//"P04040",
 					"Q8VI75",
 					"B2RQC6",
 					"O75153"
+					//"P61106"
+					//"P14672",
+					//"Q8VI75",
+					//"B2RQC6",
+					//"O75153",
+					//"O75153",
+					//"P04040",
+					//"Q9EPL8",
+					//"P62258",
+					//"Q8VI75",
+					//"B2RQC6"
 			),
 			human,
 			otherOrganisms
@@ -59,17 +68,15 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 		}
 
 		{ // Display interactor count, interaction count and protein of interest count
-			System.out.println("\n");
-			System.out.println(networkBuild.getProteinOfInterestPool().size() + " POIs");
-			System.out.println(networkBuild.getInteractorPool().size() + " interactors");
-
+			System.out.println();
 			int nbInteraction = 0;
 			for (Organism organism : networkBuild.getInteractionsByOrg().keySet()) {
 				Collection<EncoreInteraction> encoreInteractions = networkBuild.getInteractionsByOrg().get(organism);
 				nbInteraction += encoreInteractions.size();
-				System.out.println("ORG: " + organism + "  -> " + networkBuild.getInteractionsByOrg().get(organism).size() + " interactions");
+				System.out.println("ORG: " + organism.getScientificName() + "  -> " + networkBuild.getInteractionsByOrg().get(organism).size() + " interactions");
 			}
-
+			System.out.println(networkBuild.getProteinOfInterestPool().size() + " POIs");
+			System.out.println(networkBuild.getInteractorPool().size() + " interactors");
 			System.out.println(nbInteraction + " interactions");
 		}
 
@@ -77,17 +84,28 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 			DummyCyNetwork network = networkFactory.getNetworks().get(0);
 			List<CyEdge> edges = network.getEdgeList();
 			Set<CyNode> nodes = new HashSet<CyNode>(network.getNodeList());
-			Set<CyNode> linkedNodes = new HashSet<CyNode>();
-			for (CyEdge edge : edges)
-				for (CyNode node : nodes)
-					if (edge.getSource() == node || edge.getTarget() == node)
-						linkedNodes.add(node);
+			Set<CyNode> POIsNodes = new HashSet<CyNode>();
 
-			System.out.println("\nEdges: "+ edges.size());
+			for (CyNode node : nodes) {
+				if(networkBuild.getProteinOfInterestPool().contains(((DummyCyNode)node).getName()))
+					POIsNodes.add(node);
+			}
+
+			Set<CyNode> nodesLinkedToPOIs = new HashSet<CyNode>();
+			nodesLinkedToPOIs.addAll(POIsNodes);
+			for (CyEdge edge : edges)
+				if(edge.getSource() != edge.getTarget())
+					if(POIsNodes.contains(edge.getSource()))
+						nodesLinkedToPOIs.add(edge.getTarget());
+					else if(POIsNodes.contains(edge.getTarget()))
+						nodesLinkedToPOIs.add(edge.getSource());
+
+			System.out.println();
+			System.out.println("Edges: "+ edges.size());
 			System.out.println("Nodes: "+ nodes.size());
-			System.out.println("Linked nodes: "+ linkedNodes.size());
-			System.out.println("Unlinked nodes:");
-			nodes.removeAll(linkedNodes);
+			System.out.println("Nodes linked to at least one of the POIs: " + nodesLinkedToPOIs.size());
+			System.out.print("Unlinked nodes: ");
+			nodes.removeAll(nodesLinkedToPOIs);
 			System.out.println(nodes);
 		}
 	}

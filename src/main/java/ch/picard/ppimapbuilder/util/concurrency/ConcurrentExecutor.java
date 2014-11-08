@@ -16,17 +16,31 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 		this.executorServiceManager = executorServiceManager;
 	}
 
+	/**
+	 * Constructs a new ConcurrentExecutor with an executorServiceManager that will be use to create a new ExecutorService
+	 * @param executorServiceManager an executorServiceManager
+	 * @param nbRequests number of request that will be launched
+	 */
 	public ConcurrentExecutor(ExecutorServiceManager executorServiceManager, int nbRequests) {
 		this(null, executorServiceManager, nbRequests);
 	}
 
+	/**
+	 * Constructs a new ConcurrentExecutor with an executorService in which requests will be submitted
+	 * @param executorService an executorService
+	 * @param nbRequests number of request that will be launched
+	 */
 	public ConcurrentExecutor(ExecutorService executorService, int nbRequests) {
 		this(executorService, null, nbRequests);
 	}
 
+	/**
+	 * Launches all requests
+	 */
 	@Override
 	public final void run() {
 		if (executorService == null || nbRequests <= 1) {
+			// Fallback without concurrent requests
 			for (int i = 0; i < nbRequests; i++) {
 				try {
 					processResult(submitRequests(i).call(), i);
@@ -74,15 +88,34 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 		if(executorServiceManager != null) executorServiceManager.unRegister(executorService);
 	}
 
+	/**
+	 * Method to implement in order to create new requests
+	 * @param index index of the current request to be created
+	 * @return the request
+	 */
 	public abstract Callable<R> submitRequests(int index);
 
+	/**
+	 * Method to implement in order to process result of requests.
+	 * @param result the result of a request obtained
+	 * @param index the index of the request from which this result comes
+	 */
 	public void processResult(R result, Integer index) {}
 
+	/**
+	 * Method to override in order to process InterruptedException occurring during a request
+	 * @return if true, the ConcurrentExecutor will stop fetching other request responses
+	 */
 	public boolean processInterruptedException(InterruptedException e) {
 		e.printStackTrace();
 		return false;
 	}
 
+	/**
+	 * Method to override in order to process ExecutionException occurring during a request.
+	 * An ExecutionException has a cause obtainable with ExecutionException.getCause().
+	 * @return if true, the ConcurrentExecutor will stop fetching other request responses
+	 */
 	public boolean processExecutionException(ExecutionException e, Integer index) {
 		e.printStackTrace();
 		return false;

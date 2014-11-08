@@ -5,46 +5,12 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import java.io.Serializable;
 import java.util.*;
 
-public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
+public class UniProtEntrySet extends UniProtEntryCollection implements Set<UniProtEntry>, Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private final List<UniProtEntry> uniProtEntries;
-	private final Organism organism;
 
 	public UniProtEntrySet(Organism organism) {
-		this.organism = organism;
-		uniProtEntries = new ArrayList<UniProtEntry>();
-	}
-
-	public UniProtEntry find(String uniprotId) {
-		for (UniProtEntry prot : uniProtEntries) {
-			if (prot.getUniProtId().equals(uniprotId))
-				return prot;
-		}
-		for (UniProtEntry prot : uniProtEntries) {
-			if (prot.getAccessions().contains(uniprotId))
-				return prot;
-		}
-		return null;
-	}
-
-	public Map<Protein, UniProtEntry> findProteinInOrganismWithReferenceEntry(Organism organism) {
-		Map<Protein, UniProtEntry> proteins = new HashMap<Protein, UniProtEntry>();
-		for (UniProtEntry proteinEntry : uniProtEntries) {
-			if (proteinEntry.getOrganism().equals(organism)) {
-				proteins.put(proteinEntry, proteinEntry);
-			} else {
-				Protein protein = proteinEntry.getOrtholog(organism);
-
-				if (protein != null)
-					proteins.put(protein, proteinEntry);
-			}
-		}
-		return proteins;
-	}
-
-	public void clear() {
-		uniProtEntries.clear();
+		super(organism);
 	}
 
 	@Override
@@ -53,18 +19,16 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 
 		//All new entry
 		if (existingEntry == null)
-			return add(uniProtEntry, false);
+			return super.add(uniProtEntry);
 
 		// Existing entry => Add to duplicates
-		this.uniProtEntries.remove(existingEntry);
-		return add(
+		super.remove(existingEntry);
+		return super.add(
 				new UniProtEntry
 						.Builder(existingEntry, uniProtEntry)
-						.build(),
-				false
+						.build()
 		);
 	}
-
 
 	@Override
 	public boolean addAll(Collection<? extends UniProtEntry> uniProtEntries) {
@@ -78,7 +42,7 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 			// All new entry
 			if (existingEntry == null) {
 				atLeastOneAdditionMade = true;
-				add(uniProtEntry, false);
+				super.add(uniProtEntry);
 			}
 			// Existing entry => Add to duplicates
 			else {
@@ -92,22 +56,16 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 		// Merge duplicates and add them back to Set
 		for (UniProtEntry existingEntry : duplicates.keySet()) {
 			List<UniProtEntry> currentDuplicates = duplicates.get(existingEntry);
-			this.uniProtEntries.remove(existingEntry);
-			add(
+			super.remove(existingEntry);
+			super.add(
 					new UniProtEntry
 							.Builder(existingEntry, currentDuplicates.toArray(new UniProtEntry[currentDuplicates.size()]))
-							.build(),
-					false
+							.build()
 			);
 			atLeastOneAdditionMade = true;
 		}
 
 		return atLeastOneAdditionMade;
-	}
-
-	public boolean addAll(Collection<? extends UniProtEntry> uniProtEntries, boolean checkExists) {
-		if(checkExists) return addAll(uniProtEntries);
-		else return this.uniProtEntries.addAll(uniProtEntries);
 	}
 
 	@Override
@@ -125,65 +83,12 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 		return false;
 	}
 
-	public boolean contains(String uniProtId) {
-		return find(uniProtId) != null;
-	}
-
-	@Override
-	public int size() {
-		return uniProtEntries.size();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return uniProtEntries.isEmpty();
-	}
-
-	@Override
-	public Iterator<UniProtEntry> iterator() {
-		return uniProtEntries.iterator();
-	}
-
-	@Override
-	public Object[] toArray() {
-		return uniProtEntries.toArray();
-	}
-
-	@Override
-	public <T> T[] toArray(T[] a) {
-		return uniProtEntries.toArray(a);
-	}
-
-
-	@Override
-	public boolean remove(Object o) {
-		return uniProtEntries.remove(o);
-	}
-
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		for (Object o : c) {
-			if (!contains(o)) return false;
-		}
+		for (Object o : c)
+			if (!contains(o))
+				return false;
 		return true;
 	}
 
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		return uniProtEntries.removeAll(c);
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		return uniProtEntries.retainAll(c);
-	}
-
-	/**
-	 * @param entry
-	 * @param checkExisting     Check exists before adding or not
-	 */
-	public boolean add(UniProtEntry entry, boolean checkExisting) {
-		if (checkExisting) return add(entry);
-		else return uniProtEntries.add(organism == null ? entry : ProteinUtils.correctEntryOrganism(entry, organism));
-	}
 }

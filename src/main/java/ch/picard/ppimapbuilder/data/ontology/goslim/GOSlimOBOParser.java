@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/**
+ * Rudimentary OBO parser that only read Gene Ontology Term from an OBO file to construct a GOSlim from these terms.
+ */
 public class GOSlimOBOParser {
 
 	public static GOSlim parseOBOFile(InputStream inputStream, String name) {
@@ -22,10 +25,14 @@ public class GOSlimOBOParser {
 			String term = null;
 			Character category = null;
 			while((line = reader.readLine()) != null) {
-				if(line.contains("[Term]"))
+				if(line.contains("[Term]")) {
 					inTerm = true;
+					identifier = term = null;
+					category = null;
+				}
 				else if(inTerm && line.startsWith("id:")) {
-					identifier = line.replace("id: ", "");
+					String id = line.replace("id: ", "");
+					identifier = id.startsWith("GO") ? id : null;
 				}
 				else if(line.startsWith("name:") && identifier != null) {
 					term = line.replace("name: ", "");
@@ -41,8 +48,6 @@ public class GOSlimOBOParser {
 
 					set.add(new GeneOntologyTerm(identifier, term, category));
 					inTerm = false;
-					identifier = term = null;
-					category = null;
 				}
 			}
 

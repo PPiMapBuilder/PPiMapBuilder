@@ -116,7 +116,7 @@ public class Organism implements Comparable<Organism>, Serializable {
 	}
 
 	public boolean sameSpecies(Organism o) {
-		return genus.equals(o.genus) && species.equals(o.species);
+		return o != null && genus.equals(o.genus) && species.equals(o.species);
 	}
 
 	/**

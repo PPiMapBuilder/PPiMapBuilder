@@ -50,7 +50,7 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 		taskMonitor.setTitle("PPiMapBuilder interaction query");
 		taskMonitor.setProgress(0d);
 
-		taskMonitor.setStatusMessage("Fetch UniProt entry data for input proteins...");
+		taskMonitor.setStatusMessage("Fetch UniProt data for input proteins...");
 
 		HashMap<String, UniProtEntry> uniProtEntries = uniProtEntryClient.retrieveProteinsData(inputProteinIDs);
 		for (int i = 0, inputProteinIDsSize = inputProteinIDs.size(); i < inputProteinIDsSize; i++) {
@@ -64,8 +64,10 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 
 				if (!entry.getOrganism().equals(referenceOrganism)) {
 					Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
-                    if(ortholog != null)
-    					entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
+                    if(ortholog != null) {
+	                    entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
+	                    entry.addOrtholog(ortholog);
+                    }
                     else entry = null;
 				}
 			}
@@ -77,8 +79,7 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 			}
 
 			// Save the protein into the interactor pool
-			if(!proteinOfInterestPool.contains(entry)) {
-				proteinOfInterestPool.add(entry);
+			if(proteinOfInterestPool.add(entry)) {
 				interactorPool.add(entry);
 			}
 		}

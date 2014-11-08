@@ -29,6 +29,10 @@ public class Pair<T> implements Comparable<Pair<T>> {
 		return second;
 	}
 
+	public boolean isNotNull() {
+		return first != null && second != null;
+	}
+
 	public boolean isEmpty() {
 		return first == null && second == null;
 	}

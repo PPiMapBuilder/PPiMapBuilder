@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog;
 
+import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 
@@ -111,4 +112,12 @@ public class OrthologGroup implements Serializable {
 	public boolean contains(Protein protein) {
 		return getProteins().contains(protein);
 	}
+
+	public OrthologScoredProtein find(Protein protein) {
+		for (OrthologScoredProtein orthologScoredProtein : members.get(protein.getOrganism()))
+			if(orthologScoredProtein.getUniProtId().equals(protein.getUniProtId()))
+				return orthologScoredProtein;
+		return null;
+	}
+
 }

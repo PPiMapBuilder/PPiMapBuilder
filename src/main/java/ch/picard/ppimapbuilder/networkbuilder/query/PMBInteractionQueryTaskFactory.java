@@ -9,6 +9,7 @@ import ch.picard.ppimapbuilder.networkbuilder.query.tasks.*;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
+import psidev.psi.mi.tab.model.BinaryInteraction;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.*;
@@ -25,6 +26,9 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
+
+	// Temporary data
+	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
 
 	// Thread list
 	private final ThreadedClientManager threadedClientManager;
@@ -52,9 +56,11 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 		allOrganisms.add(referenceOrganism);
 		List<PsicquicService> selectedDatabases = networkQueryParameters.getSelectedDatabases();
 
+		directInteractionsByOrg = new HashMap<Organism, Collection<BinaryInteraction>>();
+
 		// Store thread pool used by web client and this task
 		this.threadedClientManager = new ThreadedClientManager(
-                new ExecutorServiceManager(Math.min(2, Runtime.getRuntime().availableProcessors()) + 1),
+                new ExecutorServiceManager((Math.min(2, Runtime.getRuntime().availableProcessors()) + 1)),
 				selectedDatabases
 		);
 
@@ -69,23 +75,23 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 						MINIMUM_ORTHOLOGY_SCORE, inputProteinIDs, referenceOrganism,
 						proteinOfInterestPool, interactorPool
 				),
-				new FetchDirectInteractorReferenceOrganismTask(
+				new FetchDirectInteractionReferenceOrganismTask(
 						threadedClientManager,
 						referenceOrganism, proteinOfInterestPool, MINIMUM_ORTHOLOGY_SCORE,
-						interactorPool
+						interactorPool, directInteractionsByOrg
 				),
 				new FetchOrthologsOfInteractorsTask(
 						threadedClientManager,
 						otherOrganisms, interactorPool, MINIMUM_ORTHOLOGY_SCORE
 				),
-				new FetchDirectInteractorOrtherOrganismsTask(
+				new FetchDirectInteractionOtherOrganismsTask(
 						threadedClientManager,
 						otherOrganisms, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE, proteinOfInterestPool,
-						interactorPool
+						interactorPool, directInteractionsByOrg
 				),
 				new FetchInteractionsTask(
 						threadedClientManager,
-						allOrganisms, interactorPool,
+						allOrganisms, interactorPool, proteinOfInterestPool, directInteractionsByOrg,
 						interactionsByOrg
 				)
 		);

@@ -23,7 +23,6 @@ public class ThreadedClientManager {
 	private final InParanoidClient inParanoidClient;
 	private final List<PsicquicService> selectedDatabases;
 
-	private final Set<AbstractThreadedClient> inUseClients;
 	private final Set<AbstractThreadedClient> notInUseClients;
 
 	public ThreadedClientManager(ExecutorServiceManager executorServiceManager, List<PsicquicService> selectedDatabases) {
@@ -37,7 +36,6 @@ public class ThreadedClientManager {
 		// PMB ortholog cache client
 		proteinOrthologCacheClient = PMBProteinOrthologCacheClient.getInstance();
 
-		this.inUseClients = new HashSet<AbstractThreadedClient>();
 		this.notInUseClients = new HashSet<AbstractThreadedClient>();
 	}
 
@@ -51,13 +49,8 @@ public class ThreadedClientManager {
 
 	private <T extends AbstractThreadedClient> T register(T client) {
 		notInUseClients.remove(client);
-		inUseClients.add(client);
 		return client;
 	}
-
-    public ExecutorService getOrCreateThreadPool() {
-        return executorServiceManager.getOrCreateThreadPool();
-    }
 
     public synchronized ThreadedProteinOrthologClientDecorator getOrCreateProteinOrthologClient() {
 		ThreadedProteinOrthologClientDecorator client = getUnUsedClientByClass(ThreadedProteinOrthologClientDecorator.class);
@@ -87,13 +80,11 @@ public class ThreadedClientManager {
 	}
 
 	public synchronized void unRegister(AbstractThreadedClient client) {
-		inUseClients.remove(client);
 		notInUseClients.add(client);
 	}
 
 	public void clear() {
 		proteinOrthologCacheClient.clearMemoryCache();
-		inUseClients.clear();
 		notInUseClients.clear();
 		executorServiceManager.clear();
 	}

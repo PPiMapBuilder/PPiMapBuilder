@@ -35,11 +35,10 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	// Data input from the user
 	private final NetworkQueryParameters networkQueryParameters;
 
-	// Data collection for network generation
-	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
-	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private final UniProtEntrySet interactorPool;
-
+	// Data output from network querying
+	private UniProtEntrySet proteinOfInterestPool; // not the same as user input
+	private HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
+	private UniProtEntrySet interactorPool;
 
 	// Error output
 	private String errorMessage;
@@ -54,7 +53,6 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 			final VisualMappingManager visualMappingManager,
 			final NetworkQueryParameters networkQueryParameters
 	) {
-
 		this.networkManager = networkManager;
 		this.networkNaming = networkNaming;
 		this.networkFactory = networkFactory;
@@ -64,10 +62,6 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.visualMappingManager = visualMappingManager;
 		this.networkQueryParameters = networkQueryParameters;
 
-		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
-		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
-		this.proteinOfInterestPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
-
 		this.errorMessage = null;
 	}
 
@@ -75,18 +69,18 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
 
-		interactionsByOrg.clear();
-		interactorPool.clear();
-		proteinOfInterestPool.clear();
+		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
+		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
+		this.proteinOfInterestPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
 
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
-			new PMBInteractionQueryTaskFactory(
-				interactionsByOrg,
-				interactorPool,
-				proteinOfInterestPool,
-				networkQueryParameters
-			).createTaskIterator()
+				new PMBInteractionQueryTaskFactory(
+						interactionsByOrg,
+						interactorPool,
+						proteinOfInterestPool,
+						networkQueryParameters
+				).createTaskIterator()
 		);
 		taskIterator.append(
 				new PMBCreateNetworkTask(

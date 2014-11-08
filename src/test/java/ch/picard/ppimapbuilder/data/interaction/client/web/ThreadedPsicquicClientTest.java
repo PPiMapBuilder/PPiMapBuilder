@@ -99,7 +99,7 @@ public class ThreadedPsicquicClientTest {
 	@Test
 	public void testGetInteractionsInProteinPool() throws Exception {
 		final Set<Set<String>> expected = new HashSet<Set<String>>() {{
-			for (Pair<String> pair : PairUtils.createCombinations(new HashSet<String>(ProteinUtils.asIdentifiers(proteins)), true, false)) {
+			for (Pair<String> pair : PairUtils.createCombinations(proteins, true, false)) {
 				add(new HashSet<String>(Arrays.asList(pair.getFirst(), pair.getSecond())));
 			}
 		}};
@@ -157,8 +157,7 @@ public class ThreadedPsicquicClientTest {
 	}
 
 	private static final Organism human = new Organism("Homo sapiens", 9606);
-	private static final Set<Protein> proteins = ProteinUtils.newProteins(
-			new HashSet<String>(Arrays.asList(new String[]{"Q53YK7", "P27635", "Q5NGF9", "Q9UGK8", "O15350",
+	private static final Set<String> proteins = new HashSet<String>(Arrays.asList(new String[]{"Q53YK7", "P27635", "Q5NGF9", "Q9UGK8", "O15350",
 					"Q5NGF3", "P53621", "P07101", "P41134", "Q8NBU8", "P98077", "P14907", "Q9UGJ8", "Q5NGE9", "Q9NUY6", "Q96SB8", "Q9UGJ0",
 					"P13073", "P47901", "P47900", "Q9P1A6", "P98082", "P21809", "Q96SA5", "P13861", "A0AV37", "Q53GK5", "P41743", "Q9UBU3",
 					"P40616", "Q8TCX1", "Q9H4L7", "Q494Z3", "P14921", "P14920", "P35590", "P14923", "A1Z5I9", "P06576", "P13051", "Q16716",
@@ -225,8 +224,6 @@ public class ThreadedPsicquicClientTest {
 					"Q9UFW8", "P29992", "B4DUS6", "O43379", "P10619", "O60602", "Q5VW80", "Q8WTW2", "P23258", "B7Z8H0", "Q8IUX2", "Q7CJP1",
 					"Q13952", "Q14344", "Q62132", "Q99677", "Q9UG90", "Q9BZH6", "Q9BQD3", "B4E025", "O60603", "Q01955", "Q92794", "Q5NHX7",
 					"Q92791", "Q5NHX6", "Q5NI96", "Q5NHX9", "Q92793", "Q5NHX8", "Q5NHX3", "Q5NI93", "Q01959", "Q5NHX5", "P10644", "Q8WTV0",
-					"Q6SA08", "C0LZJ3"*/})),
-			human
-	);
+					"Q6SA08", "C0LZJ3"*/}));
 
 }

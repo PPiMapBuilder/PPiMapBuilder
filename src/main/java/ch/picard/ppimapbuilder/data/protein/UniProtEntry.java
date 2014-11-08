@@ -1,8 +1,7 @@
 package ch.picard.ppimapbuilder.data.protein;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologyCategory;
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import com.eclipsesource.json.JsonObject;
 
@@ -17,7 +16,7 @@ public class UniProtEntry extends Protein {
 	transient private final String ecNumber;
 	transient private final boolean reviewed;
 	transient private final GeneOntologyTermSet geneOntologyTerms;
-	transient private final HashMap<Organism, Protein> orthologs;
+	transient private final Set<Protein> orthologs;
 
 	private UniProtEntry(
 			String uniprotId,
@@ -29,7 +28,7 @@ public class UniProtEntry extends Protein {
 			boolean reviewed,
 			Set<String> synonymGeneNames,
 			GeneOntologyTermSet geneOntologyTerms,
-			HashMap<Organism, Protein> orthologs
+			Set<Protein> orthologs
 	) {
 		super(uniprotId, organism);
 		this.accessions = accessions;
@@ -42,16 +41,26 @@ public class UniProtEntry extends Protein {
 		this.orthologs = orthologs;
 	}
 
-	public Protein getOrtholog(Organism organism) {
-		return orthologs.get(organism);
+	public Collection<Protein> getOrthologs(Organism organism) {
+		final ArrayList<Protein> orthologs = new ArrayList<Protein>();
+		for (Protein ortholog : this.orthologs)
+			if(ortholog.getOrganism().equals(organism))
+				orthologs.add(ortholog);
+		return orthologs;
 	}
 
 	public Collection<Protein> getOrthologs() {
-		return orthologs.values();
+		return orthologs;
 	}
 
-	public Protein addOrtholog(Protein prot) {
-		return orthologs.put(prot.getOrganism(), prot);
+	public void addOrthologs(Collection<? extends Protein> orthologs) {
+		for (Protein ortholog : orthologs)
+			addOrtholog(ortholog);
+	}
+
+	public void addOrtholog(Protein ortholog) {
+		if(ortholog != null)
+			orthologs.add(ortholog);
 	}
 
 	public GeneOntologyTermSet getGeneOntologyTerms() {
@@ -76,6 +85,10 @@ public class UniProtEntry extends Protein {
 
 	public String getEcNumber() {
 		return ecNumber;
+	}
+
+	public boolean hasAccession(String uniProtID) {
+		return uniProtID.equals(uniProtID) || accessions.contains(uniProtID);
 	}
 
 	public boolean isIdentical(UniProtEntry entry) {
@@ -129,12 +142,15 @@ public class UniProtEntry extends Protein {
 		private String ecNumber = null;
 		private Boolean reviewed = null;
 		private GeneOntologyTermSet geneOntologyTerms = null;
-		private HashMap<Organism, Protein> orthologs = null;
+		private HashSet<Protein> orthologs = null;
 
 		public Builder() {
 			this((UniProtEntry) null);
 		}
 
+		/**
+		 * Constructs a UniProtEntry.Builder using an existing UniProtEntry as a template.
+		 */
 		public Builder(UniProtEntry entry) {
 			if(entry != null) {
 				uniprotId = entry.uniProtId;
@@ -146,19 +162,22 @@ public class UniProtEntry extends Protein {
 				ecNumber = entry.ecNumber;
 				reviewed = entry.reviewed;
 				geneOntologyTerms = new GeneOntologyTermSet(entry.geneOntologyTerms);
-				orthologs = new HashMap<Organism, Protein>(entry.orthologs);
+				orthologs = new HashSet<Protein>(entry.orthologs);
 			}
 		}
 
+		/**
+		 * Constructs a UniProtEntry.Builder using ther merging of existing UniProtEntry as a template.
+		 */
 		public Builder(UniProtEntry referenceEntry, UniProtEntry... entries) {
 			this(referenceEntry);
 
 			for (UniProtEntry entry : entries) {
-				accessions.addAll(entry.accessions);
-				accessions.add(entry.uniProtId);
-				synonymGeneNames.addAll(entry.synonymGeneNames);
-				geneOntologyTerms.addAll(entry.geneOntologyTerms);
-				orthologs.putAll(entry.orthologs);
+				addAccessions(entry.accessions);
+				addAccession(entry.uniProtId);
+				addSynonymGeneNames(entry.synonymGeneNames);
+				addGeneOntologyTerms(entry.geneOntologyTerms);
+				addOrthologs(entry.orthologs);
 			}
 		}
 
@@ -177,7 +196,7 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		public Builder addAccessions(LinkedHashSet<String> accessions) {
+		public Builder addAccessions(Collection<String> accessions) {
 			getOrCreateAccessions().addAll(accessions);
 			return this;
 		}
@@ -197,13 +216,15 @@ public class UniProtEntry extends Protein {
 			return synonymGeneNames = new HashSet<String>();
 		}
 
-		public Builder addSynonymGeneNames(String synonymGeneName) {
-			getOrCreateSynonymGeneNames().add(synonymGeneName);
+		public Builder addSynonymGeneName(String synonymGeneName) {
+			if(synonymGeneName != null)
+				getOrCreateSynonymGeneNames().add(synonymGeneName);
 			return this;
 		}
 
-		public Builder addSynonymGeneNames(Set<String> synonymGeneNames) {
-			getOrCreateSynonymGeneNames().addAll(synonymGeneNames);
+		public Builder addSynonymGeneNames(Collection<String> synonymGeneNames) {
+			for (String synonymGeneName : synonymGeneNames)
+				addSynonymGeneName(synonymGeneName);
 			return this;
 		}
 
@@ -227,28 +248,32 @@ public class UniProtEntry extends Protein {
 			return geneOntologyTerms = new GeneOntologyTermSet();
 		}
 
-		public Builder addGeneOntologyTerms(Set<GeneOntologyTerm> terms) {
-			getOrCreateGeneOntologyTerms().addAll(terms);
+		public Builder addGeneOntologyTerms(Collection<GeneOntologyTerm> terms) {
+			for (GeneOntologyTerm term : terms)
+				addGeneOntologyTerm(term);
 			return this;
 		}
 
 		public Builder addGeneOntologyTerm(GeneOntologyTerm term) {
-			getOrCreateGeneOntologyTerms().add(term);
+			if(term != null)
+				getOrCreateGeneOntologyTerms().add(term);
 			return this;
 		}
 
-		private HashMap<Organism, Protein> getOrCreateOrthologs() {
+		private HashSet<Protein> getOrCreateOrthologs() {
 			if(orthologs != null) return orthologs;
-			return orthologs = new HashMap<Organism, Protein>();
+			return orthologs = new HashSet<Protein>();
 		}
 
-		public Builder addOrthologs(HashMap<Organism, Protein> orthologs) {
-			getOrCreateOrthologs().putAll(orthologs);
+		public Builder addOrthologs(Collection<? extends Protein> orthologs) {
+			for (Protein ortholog : orthologs)
+				getOrCreateOrthologs().add(ortholog);
 			return this;
 		}
 
-		public Builder addOrtholog(Organism organism, Protein protein) {
-			getOrCreateOrthologs().put(organism, protein);
+		public Builder addOrtholog(Protein ortholog) {
+			if(ortholog != null)
+				getOrCreateOrthologs().add(ortholog);
 			return this;
 		}
 

@@ -356,24 +356,24 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param row
 	 */
 	public void setProteinView(CyRow row) {
-		this.setProteinId(row.get("uniprot_id", String.class));
-		this.setPtnName(row.get("protein_name", String.class));
-		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
+		this.setProteinId(row.get("Uniprot_id", String.class));
+		this.setPtnName(row.get("Protein_name", String.class));
+		this.setReviewState(row.get("Reviewed", String.class).equalsIgnoreCase("true"));
 
-		String tax_id = row.get("tax_id", String.class);
+		String tax_id = row.get("Tax_id", String.class);
 
-		this.setGeneName(row.get("gene_name", String.class) != null ? row.get("gene_name", String.class) : "", tax_id);
+		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
 
-		this.setEcNumber(row.get("ec_number", String.class) != null ? row.get("ec_number", String.class) : "");
+		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "");
 
-		this.setGeneNameSynonyms(row.getList("synonym_gene_names", String.class));
-		this.setOntology(row.getList("biological_processes_hidden", String.class), row.getList("cellular_components_hidden", String.class),
-				row.getList("molecular_functions_hidden", String.class));
+		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
+		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
+				row.getList("Molecular_functions_hidden", String.class));
 
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
 		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id);
 
-		this.setOrthologs(row.getList("orthologs", String.class));
+		this.setOrthologs(row.getList("Orthologs", String.class));
 
 		this.showProteinView();
 	}
@@ -450,17 +450,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	}
 
 	public void setInteractionView(CyRow row) {
-		//this.setIntAName(row.get("protein_name", String.class));
 		this.setIntAName(row.get("Protein_name_A", String.class));
 		this.setIntBName(row.get("Protein_name_B", String.class));
 
-		String tax_id = row.get("tax_id", String.class);
+		String tax_id = row.get("Tax_id", String.class);
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
 		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id);
 
-		this.setPubId(row.getList("pubid", String.class));
-		this.setSource(row.getList("source", String.class));
-		this.setConfidence(row.getList("confidence", String.class));
+		this.setPubId(row.getList("Pubid", String.class));
+		this.setSource(row.getList("Source", String.class));
+		this.setConfidence(row.getList("Confidence", String.class));
 
 		this.showInteractionView();
 	}

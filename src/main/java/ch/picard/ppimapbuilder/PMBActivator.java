@@ -150,9 +150,9 @@ public class PMBActivator extends AbstractCyActivator {
 			vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, new Color(51, 153, 255));
 			vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 10);
 			vs.setDefaultValue(BasicVisualLexicon.NODE_SELECTED_PAINT, new Color(160, 255, 144));
-			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction("gene_name", String.class, BasicVisualLexicon.NODE_LABEL);
+			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction("Gene_name", String.class, BasicVisualLexicon.NODE_LABEL);
 			vs.addVisualMappingFunction(pMapping);
-			DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
+			DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
 			dMapping.putMapValue("true", new Color(255, 255, 51));
 			dMapping.putMapValue("false", new Color(255, 255, 255));
 			vs.addVisualMappingFunction(dMapping);
@@ -160,7 +160,7 @@ public class PMBActivator extends AbstractCyActivator {
 			//EDGE
 			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(204, 204, 204));
 			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_SELECTED_PAINT, new Color(255, 0, 0));
-			dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("interolog", String.class, BasicVisualLexicon.EDGE_LINE_TYPE);
+			dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Interolog", String.class, BasicVisualLexicon.EDGE_LINE_TYPE);
 			dMapping.putMapValue("true", LineTypeVisualProperty.EQUAL_DASH);
 			dMapping.putMapValue("false", LineTypeVisualProperty.SOLID);
 			vs.addVisualMappingFunction(dMapping);
