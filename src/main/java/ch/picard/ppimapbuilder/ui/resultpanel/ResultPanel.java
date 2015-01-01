@@ -1,5 +1,7 @@
 package ch.picard.ppimapbuilder.ui.resultpanel;
 
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
+import ch.picard.ppimapbuilder.data.organism.Organism;
 import com.eclipsesource.json.JsonObject;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang.NotImplementedException;
@@ -109,7 +111,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JLabel lblReviewed;
 	private JLabel proteinId;
 	private JLabel ecNum;
-	private JLabel organism;
+	private JLabel proteinOrganism;
 	private JLabel geneName;
 	private DefaultListModel synonymsList;
 	private JTree treeOntology;
@@ -126,7 +128,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JPanel interactionPanel = new JPanel();
 	private JLabel intAName;
 	private JLabel intBName;
-	private JLabel taxId;
+	private JLabel interactionOrganism;
 	private JPanel panelPubId;
 	private JTree treePubId;
 	private JPanel panelSource;
@@ -282,8 +284,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		ecNum = NONE_LABEL();
 		proteinPanel.add(ecNum, "cell 1 2");
 
-		organism = NONE_LABEL();
-		proteinPanel.add(organism, "cell 1 3");
+		proteinOrganism = NONE_LABEL();
+		proteinPanel.add(proteinOrganism, "cell 1 3");
 
 		geneName = NONE_LABEL();
 		proteinPanel.add(geneName, "cell 1 4");
@@ -354,40 +356,31 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param row
 	 */
 	public void setProteinView(CyRow row) {
-		System.out.println(row.getAllValues());
+		this.setProteinId(row.get("Uniprot_id", String.class));
+		this.setPtnName(row.get("Protein_name", String.class));
+		this.setReviewState(row.get("Reviewed", String.class).equalsIgnoreCase("true"));
 
-		this.setProteinId(row.get("uniprot_id", String.class));
-		System.out.println("#1");
-		this.setPtnName(row.get("protein_name", String.class));
-		System.out.println("#2");
-		this.setReviewState(row.get("reviewed", String.class).equalsIgnoreCase("true"));
-		System.out.println("#3");
-		this.setGeneName(row.get("gene_name", String.class), row.get("tax_id", String.class));
-		System.out.println("#4");
+		String tax_id = row.get("Tax_id", String.class);
 
-		this.setEcNumber(row.get("ec_number", String.class) != null ? row.get("ec_number", String.class) : "");
-		System.out.println("#5");
-		//
-		this.setGeneNameSynonyms(row.getList("synonym_gene_names", String.class));
-		System.out.println("#6");
-		this.setOntology(row.getList("biological_processes_hidden", String.class), row.getList("cellular_components_hidden", String.class),
-				row.getList("molecular_functions_hidden", String.class));
-		System.out.println("#7");
-		this.setOrganism(row.get("tax_id", String.class));
-		System.out.println("#8");
-		this.setOrthologs(row.getList("orthologs", String.class));
-		
+		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
 
-		System.out.println("#9");
-		
+		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "");
+
+		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
+		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
+				row.getList("Molecular_functions_hidden", String.class));
+
+		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
+		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id);
+
+		this.setOrthologs(row.getList("Orthologs", String.class));
+
 		this.showProteinView();
-
-		System.out.println("#10");
 	}
-	
-	private void setStaticInteractionView() {
 
+	private void setStaticInteractionView() {
 		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
+
 		/*
 		 * HEADER - GENERAL INFORMATION
 		 */
@@ -401,8 +394,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		intBName.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		interactionPanel.add(intBName, "cell 0 1 2 1,grow");
 		
-		final JLabel lblTaxId = new JLabel("Tax ID:");
-		interactionPanel.add(lblTaxId, "cell 0 2,alignx left");
+		final JLabel lblInteractionOrganism = new JLabel("Organism:");
+		interactionPanel.add(lblInteractionOrganism, "cell 0 2,alignx left");
 		
 		final JScrollPane scrollPane_Publication = new JScrollPane();
 		scrollPane_Publication.setOpaque(false);
@@ -450,23 +443,25 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		/*
 		 * VARIABLE LABELS
 		 */
-		taxId = NONE_LABEL();
-		interactionPanel.add(taxId, "cell 1 2");
+		interactionOrganism = NONE_LABEL();
+		interactionPanel.add(interactionOrganism, "cell 1 2");
 
 
 	}
 
 	public void setInteractionView(CyRow row) {
-		//this.setIntAName(row.get("protein_name", String.class));
 		this.setIntAName(row.get("Protein_name_A", String.class));
 		this.setIntBName(row.get("Protein_name_B", String.class));
-		this.setTaxId(row.get("tax_id", String.class));
-		this.setPubId(row.getList("pubid", String.class));
-		this.setSource(row.getList("source", String.class));
-		this.setConfidence(row.getList("confidence", String.class));
+
+		String tax_id = row.get("Tax_id", String.class);
+		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
+		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id);
+
+		this.setPubId(row.getList("Pubid", String.class));
+		this.setSource(row.getList("Source", String.class));
+		this.setConfidence(row.getList("Confidence", String.class));
 
 		this.showInteractionView();
-
 	}
 	
 	public void showInteractionView() {
@@ -512,9 +507,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	/**
 	 * Set the protein name label
-	 * 
-	 * @param protein
-	 *            name
 	 */
 	public void setPtnName(String ptnName) {
 		if (!ptnName.isEmpty()) {
@@ -533,30 +525,27 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	/**
 	 * Set the Tax ID
-	 * 
-	 * @param taxId
 	 */
-	private void setTaxId(String taxId) {
-		if (!taxId.isEmpty()) {
-			this.taxId.setFont(STD_FONT);
-			this.taxId.setText(taxId);
+	private void setInteractionOrganism(String name, String taxId) {
+		String text = formatOrganism(name, taxId);
+		if (!text.isEmpty()) {
+			this.interactionOrganism.setFont(STD_FONT);
+			this.interactionOrganism.setText(text);
 			this.lblExtLinkUniprot.setVisible(true);
 		} else {
 			this.lblExtLinkUniprot.setVisible(false);
-			this.taxId.setFont(NONE_FONT);
-			this.taxId.setText("none");
+			this.interactionOrganism.setFont(NONE_FONT);
+			this.interactionOrganism.setText("none");
 		}
 	}
 	
 	/**
 	 * Set pubId
-	 * 
-	 * @param pubid
 	 */
 	private void setPubId(List<String> pubId) {
 		this.panelPubId.removeAll();
 		
-		System.out.println(pubId);
+		//System.out.println(pubId);
 
 		for (String str : pubId) {
 
@@ -574,7 +563,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			
 			String[] parts = str.split(":");
 			if (parts[0].equals("pubmed")){
-				System.out.println("pubmed");
+				//System.out.println("pubmed");
 				
 				try {
 					lblExtLinkPubMed.setVisible(true);
@@ -605,8 +594,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	
 	/**
 	 * Set source
-	 * 
-	 * @param source
 	 */
 	private void setConfidence(List<String> confidence) {
 		this.panelConfidence.removeAll();
@@ -626,11 +613,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	/**
 	 * Set the protein name label
-	 * 
-	 * @param gene
-	 *            name
-	 * @param taxonomic
-	 *            id
 	 */
 	private void setGeneName(String geneName, String taxId) {
 		if (!geneName.isEmpty()) {
@@ -724,7 +706,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param ecNumber
 	 */
 	private void setEcNumber(String ecNumber) {
-		if (!ecNumber.isEmpty()) {
+		if (!ecNumber.isEmpty() && ecNumber != null) {
 			this.ecNum.setFont(STD_FONT);
 			this.ecNum.setText(ecNumber);
 			try {
@@ -746,36 +728,18 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * 
 	 * @return
 	 */
-	public String getOrganism() {
-		return organism.getText();
-	}
-
-	/**
-	 * Set the organism taxonomic ID
-	 * 
-	 * @param taxId
-	 */
-	@Deprecated
-	private void setOrganism(String taxId) {
-		setOrganism(null, taxId);
+	public String getProteinOrganism() {
+		return proteinOrganism.getText();
 	}
 
 	/**
 	 * Set the organism name and taxonomic ID
-	 * 
-	 * @param taxId
 	 */
-	private void setOrganism(String name, String taxId) {
-		String s;
-		if (name == null || name.isEmpty()) {
-			s = "[" + taxId + "]";
-		} else {
-			s = name + " [" + taxId + "]";
-		}
-
-		if (!s.isEmpty()) {
-			this.organism.setFont(STD_FONT);
-			this.organism.setText(s);
+	private void setProteinOrganism(String name, String taxId) {
+		String text = formatOrganism(name, taxId);
+		if (!text.isEmpty()) {
+			this.proteinOrganism.setFont(STD_FONT);
+			this.proteinOrganism.setText(text);
 			try {
 				this.lblExtLinkOrganism.setUri(new URI("http://www.uniprot.org/taxonomy/" + taxId));
 			} catch (URISyntaxException e) {
@@ -784,10 +748,17 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			this.lblExtLinkOrganism.setVisible(true);
 		} else {
 			this.lblExtLinkOrganism.setVisible(false);
-			this.organism.setFont(NONE_FONT);
-			this.organism.setText("none");
+			this.proteinOrganism.setFont(NONE_FONT);
+			this.proteinOrganism.setText("none");
 		}
+	}
 
+	private String formatOrganism(String name, String taxId) {
+		if (name == null || name.isEmpty()) {
+			return  "[" + taxId + "]";
+		} else {
+			return  name + " [" + taxId + "]";
+		}
 	}
 
 	/**
@@ -827,13 +798,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param orthologs
 	 */
 	private void setOrthologs(List<String> orthologs) {
-		// TODO: Add orthologs column
-		// throw new NotImplementedException("Ortholog are not handle yet");
 		this.panelOrthologs.removeAll();
-
+		
 		for (String str : orthologs) {
 			JsonObject json = JsonObject.readFrom(str);
-			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("organism").asString() + "]"));
+			this.panelOrthologs.add(new JLabel(" •   " + json.get("uniProtId").asString() + " [" + json.get("organism").asInt() + "]"));
 		}
 
 	}
@@ -945,9 +914,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	/**
 	 * Set the protein name label
-	 * 
-	 * @param protein
-	 *            name
 	 */
 	public void setIntAName(String intAName) {
 		if (!intAName.isEmpty()) {
@@ -975,9 +941,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	/**
 	 * Set the protein name label
-	 * 
-	 * @param protein
-	 *            name
 	 */
 	public void setIntBName(String intBName) {
 		if (!intBName.isEmpty()) {

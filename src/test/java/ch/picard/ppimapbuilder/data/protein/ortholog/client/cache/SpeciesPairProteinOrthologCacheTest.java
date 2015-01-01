@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,6 +14,8 @@ import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class SpeciesPairProteinOrthologCacheTest {
 
@@ -37,8 +40,8 @@ public class SpeciesPairProteinOrthologCacheTest {
 		testFolderOutput = TestUtils.createTestOutputFolder(SpeciesPairProteinOrthologCacheTest.class.getSimpleName());
 		PMBSettings.getInstance().setOrthologCacheFolder(testFolderOutput);
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		P04040 = new Protein("P04040", human);
 		Q06141 = new Protein("Q06141", human);
@@ -61,33 +64,34 @@ public class SpeciesPairProteinOrthologCacheTest {
 
 	@Test
 	public void testAddOrtholog() throws Exception {
-		Protein expected = P24270;
+		List<? extends Protein> expected, actual;
+
+		expected = Arrays.asList(P24270);
 		cache.addOrthologGroup(new OrthologGroup(
 				new OrthologScoredProtein(P04040, 1d),
 				new OrthologScoredProtein(P24270, 1d)
 		));
-		Protein actual = cache.getOrtholog(P04040, mouse, 1d);
+		actual = cache.getOrtholog(P04040, mouse, 1d);
 		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
 	public void testGetOrthologFail() throws Exception {
-		Protein actual;
+		List<? extends Protein> actual;
 
 		actual = cache.getOrtholog(new Protein("DSF", null), mouse, 0d);
-		Assert.assertNull(actual);
+		Assert.assertTrue(actual.isEmpty());
 	}
 
 	@Test
 	public void testGetOrthologSuccess() throws Exception {
-		Protein expected;
-		Protein actual;
+		List<? extends Protein> expected, actual;
 
-		expected = Q06141;
+		expected = Arrays.asList(Q06141);
 		actual = cache.getOrtholog(P35230, human, 1d);
 		Assert.assertEquals(expected, actual);
 
-		expected = Q58A65;
+		expected = Arrays.asList(Q58A65);
 		actual = cache.getOrtholog(O60271, mouse, 1d);
 		Assert.assertEquals(expected, actual);
 	}

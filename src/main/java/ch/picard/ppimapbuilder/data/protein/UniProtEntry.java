@@ -1,163 +1,122 @@
 package ch.picard.ppimapbuilder.data.protein;
 
-import com.eclipsesource.json.JsonObject;
-import ch.picard.ppimapbuilder.data.gene_ontology.GeneOntologyModel;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import com.eclipsesource.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class UniProtEntry extends Protein {
 
-	transient private String geneName;
-	transient private List<String> synonymGeneNames = new ArrayList<String>();
-	transient private String proteinName;
-	transient private String ecNumber;
-	transient private boolean reviewed;
-	transient private List<GeneOntologyModel> cellularComponents = new ArrayList<GeneOntologyModel>();
-	transient private List<GeneOntologyModel> biologicalProcesses = new ArrayList<GeneOntologyModel>();
-	transient private List<GeneOntologyModel> molecularFunctions = new ArrayList<GeneOntologyModel>();
-	transient private final HashMap<Organism, Protein> orthologs = new HashMap<Organism, Protein>();
+	private final LinkedHashSet<String> accessions;
+	private final String geneName;
+	private final Set<String> synonymGeneNames;
+	private final String proteinName;
+	private final String ecNumber;
+	private final boolean reviewed;
+	private final GeneOntologyTermSet geneOntologyTerms;
+	//private final Map<Organism, Set<Protein>> orthologs;
 
-	public UniProtEntry(String uniprotId, String geneName, String ecNumber, Organism organism, String proteinName, boolean reviewed) {
+	private UniProtEntry(
+			String uniprotId,
+			LinkedHashSet<String> accessions,
+			String geneName,
+			String ecNumber,
+			Organism organism,
+			String proteinName,
+			boolean reviewed,
+			Set<String> synonymGeneNames,
+			GeneOntologyTermSet geneOntologyTerms//,
+			//Set<Protein> orthologs
+	) {
 		super(uniprotId, organism);
+		this.accessions = accessions;
 		this.proteinName = proteinName;
 		this.ecNumber = ecNumber;
 		this.geneName = geneName;
 		this.reviewed = reviewed;
+		this.synonymGeneNames = synonymGeneNames;
+		this.geneOntologyTerms = geneOntologyTerms;
+		//this.orthologs = new HashMap<Organism, Set<Protein>>();
+		//for (Protein ortholog : orthologs) {
+		//	addOrtholog(ortholog);
+		//}
 	}
 
-	public List<GeneOntologyModel> getCellularComponents() {
-		return cellularComponents;
-	}
-
-	public ArrayList<String> getCellularComponentsAsStringList() {
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.cellularComponents) {
-			list.add(go.toString());
+	/*public Set<Protein> getOrthologs(Organism organism) {
+		Set<Protein> proteins = orthologs.get(organism);
+		if(proteins == null) {
+			proteins = new HashSet<Protein>();
+			orthologs.put(organism, proteins);
 		}
-		return list;
+		return proteins;
 	}
-	
-	public Protein getOrtholog(Organism organism) {
-		return orthologs.get(organism);
-	}
-	
-	public List<Protein> getOrthologs() {
-		return new ArrayList<Protein>(orthologs.values());
-	}
-	
-	public List<String> getOrthologsAsStringList() {
-		List<String> orthologs = new ArrayList<String>();
-		for(Protein ortholog:  getOrthologs())
-			orthologs.add(ortholog.toString());
+
+	public Set<Protein> getOrthologs() {
+		Set<Protein> orthologs = new HashSet<Protein>();
+		for (Set<Protein> proteins : this.orthologs.values()) {
+			orthologs.addAll(proteins);
+		}
 		return orthologs;
 	}
-	
-	public Protein addOrtholog(Protein prot) {
-		return orthologs.put(prot.getOrganism(), prot);
+
+	public void addOrthologs(Collection<? extends Protein> orthologs) {
+		for (Protein ortholog : orthologs)
+			addOrtholog(ortholog);
 	}
 
-	public void setCellularComponents(ArrayList<GeneOntologyModel> cellularComponents) {
-		this.cellularComponents = cellularComponents;
-	}
-
-	public void addCellularComponent(GeneOntologyModel go) {
-		this.cellularComponents.add(go);
-	}
-
-	public List<GeneOntologyModel> getBiologicalProcesses() {
-		return biologicalProcesses;
-	}
-
-	public ArrayList<String> getBiologicalProcessesAsStringList() {
-
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.biologicalProcesses) {
-			list.add(go.toString());
+	public void addOrtholog(Protein ortholog) {
+		if(ortholog != null) {
+			getOrthologs(ortholog.getOrganism()).add(ortholog);
 		}
-		return list;
+	}*/
+
+	public GeneOntologyTermSet getGeneOntologyTerms() {
+		return geneOntologyTerms;
 	}
 
-	public void setBiologicalProcesses(ArrayList<GeneOntologyModel> biologicalProcesses) {
-		this.biologicalProcesses = biologicalProcesses;
-	}
-
-	public void addBiologicalProcess(GeneOntologyModel go) {
-		this.biologicalProcesses.add(go);
-	}
-
-	public List<GeneOntologyModel> getMolecularFunctions() {
-		return molecularFunctions;
-	}
-
-	public ArrayList<String> getMolecularFunctionsAsStringList() {
-		ArrayList<String> list = new ArrayList<String>();
-		for (GeneOntologyModel go : this.molecularFunctions) {
-			list.add(go.toString());
-		}
-		return list;
-	}
-
-	public void setMolecularFunctions(ArrayList<GeneOntologyModel> molecularFunctions) {
-		this.molecularFunctions = molecularFunctions;
-	}
-
-	public void addMolecularFunction(GeneOntologyModel go) {
-		this.molecularFunctions.add(go);
-	}
-
-	public String molecularFunctionsToString() {
-		String text = "";
-		for (GeneOntologyModel go : this.molecularFunctions) {
-			text += go.toString();
-			text += ",";
-		}
-		return text.substring(0, text.length() - 1);
-	}
-
-	public List<String> getSynonymGeneNames() {
+	public Set<String> getSynonymGeneNames() {
 		return synonymGeneNames;
-	}
-
-	public void setSynonymGeneNames(ArrayList<String> synonymGeneNames) {
-		this.synonymGeneNames = synonymGeneNames;
-	}
-
-	public void addSynonymGeneName(String geneName) {
-		this.synonymGeneNames.add(geneName);
 	}
 
 	public boolean isReviewed() {
 		return reviewed;
 	}
 
-	public void setReviewed(boolean reviewed) {
-		this.reviewed = reviewed;
-	}
-
 	public String getGeneName() {
 		return geneName;
-	}
-
-	public void setGeneName(String geneName) {
-		this.geneName = geneName;
 	}
 
 	public String getProteinName() {
 		return proteinName;
 	}
 
-	public void setProteinName(String proteinName) {
-		this.proteinName = proteinName;
+	public String getEcNumber() {
+		return ecNumber;
 	}
-	
+
+	public boolean hasAccession(String uniProtID) {
+		return uniProtID.equals(uniProtID) || accessions.contains(uniProtID);
+	}
+
+	public boolean isIdentical(UniProtEntry entry) {
+		return accessions.equals(entry.accessions)
+				&& organism.equals(entry.organism)
+				//&& orthologs.equals(entry.orthologs)
+				&& synonymGeneNames.equals(entry.synonymGeneNames)
+				&& geneOntologyTerms.equals(entry.geneOntologyTerms)
+				&& geneName.equals(entry.geneName)
+				&& ecNumber.equals(entry.ecNumber)
+				&& proteinName.equals(entry.proteinName)
+				&& reviewed == entry.reviewed;
+	}
+
 	/**
 	 * Mostly for debug
 	 */
 	@Override
-	public String toString() {
+	public String toJSON() {
 		JsonObject out = new JsonObject();
 		out.add("id", uniProtId);
 		try {
@@ -171,12 +130,180 @@ public class UniProtEntry extends Protein {
 		return out.toString();
 	}
 
-	public String getEcNumber() {
-		return ecNumber;
+	public LinkedHashSet<String> getAccessions() {
+		return accessions;
 	}
 
-	public void setEcNumber(String ecNumber) {
-		this.ecNumber = ecNumber;
+	/**
+	 * UniProtEntry.Builder used to create new UniProt entry from a template which can be modified.
+	 * Can also be used to merge several entry into one by taking the first one as a template and merging accessions,
+	 * gene name synonymes, cellular component annotations, biological processes annotations, molecular function annotations
+	 * and orthologs.
+	 */
+	public static class Builder {
+
+		private String uniprotId = null;
+		private LinkedHashSet<String> accessions = null;
+		private Organism organism = null;
+		private String geneName = null;
+		private Set<String> synonymGeneNames = null;
+		private String proteinName = null;
+		private String ecNumber = null;
+		private Boolean reviewed = null;
+		private GeneOntologyTermSet geneOntologyTerms = null;
+		//private HashSet<Protein> orthologs = null;
+
+		public Builder() {
+			this((UniProtEntry) null);
+		}
+
+		/**
+		 * Constructs a UniProtEntry.Builder using an existing UniProtEntry as a template.
+		 */
+		public Builder(UniProtEntry entry) {
+			if(entry != null) {
+				uniprotId = entry.uniProtId;
+				accessions = new LinkedHashSet<String>(entry.accessions);
+				organism = entry.organism;
+				geneName = entry.geneName;
+				synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
+				proteinName = entry.proteinName;
+				ecNumber = entry.ecNumber;
+				reviewed = entry.reviewed;
+				geneOntologyTerms = new GeneOntologyTermSet(entry.geneOntologyTerms);
+				//orthologs = new HashSet<Protein>(entry.getOrthologs());
+			}
+		}
+
+		/**
+		 * Constructs a UniProtEntry.Builder using ther merging of existing UniProtEntry as a template.
+		 */
+		public Builder(UniProtEntry referenceEntry, UniProtEntry... entries) {
+			this(referenceEntry, Arrays.asList(entries));
+		}
+
+		public Builder(UniProtEntry referenceEntry, Collection<UniProtEntry> entries) {
+			this(referenceEntry);
+
+			for (UniProtEntry entry : entries) {
+				addAccessions(entry.accessions);
+				addSynonymGeneNames(entry.synonymGeneNames);
+				addGeneOntologyTerms(entry.geneOntologyTerms);
+				//addOrthologs(entry.getOrthologs());
+			}
+		}
+
+		public Builder setUniprotId(String uniprotId) {
+			this.uniprotId = uniprotId;
+			return this;
+		}
+
+		private LinkedHashSet<String> getOrCreateAccessions() {
+			if(accessions != null) return accessions;
+			return accessions = new LinkedHashSet<String>();
+		}
+
+		public Builder addAccession(String accession) {
+			getOrCreateAccessions().add(accession);
+			return this;
+		}
+
+		public Builder addAccessions(Collection<String> accessions) {
+			getOrCreateAccessions().addAll(accessions);
+			return this;
+		}
+
+		public Builder setOrganism(Organism organism) {
+			this.organism = organism;
+			return this;
+		}
+
+		public Builder setGeneName(String geneName) {
+			this.geneName = geneName;
+			return this;
+		}
+
+		private Set<String> getOrCreateSynonymGeneNames() {
+			if(synonymGeneNames != null) return synonymGeneNames;
+			return synonymGeneNames = new HashSet<String>();
+		}
+
+		public Builder addSynonymGeneName(String synonymGeneName) {
+			if(synonymGeneName != null)
+				getOrCreateSynonymGeneNames().add(synonymGeneName);
+			return this;
+		}
+
+		public Builder addSynonymGeneNames(Collection<String> synonymGeneNames) {
+			for (String synonymGeneName : synonymGeneNames)
+				addSynonymGeneName(synonymGeneName);
+			return this;
+		}
+
+		public Builder setProteinName(String proteinName) {
+			this.proteinName = proteinName;
+			return this;
+		}
+
+		public Builder setEcNumber(String ecNumber) {
+			this.ecNumber = ecNumber;
+			return this;
+		}
+
+		public Builder setReviewed(boolean reviewed) {
+			this.reviewed = reviewed;
+			return this;
+		}
+
+		private GeneOntologyTermSet getOrCreateGeneOntologyTerms() {
+			if(geneOntologyTerms != null) return geneOntologyTerms;
+			return geneOntologyTerms = new GeneOntologyTermSet();
+		}
+
+		public Builder addGeneOntologyTerms(Collection<GeneOntologyTerm> terms) {
+			for (GeneOntologyTerm term : terms)
+				addGeneOntologyTerm(term);
+			return this;
+		}
+
+		public Builder addGeneOntologyTerm(GeneOntologyTerm term) {
+			if(term != null)
+				getOrCreateGeneOntologyTerms().add(term);
+			return this;
+		}
+
+		/*private HashSet<Protein> getOrCreateOrthologs() {
+			if(orthologs != null) return orthologs;
+			return orthologs = new HashSet<Protein>();
+		}
+
+		public Builder addOrthologs(Collection<? extends Protein> orthologs) {
+			for (Protein ortholog : orthologs)
+				getOrCreateOrthologs().add(ortholog);
+			return this;
+		}
+
+		public Builder addOrtholog(Protein ortholog) {
+			if(ortholog != null)
+				getOrCreateOrthologs().add(ortholog);
+			return this;
+		}*/
+
+		public UniProtEntry build() {
+			return new UniProtEntry(
+					uniprotId,
+					getOrCreateAccessions(),
+					geneName,
+					ecNumber,
+					organism,
+					proteinName,
+					reviewed,
+					getOrCreateSynonymGeneNames(),
+					getOrCreateGeneOntologyTerms()//,
+					//getOrCreateOrthologs()
+			);
+		}
+
 	}
 
 }

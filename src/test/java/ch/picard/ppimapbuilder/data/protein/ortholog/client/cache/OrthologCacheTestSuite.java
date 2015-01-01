@@ -11,8 +11,4 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroupTest;
 		SpeciesPairProteinOrthologCacheTest.class,
 		PMBProteinOrthologCacheClientTest.class
 })
-public class OrthologCacheTestSuite {
-
-
-
-}
+public class OrthologCacheTestSuite {}

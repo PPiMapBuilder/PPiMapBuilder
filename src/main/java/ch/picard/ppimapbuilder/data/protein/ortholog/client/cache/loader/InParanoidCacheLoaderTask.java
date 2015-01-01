@@ -1,14 +1,5 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 
-import com.ctc.wstx.stax.WstxInputFactory;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.execchain.RequestAbortedException;
-import org.cytoscape.work.Task;
-import org.cytoscape.work.TaskMonitor;
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
@@ -16,23 +7,36 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrth
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
 import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import ch.picard.ppimapbuilder.util.SteppedTaskMonitor;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import com.ctc.wstx.stax.WstxInputFactory;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.execchain.RequestAbortedException;
+import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.Task;
+import org.cytoscape.work.TaskMonitor;
 
-import javax.swing.*;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-class InParanoidCacheLoaderTask implements Task {
+class InParanoidCacheLoaderTask extends AbstractTask {
 
-	private final static String BASE_URL = "http://inparanoid.sbc.su.se/download/8.0_current/OrthoXML/";
+	private final static String BASE_URL = "http://inparanoid.sbc.su.se/download/8.0_current/Orthologs_OrthoXML/";
 	private final InParanoidCacheLoaderTaskFactory parent;
 	private final CloseableHttpClient httpClient;
 	private final ExecutorService executorService;
+	private final Task callback;
 	private boolean cancelled = false;
 
-	public InParanoidCacheLoaderTask(InParanoidCacheLoaderTaskFactory parent) {
+	public InParanoidCacheLoaderTask(InParanoidCacheLoaderTaskFactory parent, Task callback) {
+		this.callback = callback;
 		this.httpClient = HttpClientBuilder.create().build();
 		this.parent = parent;
 		this.executorService = Executors.newFixedThreadPool(5);
@@ -40,94 +44,76 @@ class InParanoidCacheLoaderTask implements Task {
 
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
-		Set<Pair<Organism>> organismCombination = OrganismUtils.createCombinations(parent.getOrganisms());
+		final List<Pair<Organism>> organismCombination = new ArrayList<Pair<Organism>>(OrganismUtils.createCombinations(parent.getOrganisms()));
 
 		//Set number of steps
-		SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor, organismCombination.size() + 1);
+		final SteppedTaskMonitor monitor = new SteppedTaskMonitor(taskMonitor, organismCombination.size() + 1);
 		monitor.setTitle("Loading InParanoid OrthoXML files in cache");
 
-		List<Future<CacheLoadRequest>> requests = new ArrayList<Future<CacheLoadRequest>>();
-		CompletionService<CacheLoadRequest> completionService = new ExecutorCompletionService<CacheLoadRequest>(executorService);
+		final int[] i = new int[]{0};
 
 		monitor.setStep("Preparing requests...");
-		for (Pair<Organism> organismCouple : organismCombination) {
-			Organism organismA = organismCouple.getFirst();
-			Organism organismB = organismCouple.getSecond();
+		new ConcurrentExecutor<CacheLoadRequest>(executorService, organismCombination.size()) {
+			@Override
+			public Callable<CacheLoadRequest> submitRequests(int index) {
+				Pair<Organism> organismCouple = organismCombination.get(index);
+				Organism organismA = organismCouple.getFirst();
+				Organism organismB = organismCouple.getSecond();
 
-			SpeciesPairProteinOrthologCache cache = PMBProteinOrthologCacheClient.getInstance()
-					.getSpeciesPairProteinOrthologCache(organismA, organismB);
+				try {
+					SpeciesPairProteinOrthologCache cache =
+							PMBProteinOrthologCacheClient.getInstance()
+								.getSpeciesPairProteinOrthologCache(organismA, organismB);
 
-			if (!cache.isFull()) {
-				CacheLoadRequest request = new CacheLoadRequest(
-						organismA,
-						organismB,
+					if (!cache.isFull()) {
+						return new CacheLoadRequest(
+								organismA,
+								organismB,
 
-						new StringBuilder(BASE_URL)
-								.append(organismA.getAbbrName()).append("/")
-								.append(organismA.getAbbrName())
-								.append("-")
-								.append(organismB.getAbbrName())
-								.append(".orthoXML")
-								.toString(),
+								BASE_URL
+										+ organismA.getAbbrName()
+										+ "/"
+										+ organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".orthoXML",
 
-						cache,
+								cache
+						);
+					}
+				} catch (Exception ignored){}
 
-						this
+				return null;
+			}
+
+			@Override
+			public void processResult(CacheLoadRequest result, Integer index) {
+				monitor.setStep(
+						"Loaded: " +
+								result.organismA.getSimpleScientificName() +
+								" - " +
+								result.organismB.getSimpleScientificName()
 				);
-				requests.add(completionService.submit(request));
+				i[0]++;
 			}
+		}.run();
 
-			if (cancelled)
-				break;
-		}
-
-		Future<CacheLoadRequest> future;
-		int j = 0, i = 0;
-		for (int requestsSize = requests.size(); i < requestsSize; i++) {
-			try {
-				if (cancelled || executorService.isShutdown() || executorService.isTerminated())
-					break;
-
-				future = completionService.take();
-
-				CacheLoadRequest cacheLoadRequest = future.get();
-
-				if (!cacheLoadRequest.canceled) {
-					monitor.setStep(
-							"Loaded: " +
-									cacheLoadRequest.organismA.getSimpleScientificName() +
-									" - " +
-									cacheLoadRequest.organismB.getSimpleScientificName()
-					);
-					j++;
-				}
-			} catch (InterruptedException e) {
-			} catch (ExecutionException e) {
-				if (!(e.getCause() instanceof RequestAbortedException))
-					e.printStackTrace();
-			}
-		}
-		if (i == 0) {
-			new Thread() {
-				@Override
-				public void run() {
-					JOptionPane.showMessageDialog(null, "Orthology cache fully loaded from InParanoid", "Orthology cache loading", JOptionPane.INFORMATION_MESSAGE);
-				}
-			}.start();
+		if (i[0] == 0) {
+			parent.setMessage("Orthology cache fully loaded from InParanoid");
+			return;
 		}
 
 		monitor.setProgress(1);
 
-		if (parent.getListener() != null)
-			parent.getListener().run();
-
 		PMBProteinOrthologCacheClient.getInstance().save();
+
+		if (callback != null) insertTasksAfterCurrentTask(callback);
 	}
 
 	@Override
 	public void cancel() {
 		cancelled = true;
 		executorService.shutdownNow();
+		try {
+			parent.getCallback().run(null);
+		} catch (Exception e) {}
 	}
 
 	class CacheLoadRequest implements Callable<CacheLoadRequest> {
@@ -135,21 +121,17 @@ class InParanoidCacheLoaderTask implements Task {
 		private final Organism organismB;
 		private final String url;
 		private final SpeciesPairProteinOrthologCache cache;
-		private final InParanoidCacheLoaderTask task;
-		private boolean skipped = false;
-		private boolean canceled = false;
 
-		CacheLoadRequest(Organism organismA, Organism organismB, String url, SpeciesPairProteinOrthologCache cache, InParanoidCacheLoaderTask task) {
+		CacheLoadRequest(Organism organismA, Organism organismB, String url, SpeciesPairProteinOrthologCache cache) {
 			this.organismA = organismA;
 			this.organismB = organismB;
 			this.url = url;
 			this.cache = cache;
-			this.task = task;
 		}
 
 		@Override
 		public CacheLoadRequest call() throws Exception {
-			if (!task.cancelled) {
+			if (!InParanoidCacheLoaderTask.this.cancelled) {
 				HttpRequestBase req = null;
 				CloseableHttpResponse res = null;
 
@@ -170,15 +152,13 @@ class InParanoidCacheLoaderTask implements Task {
 									new OrthoXMLParser(input, cache).parse();
 								}
 							}, WstxInputFactory.class);
-						} else
-							skipped = true;
+						}
 					}
 				} finally {
 					if (res != null) res.close();
 					if (req != null) req.releaseConnection();
 				}
-			} else
-				canceled = true;
+			}
 			return this;
 		}
 	}

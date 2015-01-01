@@ -26,11 +26,11 @@ public class Organism implements Comparable<Organism>, Serializable {
 	// Unique identifier for Organisms
 	private final int ncbiTaxId;
 
-	protected Organism(String scientificName, int taxId) {
+	public Organism(String scientificName, int taxId) {
 		this(scientificName, "", "", taxId);
 	}
 
-	protected Organism(String scientificName, String mnemonic, String commonName, int taxId) {
+	public Organism(String scientificName, String mnemonic, String commonName, int taxId) {
 		String[] parts = scientificName.split(" ");
 
 		// Format genus name to have a capitalized word
@@ -107,12 +107,16 @@ public class Organism implements Comparable<Organism>, Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Organism)
-			return ncbiTaxId == ((Organism) obj).ncbiTaxId;
-		else if (obj instanceof Integer)
-			return ncbiTaxId == (Integer) obj;
-		else
+		if(obj == null)
 			return false;
+		else if (obj instanceof Organism)
+			return ncbiTaxId == ((Organism) obj).ncbiTaxId;
+		else
+			return ncbiTaxId == (Integer) obj;
+	}
+
+	public boolean sameSpecies(Organism o) {
+		return o != null && genus.equals(o.genus) && species.equals(o.species);
 	}
 
 	/**

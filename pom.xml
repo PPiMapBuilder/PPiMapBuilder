@@ -5,7 +5,7 @@
 	<!-- Project identifiers -->
 	<groupId>ch.picard</groupId>
 	<artifactId>PPiMapBuilder</artifactId>
-	<version>0.9</version>
+	<version>0.10</version>
 	<name>PPiMapBuilder</name>
 	<description>Cytoscape 3 app for protein-protein interaction network generation and
 		prediction as described by Echeverría et al. (2011).</description>
@@ -18,6 +18,8 @@
 		<bundle.symbolicName>ch.picard.ppimapbuilder</bundle.symbolicName>
 		<bundle.namespace>ch.picard.ppimapbuilder</bundle.namespace>
 		<cytoscape.version>3.0.0</cytoscape.version>
+		<timestamp>${maven.build.timestamp}</timestamp>
+		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 	</properties>
 
 	<!-- Licence -->
@@ -65,6 +67,8 @@
 				<role>project leader</role>
 				<role>developer</role>
 			</roles>
+			<organization>Génie Physiologique et Informatique - Université de Poitiers</organization>
+			<organizationUrl>http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86</organizationUrl>
 		</developer>
 
 		<developer>
@@ -132,8 +136,8 @@
 				</configuration>
 			</plugin>
 
-			<!-- SUREFIRE <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
-				<version>2.7.1</version> <configuration> <redirectTestOutputToFile>true</redirectTestOutputToFile> 
+			<!-- SUREFIRE <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId>
+				<version>2.7.1</version> <configuration> <redirectTestOutputToFile>true</redirectTestOutputToFile>
 				</configuration> </plugin> -->
 
 			<!-- BUNDLE with OSGI metadata (based on the osgi.bnd file) -->
@@ -156,7 +160,10 @@
 						<Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
 					<archive>
-						<manifest>
+                        <manifestEntries>
+                            <Build-Time>${maven.build.timestamp}</Build-Time>
+                        </manifestEntries>
+                        <manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
@@ -170,16 +177,16 @@
 	<!-- Repository specifications -->
 	<repositories>
 		<!-- Cytoscape repositories -->
-		<repository>
+		<!-- <repository>
 			<id>cytoscape_snapshots</id>
 			<snapshots>
 			</snapshots>
 			<releases>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
 			</releases>
 			<name>Cytoscape Snapshots</name>
 			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots/</url>
-		</repository>
+		</repository>-->
 		<repository>
 			<id>cytoscape_releases</id>
 			<snapshots>
@@ -211,7 +218,7 @@
 			<url>http://www.ebi.ac.uk/~maven/m2repo</url>
 		</repository>
 
-		<!-- <repository> <id>ebi-repo-snapshots</id> <name>EBI snapshots repository</name> 
+		<!-- <repository> <id>ebi-repo-snapshots</id> <name>EBI snapshots repository</name>
 			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots</url> </repository> -->
 
 		<!-- Local Repository -->
@@ -313,6 +320,13 @@
 			<version>${cytoscape.version}</version>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.7</version>
+            <scope>test</scope>
+        </dependency>
+
 
 		<!-- MigLayout Swing -->
 		<dependency>
@@ -389,7 +403,7 @@
 		<dependency>
 			<groupId>uk.ac.ebi.enfin.mi.cluster</groupId>
 			<artifactId>micluster</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -463,5 +477,12 @@
 			<version>0.1b</version>
 			<scope>compile</scope>
 		</dependency>
-	</dependencies>
+
+        <!-- CSV Parser -->
+        <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>2.0</version>
+        </dependency>
+    </dependencies>
 </project>

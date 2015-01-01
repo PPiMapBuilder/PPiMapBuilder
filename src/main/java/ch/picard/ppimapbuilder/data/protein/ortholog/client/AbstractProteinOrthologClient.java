@@ -2,40 +2,35 @@ package ch.picard.ppimapbuilder.data.protein.ortholog.client;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractProteinOrthologClient implements ProteinOrthologClient {
 
 	@Override
-	public OrthologScoredProtein getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
+	public List<OrthologScoredProtein> getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
 		OrthologGroup group = getOrthologGroup(protein, organism);
 
-		if (group == null) {
-			if (!protein.getUniProtId().contains("-"))
-				return null;
-			else {
-				String id = protein.getUniProtId().split("-")[0];
-				group = getOrthologGroup(new Protein(id, protein.getOrganism()), organism);
+		if (group == null && !ProteinUtils.UniProtId.isStrict(protein.getUniProtId())) {
+			String id = ProteinUtils.UniProtId.extractStrictUniProtId(protein.getUniProtId());
 
-				if (group == null)
-					return null;
-			}
+			group = getOrthologGroup(new Protein(id, protein.getOrganism()), organism);
 		}
 
-		OrthologScoredProtein ortholog = group.getBestOrthologInOrganism(organism);
+		if (group != null) {
+			List<OrthologScoredProtein> ortholog = group.getBestOrthologsInOrganism(organism);
+			OrthologScoredProtein originalProtein = group.find(protein);
 
-		if (ortholog == null)
-			return null;
-
-		if (ortholog.getScore() >= score) {
-			if (protein instanceof UniProtEntry) {
-				((UniProtEntry) protein).addOrtholog(ortholog);
-			}
-			return ortholog;
-		} else
-			return null;
+			if (!ortholog.isEmpty() && ortholog.get(0).getScore() >= score
+					&& originalProtein != null && originalProtein.getScore() >= score)
+				return ortholog;
+		}
+		return new ArrayList<OrthologScoredProtein>();
 	}
 
 }

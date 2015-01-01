@@ -1,19 +1,18 @@
 package ch.picard.ppimapbuilder.data.organism;
 
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.JOptionPane;
-
-import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 /**
  * Class that keeps a register of organisms in PMB
  */
-public class UserOrganismRepository {
+public class UserOrganismRepository extends OrganismRepository {
 
 	private static UserOrganismRepository _instance;
-	private static List<Organism> listOrganism;
 
 	public static UserOrganismRepository getInstance() {
 		if (_instance == null)
@@ -21,12 +20,15 @@ public class UserOrganismRepository {
 		return _instance;
 	}
 
+	private UserOrganismRepository(List<Organism> organismList) {
+		super(organismList);
+	}
 	private UserOrganismRepository() {
-		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
+		this(PMBSettings.getInstance().getOrganismList());
 	}
 	
-	public static void resetUserOrganismRepository() {
-		listOrganism = (ArrayList<Organism>) PMBSettings.getInstance().getOrganismList();
+	public static void resetToSettings() {
+		_instance = new UserOrganismRepository();
 	}
 	
 	public static ArrayList<Organism> getDefaultOrganismList() {
@@ -43,56 +45,20 @@ public class UserOrganismRepository {
 		return organismList;
 	}
 
-	public List<Organism> getOrganisms() {
-		return listOrganism;
-	}
-	
-	public void setOrganisms(ArrayList<Organism> listOrganism) {
-		this.listOrganism = listOrganism;
-	}
-
-	public Organism getOrganismByTaxId(int taxId) {
-		for (Organism org : listOrganism)
-			if (org.getTaxId() == taxId)
-				return org;
-		return null;
-	}
-
-	public Organism getOrganismBySimpleName(String simpleName) {
-		for (Organism org : listOrganism)
-			if (org.getSimpleScientificName().equals(simpleName.trim()))
-				return org;
-		return null;
-	}
-	
-	public Organism getOrganismByScientificName(String scientificName) {
-		for (Organism org : listOrganism)
-			if (org.getScientificName().equals(scientificName))
-				return org;
-		return null;
-	}
-	
-	public void addOrganism(Organism o) {
-		listOrganism.add(o);
-	}
-	
 	public void removeOrganism(Organism o) {
-		listOrganism.remove(o);
+		organisms.remove(o);
+		PMBProteinOrthologCacheClient.getInstance().emptyCacheLinkedToOrganism(o);
 	}
 	
 	public void addOrganism(String scientificName) {
 		Organism orga = InParanoidOrganismRepository.getInstance().getOrganismByScientificName(scientificName);		
 		if (orga != null) {
-			listOrganism.add(orga);
+            organisms.add(orga);
 		}
 	}
 	
-	public void removeOrganism(String scientificName) {
-		removeOrganism(getOrganismByScientificName(scientificName));
-	}
-	
 	public void removeOrganismExceptLastOne(String scientificName) {
-		if (listOrganism.size() > 1)
+		if (organisms.size() > 1)
 			removeOrganism(getOrganismByScientificName(scientificName));
 		else 
 			JOptionPane.showMessageDialog(null, "Please keep at least one organism", "Deletion impossible", JOptionPane.INFORMATION_MESSAGE);

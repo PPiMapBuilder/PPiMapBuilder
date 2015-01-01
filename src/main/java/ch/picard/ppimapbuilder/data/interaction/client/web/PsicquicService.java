@@ -5,15 +5,15 @@ import java.util.List;
 
 public class PsicquicService {
 
-	protected String name;
-	protected String soapUrl;
-	protected String restUrl;
-	protected boolean active;
-	protected long count;
-	protected String version;
-	protected String organizationUrl;
-	protected boolean restricted;
-	protected List<String> tags;
+	final private String name;
+	final private String soapUrl;
+	final private String restUrl;
+	final private boolean active;
+	final private long count;
+	final private String version;
+	final private String organizationUrl;
+	final private boolean restricted;
+	final private List<String> tags;
 
 	public PsicquicService(String name, String soapUrl, String restUrl, String active, String count, String version, String organizationUrl, String restricted, List<String> tags) {
 		this.name = name;

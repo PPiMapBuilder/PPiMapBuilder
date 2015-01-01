@@ -1,32 +1,44 @@
 package ch.picard.ppimapbuilder.data.organism;
 
 import ch.picard.ppimapbuilder.data.Pair;
+import ch.picard.ppimapbuilder.data.PairUtils;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OrganismUtils {
+
+	private static final Pattern pattern = Pattern.compile("\\(.*\\)");
 
 	/**
 	 * Creates pair combination of organisms using an organism list.
 	 */
 	public static Set<Pair<Organism>> createCombinations(List<Organism> organisms) {
-		final Set<Pair<Organism>> organismCombination = new HashSet<Pair<Organism>>();
-
-		//List all possible combination of organism to get the list of orthoXML files to download and parse
-		Organism organismA, organismB;
-		for (int i = 0, length = organisms.size(); i < length; i++) {
-			organismA = organisms.get(i);
-
-			for (int j = i + 1; j < length; j++) {
-				organismB = organisms.get(j);
-
-				List<Organism> organismCouple = Arrays.asList(organismA, organismB);
-				Collections.sort(organismCouple);
-
-				organismCombination.add(new Pair<Organism>(organismCouple));
-			}
-		}
-
-		return organismCombination;
+		return PairUtils.createCombinations(new HashSet<Organism>(organisms), false, true);
 	}
+
+	public static List<String> organismsToStrings(List<Organism> organisms) {
+		ArrayList<String> out = new ArrayList<String>();
+		for(Organism organism : organisms) {
+			out.add(organism.getScientificName());
+		}
+		return out;
+	}
+
+	public static Organism findOrganismInMITABTaxId(OrganismRepository repository, String taxId) {
+		Matcher matcher;
+		int taxIdA = Integer.parseInt(taxId);
+		Organism organism = repository.getOrganismByTaxId(taxIdA);
+
+		if(organism == null && (matcher = pattern.matcher(taxId)).matches()) {
+			String[] genusSpecies = matcher.group(1).split(" ");
+			organism = InParanoidOrganismRepository.getInstance().getOrganismByGenusAndSpecies(
+					genusSpecies[0],
+					genusSpecies[1]
+			);
+		}
+		return organism;
+	}
+
 }

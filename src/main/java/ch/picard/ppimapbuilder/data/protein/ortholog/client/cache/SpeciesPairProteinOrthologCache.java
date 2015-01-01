@@ -3,13 +3,19 @@ package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import ch.picard.ppimapbuilder.util.AppendingObjectOutputStream;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCacheClient implements Serializable {
+/**
+ * Protein ortholog cache client for a pair of species. Linked to a file cache named "ORG1-ORG2.dat".
+ */
+public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologClient implements ProteinOrthologCacheClient, Serializable {
 
 	private static final long serialVersionUID = 2L;
 
@@ -20,12 +26,17 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 
 	private final CacheFile cacheDataFile;
 
+	/**
+	 * In memory cache of already read OrthologGroup
+	 */
+	private transient Map<Protein, OrthologGroup> readCache;
+
 	protected SpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		cacheDataFile = new CacheFile(organismA.getAbbrName() + "-" + organismB.getAbbrName() + ".dat");
 	}
 
 	@Override
-	protected synchronized void addOrthologGroup(OrthologGroup orthologGroup) throws IOException {
+	public synchronized void addOrthologGroup(OrthologGroup orthologGroup) throws IOException {
 		addOrthologGroup(Arrays.asList(orthologGroup), true);
 	}
 
@@ -39,76 +50,92 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 
 			for (OrthologGroup orthologGroup : orthologGroups) {
 				boolean ok = true;
-				if (checkOrthologyExists) {
-					OrthologGroup existingGroup = getOrthologGroup(orthologGroup);
+				if (checkOrthologyExists && orthologGroupExist(orthologGroup))
+					ok = false;
 
-					if (existingGroup != null)
-						ok = false;
+				if (ok) {
+					out.writeObject(orthologGroup);
+					clearReadCache();
 				}
-
-				if (ok) out.writeObject(orthologGroup);
 			}
 		} finally {
 			if (out != null) out.close();
 		}
 	}
 
-	private synchronized OrthologGroup getOrthologGroup(OrthologGroup orthologGroup) throws IOException {
-		for (Organism organism : orthologGroup.getOrganisms()) {
-			for (Protein protein : orthologGroup.getProteins()) {
-				if (!protein.getOrganism().equals(organism)) {
-					OrthologGroup group = getOrthologGroup(protein, organism);
-
-					if (group != null)
-						return group;
-				}
-			}
-		}
-
-		return null;
+	private boolean orthologGroupExist(OrthologGroup orthologGroup) throws IOException {
+		OrthologGroup group = getOrthologGroup(
+				orthologGroup.getProteins().get(0),
+				orthologGroup.getOrganisms().get(0)
+		);
+		return group != null;
 	}
 
+	/**
+	 * Get the ortholog group of a protein in the species pair. Here the organism parameter doesn't apply.
+	 */
 	@Override
 	public synchronized OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws IOException {
-		if (!cacheDataFile.exists())
-			return null;
+		OrthologGroup result = null;
 
-		ObjectInputStream in = null;
-		try {
-			in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
+		// Create or Check in memory cache before reading file cache
+		if (readCache == null || readCache.size() == 0) {
+			if(readCache == null)
+				readCache = new HashMap<Protein, OrthologGroup>();
 
-			boolean EOF = false;
-			while (!EOF) {
-				try {
-					OrthologGroup group = (OrthologGroup) in.readObject();
+			if (!cacheDataFile.exists())
+				return null;
 
-					if (
-							group.contains(organism) &&
-									group.contains(protein)
-							)
-						return group;
-				} catch (EOFException e) {
-					EOF = true;
-				} catch (ClassNotFoundException e) {
-					continue;
+			ObjectInputStream in = null;
+			try {
+				in = new ObjectInputStream(new FileInputStream(cacheDataFile.getFile()));
+
+				boolean EOF = false;
+				while (!EOF) {
+					try {
+						OrthologGroup group = (OrthologGroup) in.readObject();
+
+						for(Protein ortholog : group.getProteins()) {
+							readCache.put(ortholog, group);
+						}
+
+						if(group.contains(protein))
+							result = group;
+
+					} catch (EOFException e) {
+						EOF = true;
+					} catch (ClassNotFoundException ignored) {}
 				}
+			} catch (FileNotFoundException ignored) {
+			} finally {
+				if (in != null) in.close();
 			}
-		} catch (FileNotFoundException e) {
-			return null;
-		} finally {
-			if (in != null) in.close();
 		}
-		return null;
+
+		return result == null ? readCache.get(protein) : result;
 	}
 
-	private synchronized void clear() throws IOException {
+	/**
+	 * Clear both file cache and memory cache
+	 */
+	protected synchronized void clear() throws IOException {
+		clearReadCache();
 		cacheDataFile.clear();
+		full = false;
 	}
 
+	/**
+	 * Get a new loader to completely load the species pair cache (and clearing it before load).
+	 */
 	public Loader newLoader() {
 		return new Loader();
 	}
 
+	/**
+	 * Indicate whether the cache have been totally loaded from InParanoid or not.
+	 * Caches declared as full are trusted to contains all possible orthologs in species pair.
+	 * This is used to tell if the program has to retry the ortholog request using the InParanoid web service.
+	 */
 	public boolean isFull() {
 		if (cacheDataFile.exists())
 			return full;
@@ -117,12 +144,20 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologCach
 	}
 
 	/**
+	 * Clear memory cache of OrthologGroup read from the file cache
+	 */
+	protected void clearReadCache() {
+		if(readCache != null)
+			readCache.clear();
+	}
+
+	/**
 	 * Used to load an entire new cache into a SpeciesPairProteinOrthologCache
 	 * (clears the old cache in the process).
 	 */
 	public class Loader {
 		/**
-		 * Loads a big group of orthologs into the cache
+		 * Loads all orthologGroup of the species pair and declare the cache full.
 		 */
 		public void load(List<OrthologGroup> orthologGroups) throws IOException {
 			//Empty the cache and protein index

@@ -36,7 +36,7 @@ public class ProteinOrthologWebCachedClient extends AbstractProteinOrthologClien
 				group = webClient.getOrthologGroup(protein, organism);
 			if(cacheClient != null && group != null)
 				cacheClient.addOrthologGroup(group);
-		} else System.out.println("cache:"+protein.getUniProtId()+":"+organism);
+		} //else System.out.println("cache:"+protein.getUniProtId()+":"+organism);
 
 		return group;
 	}

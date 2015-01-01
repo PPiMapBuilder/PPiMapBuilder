@@ -1,32 +1,28 @@
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.JSearchTextField;
+import ch.picard.ppimapbuilder.ui.util.ListDeletableItem;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 
-public class OrganismSettingPanel extends TabContentPanel {
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
-	private final JPanel panSourceOrganism;
+public class OrganismSettingPanel extends TabPanel.TabContentPanel {
+
+	private final ListDeletableItem panSourceOrganism;
 	private final JPanel panSearchOrganism;
-	private JButton addOrganism;
-	private JSearchTextField searchBox;
-	
-	public OrganismSettingPanel(SettingWindow owner) {
+	private final JSearchTextField searchBox;
+	private final SettingWindow owner;
+
+	public OrganismSettingPanel(final SettingWindow owner) {
 		super(new BorderLayout(), "Organisms");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -34,99 +30,82 @@ public class OrganismSettingPanel extends TabContentPanel {
 		final JLabel lblSourceOrganisms = new JLabel("Preferred organisms:");
 		add(lblSourceOrganisms, BorderLayout.NORTH);
 
-		panSourceOrganism = new JPanel();
-		panSourceOrganism.setBackground(Color.white);
-		panSourceOrganism.setBorder(new EmptyBorder(0, 0, 0, 0));
+		this.owner = owner;
+		this.panSourceOrganism = new ListDeletableItem();
+		add(panSourceOrganism.getComponent());
 
-		panSourceOrganism.setLayout(new BoxLayout(panSourceOrganism, BoxLayout.Y_AXIS));
+		this.panSearchOrganism = new JPanel();
+		{
+			this.searchBox = new JSearchTextField(owner);
+			this.searchBox.setIcon(JSearchTextField.class.getResource("search.png"));
+			this.searchBox.setMinimumSize(new Dimension(200, 30));
+			this.searchBox.setPreferredSize(new Dimension(200, 30));
+			this.searchBox.setMaximumSize(new Dimension(200, 30));
+			this.searchBox.setBorder(PMBUIStyle.fancyPanelBorder);
 
-		updatePanSourceOrganism();
-		
-		final JScrollPane scrollPaneSourceOrganisms = new JScrollPane(panSourceOrganism);
-		scrollPaneSourceOrganisms.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
-		add(scrollPaneSourceOrganisms, BorderLayout.CENTER);
+			this.searchBox.setSuggestWidth(150);
+			this.searchBox.setPreferredSuggestSize(new Dimension(150, 50));
+			this.searchBox.setMinimumSuggestSize(new Dimension(150, 50));
+			this.searchBox.setMaximumSuggestSize(new Dimension(150, 50));
 
-		panSearchOrganism = new JPanel();
-		
-		searchBox = new JSearchTextField(owner);
-		searchBox.setIcon(JSearchTextField.class.getResource("search.png"));
-		searchBox.setMinimumSize(new Dimension(200, 30));
-		searchBox.setPreferredSize(new Dimension(200, 30));
-		searchBox.setMaximumSize(new Dimension(200, 30));
-		
-		updateSuggestions();		
-		
-		searchBox.setSuggestWidth(150);
-		searchBox.setPreferredSuggestSize(new Dimension(150, 50));
-		searchBox.setMinimumSuggestSize(new Dimension(150, 50));
-		searchBox.setMaximumSuggestSize(new Dimension(150, 50));
-		
-		
-		panSearchOrganism.add(searchBox);
-		
-		addOrganism = new JButton("Add");
-		addOrganism.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
-				updatePanSourceOrganism();
-				updateSuggestions();
-			}
-			
-		});
-		panSearchOrganism.add(addOrganism);
-		
-		add(panSearchOrganism, BorderLayout.SOUTH);
-	}
-	
-	public void updatePanSourceOrganism() {
-		panSourceOrganism.removeAll();
-		for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-			
-			ImageIcon icon = new ImageIcon(OrganismSettingPanel.class.getResource("delete.png"));
-			JLabel nameLabel = new JLabel(org.getScientificName());
-			JButton deleteOrga = new JButton(icon);
-			Dimension iconDim = new Dimension(icon.getIconWidth()+2, icon.getIconHeight()+2);
-			deleteOrga.setMinimumSize(iconDim);
-			deleteOrga.setMaximumSize(iconDim);
-			deleteOrga.setPreferredSize(iconDim);
-			deleteOrga.setContentAreaFilled(false);
-			deleteOrga.setBorder(BorderFactory.createEmptyBorder());
-			deleteOrga.addActionListener(new ActionListener() {
-				
+			this.panSearchOrganism.add(searchBox);
+
+			JButton addOrganism = new JButton("Add");
+			addOrganism.addActionListener(new ActionListener() {
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					//System.out.println(org.getScientificName()+" clicked");
-					UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-					updatePanSourceOrganism();
-					updateSuggestions();
+					UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
+					owner.newModificationMade();
+					resetUI();
 				}
+
 			});
-			
-			JPanel panOrgaName = new JPanel();
-			panOrgaName.setOpaque(false);
-			
-			panOrgaName.setLayout(new BoxLayout(panOrgaName, BoxLayout.LINE_AXIS));
-			panOrgaName.add(nameLabel);
-			panOrgaName.add(Box.createHorizontalGlue());
-			panOrgaName.add(deleteOrga);
-			
-			
-			panSourceOrganism.add(panOrgaName);
+			this.panSearchOrganism.add(addOrganism);
 		}
+
+		add(panSearchOrganism, BorderLayout.SOUTH);
 	}
-	
-	public void updateSuggestions() {
-		ArrayList<String> data = new ArrayList<String>();
-		data = (ArrayList<String>) InParanoidOrganismRepository.getInstance().getOrganismNames();
-		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
-			data.remove(o.getScientificName());
+
+	@Override
+	public synchronized void resetUI() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				panSourceOrganism.removeAllRow();
+				for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+					panSourceOrganism.addRow(
+						new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
+							.addDeleteButton(new ActionListener() {
+
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									//System.out.println(org.getScientificName()+" clicked");
+									UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+									resetUI();
+									owner.newModificationMade();
+								}
+							})
+					);
+				}
+
+				ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
+				for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+					data.remove(o.getScientificName());
+				}
+				searchBox.setSuggestData(data);
+				searchBox.setText("");
+
+				panSourceOrganism.repaint();
+			}
+		});
+	}
+
+	@Override
+	public void setVisible(boolean opening) {
+		super.setVisible(opening);
+		if(opening) {
+			resetUI();
 		}
-		searchBox.setSuggestData(data);
-		searchBox.setText("");
-		searchBox.repaint();
-		//addOrganism.requestFocusInWindow();
-		
 	}
 }

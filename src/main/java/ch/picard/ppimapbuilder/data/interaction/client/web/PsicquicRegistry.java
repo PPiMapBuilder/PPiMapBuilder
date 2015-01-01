@@ -59,7 +59,7 @@ public class PsicquicRegistry {
 		for (PsicquicService service : services) {
 			if (caseSensitive && name.equals(service.getName()))
 				return service;
-			else if(!caseSensitive && name.toLowerCase().equals(service.getName().toLowerCase()))
+			else if(!caseSensitive && name.equalsIgnoreCase(service.getName()))
 				return service;
 		}
 		return null;
@@ -109,7 +109,7 @@ public class PsicquicRegistry {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	public List<PsicquicService> getServices() throws IOException {
+	public synchronized List<PsicquicService> getServices() throws IOException {
 		if (services.isEmpty()) {
 			this.retrieveServices();
 		}
@@ -122,7 +122,7 @@ public class PsicquicRegistry {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	public void retrieveServices() throws IOException {
+	public synchronized void retrieveServices() throws IOException {
 		this.services.clear();
 
 		Document doc = Jsoup.connect(registryXmlUrl).get();

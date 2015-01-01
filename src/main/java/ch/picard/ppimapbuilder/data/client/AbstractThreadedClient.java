@@ -1,33 +1,30 @@
 package ch.picard.ppimapbuilder.data.client;
 
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+
+import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Abstract class providing base element for threaded web service clients.
  */
 public abstract class AbstractThreadedClient {
-	protected Integer maxNumberThread;
-	private ExecutorService executorService;
 
-	public AbstractThreadedClient(Integer maxNumberThread) {
-		this.maxNumberThread = maxNumberThread;
-	}
+    private final ExecutorServiceManager executorServiceManager;
 
-	public AbstractThreadedClient() {
-		this(null);
-	}
+    protected AbstractThreadedClient(ExecutorServiceManager executorServiceManager) {
+        this.executorServiceManager = executorServiceManager;
+    }
 
-	public ExecutorService setExecutorService(ExecutorService executorService) {
-		return this.executorService = executorService;
-	}
+    public ExecutorService getOrCreateThreadPool() {
+        return executorServiceManager.getOrCreateThreadPool();
+    }
 
-	public ExecutorService newFixedThreadPool() {
-		if (executorService == null) {
-			executorService = maxNumberThread != null ?
-					Executors.newFixedThreadPool(maxNumberThread) :
-					Executors.newCachedThreadPool();
-		}
-		return executorService;
+    public void unRegister(ExecutorService service) {
+        executorServiceManager.unRegister(service);
+    }
+
+	public ExecutorServiceManager getExecutorServiceManager() {
+		return executorServiceManager;
 	}
 }

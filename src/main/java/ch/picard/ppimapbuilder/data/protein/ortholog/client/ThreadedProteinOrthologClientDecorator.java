@@ -5,6 +5,8 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
+import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,26 +15,18 @@ import java.util.concurrent.*;
  * Decorator for {@link ProteinOrthologClient} which brings new methods with threaded behavior in order
  * to search multiple orthologs in multiple organisms concurrently.
  */
-public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologClient> extends AbstractThreadedClient implements ThreadedProteinOrthologClient {
+public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClient implements ThreadedProteinOrthologClient {
 
-	private final POC proteinOrthologClient;
+	// Decorated protein ortholog client
+	private final ProteinOrthologClient proteinOrthologClient;
 
-	/**
-	 * @param maxNumberThread The maximum number of thread usable by the ortholog client.
-	 *                If set under 4, the thread count can actually exceed 4 in the @code{getOrthologsMultiOrganismMultiProtein()} method.
-	 *                Otherwise, this limit will be respected
-	 */
-	public ThreadedProteinOrthologClientDecorator(POC proteinOrthologClient, int maxNumberThread) {
-		super(maxNumberThread);
+	public ThreadedProteinOrthologClientDecorator(ProteinOrthologClient proteinOrthologClient, ExecutorServiceManager executorServiceManager) {
+		super(executorServiceManager);
 		this.proteinOrthologClient = proteinOrthologClient;
 	}
 
-	public ThreadedProteinOrthologClientDecorator(POC proteinOrthologClient) {
-		this(proteinOrthologClient, 9);
-	}
-
 	@Override
-	public OrthologScoredProtein getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
+	public List<OrthologScoredProtein> getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
 		return proteinOrthologClient.getOrtholog(protein, organism, score);
 	}
 
@@ -50,37 +44,31 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 	 * @return @code{Map} of ortholog proteins indexed by organism
 	 */
 	@Override
-	public Map<Organism, OrthologScoredProtein> getOrthologsMultiOrganism(final Protein protein, final Collection<Organism> organisms, final Double score) throws Exception {
+	public Map<Organism, List<OrthologScoredProtein>> getOrthologsMultiOrganism(final Protein protein, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrtholog()} for each given organism
 		 */
-		List<Future<OrthologScoredProtein>> requests = new ArrayList<Future<OrthologScoredProtein>>();
-		CompletionService<OrthologScoredProtein> completionService = new ExecutorCompletionService<OrthologScoredProtein>(newFixedThreadPool());
+		final HashMap<Organism, List<OrthologScoredProtein>> orthologs = new HashMap<Organism, List<OrthologScoredProtein>>();
+		final List<Organism> organismList = new ArrayList<Organism>(organisms);
 
-		for (final Organism organism : organisms) {
-			requests.add(completionService.submit(new Callable<OrthologScoredProtein>() {
-				@Override
-				public OrthologScoredProtein call() throws Exception {
-					return getOrtholog(protein, organism, score);
-				}
-			}));
-		}
-
-		HashMap<Organism, OrthologScoredProtein> orthologs = new HashMap<Organism, OrthologScoredProtein>();
-		Future<OrthologScoredProtein> request;
-		OrthologScoredProtein ortholog;
-		for (int i = 0, requestsSize = requests.size(); i < requestsSize; i++) {
-			try {
-				request = completionService.take();
-				ortholog = request.get();
-				if (ortholog != null)
-					orthologs.put(ortholog.getOrganism(), ortholog);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
+		new ConcurrentExecutor<List<OrthologScoredProtein>>(getExecutorServiceManager(), organisms.size()) {
+			@Override
+			public Callable<List<OrthologScoredProtein>> submitRequests(final int index) {
+				return new Callable<List<OrthologScoredProtein>>() {
+					@Override
+					public List<OrthologScoredProtein> call() throws Exception {
+						Organism organism = organismList.get(index);
+						return organism != null ? getOrtholog(protein, organism, score) : null;
+					}
+				};
 			}
-		}
+
+			@Override
+			public void processResult(List<OrthologScoredProtein> result, Integer index) {
+				orthologs.put(organismList.get(index), result);
+			}
+		}.run();
+
 		return orthologs;
 	}
 
@@ -93,46 +81,31 @@ public class ThreadedProteinOrthologClientDecorator<POC extends ProteinOrthologC
 	 * @return @code{Map} of ortholog proteins indexed by organism indexed by source protein
 	 */
 	@Override
-	public Map<Protein, Map<Organism, OrthologScoredProtein>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
+	public Map<Protein, Map<Organism, List<OrthologScoredProtein>>> getOrthologsMultiOrganismMultiProtein(final Collection<? extends Protein> proteins, final Collection<Organism> organisms, final Double score) throws Exception {
 		/**
 		 * Proposed implementation with thread pool which requests @code{getOrthologsMultiOrganism()} for each given source protein
 		 */
+		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
+		final HashMap<Protein, Map<Organism, List<OrthologScoredProtein>>> out = new HashMap<Protein, Map<Organism, List<OrthologScoredProtein>>>();
 
-		List<Protein> proteinList = new ArrayList<Protein>(proteins);
-
-		//Temporally change the thread limit to be sure not to exceed it once
-		int oriNThread = maxNumberThread;
-		maxNumberThread = Math.max((int) Math.sqrt(maxNumberThread), 2);
-		List<Future<Map<Organism, OrthologScoredProtein>>> requests = new ArrayList<Future<Map<Organism, OrthologScoredProtein>>>();
-		CompletionService<Map<Organism, OrthologScoredProtein>> completionService = new ExecutorCompletionService<Map<Organism, OrthologScoredProtein>>(newFixedThreadPool());
-
-		for (final Protein protein : proteinList) {
-			requests.add(completionService.submit(new Callable<Map<Organism, OrthologScoredProtein>>() {
-				@Override
-				public Map<Organism, OrthologScoredProtein> call() throws Exception {
-					return getOrthologsMultiOrganism(protein, organisms, score);
-				}
-			}));
-		}
-
-		HashMap<Protein, Map<Organism, OrthologScoredProtein>> out = new HashMap<Protein, Map<Organism, OrthologScoredProtein>>();
-		Future<Map<Organism, OrthologScoredProtein>> request;
-		Map<Organism, OrthologScoredProtein> orthologs;
-		for (int i = 0, requestsSize = requests.size(); i < requestsSize; i++) {
-			try {
-				request = completionService.take();
-				orthologs = request.get();
-				if (orthologs != null) {
-					out.put(proteinList.get(requests.indexOf(request)), orthologs);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
+		new ConcurrentExecutor<Map<Organism, List<OrthologScoredProtein>>>(getExecutorServiceManager(), proteinList.size()) {
+			@Override
+			public Callable<Map<Organism, List<OrthologScoredProtein>>> submitRequests(final int index) {
+				return new Callable<Map<Organism, List<OrthologScoredProtein>>>() {
+					@Override
+					public Map<Organism, List<OrthologScoredProtein>> call() throws Exception {
+						Protein protein = proteinList.get(index);
+						return protein != null ? getOrthologsMultiOrganism(protein, organisms, score) : null;
+					}
+				};
 			}
-		}
-		maxNumberThread = oriNThread;
+
+			@Override
+			public void processResult(Map<Organism, List<OrthologScoredProtein>> result, Integer index) {
+				out.put(proteinList.get(index), result);
+			}
+		}.run();
+
 		return out;
 	}
-
 }

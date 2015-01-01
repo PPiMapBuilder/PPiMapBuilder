@@ -1,25 +1,25 @@
 package ch.picard.ppimapbuilder.networkbuilder;
 
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
+import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.session.CyNetworkNaming;
-import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
-import ch.picard.ppimapbuilder.networkbuilder.query.PMBQueryInteractionTask;
-import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * PPiMapBuilder network query and build
@@ -27,62 +27,91 @@ import java.util.HashMap;
 public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 	// Cytoscape services
-	private final CyNetworkManager netMgr;
-	private final CyNetworkFactory cnf;
-	private final CyNetworkNaming namingUtil;
-	private final CyNetworkViewFactory cnvf;
+	private final CyNetworkManager networkManager;
+	private final CyNetworkFactory networkFactory;
+	private final CyNetworkNaming networkNaming;
+	private final CyNetworkViewFactory networkViewFactory;
 	private final CyNetworkViewManager networkViewManager;
-	private final CyLayoutAlgorithmManager layoutMan;
-	private final VisualMappingManager vmm;
+	private final CyLayoutAlgorithmManager layoutAlgorithmManager;
+	private final VisualMappingManager visualMappingManager;
 
 	// Data input from the user
-	private final QueryWindow queryWindow;
+	private final NetworkQueryParameters networkQueryParameters;
 
-	// Data collection for network generation
-	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
-	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private final UniProtEntrySet interactorPool;
+	// Data output from network querying
+	private Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
+	private HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
+	private UniProtEntrySet interactorPool;
 
 	// Error output
-	private String error_message;
+	private String errorMessage;
 
-	public PMBInteractionNetworkBuildTaskFactory(final CyNetworkNaming cyNetworkNaming, final CyNetworkFactory cnf,
-			final CyNetworkManager networkManager, final CyNetworkViewFactory cnvf, final CyNetworkViewManager networkViewManager,
-			final CyLayoutAlgorithmManager layoutManagerServiceRef, final VisualMappingManager visualMappingManager,
-			final QueryWindow queryWindow, final CyTableFactory tableFactory,
-			final MapTableToNetworkTablesTaskFactory mapTableToNetworkTablesTaskFactory) {
-
-		this.netMgr = networkManager;
-		this.namingUtil = cyNetworkNaming;
-		this.cnf = cnf;
-		this.cnvf = cnvf;
+	public PMBInteractionNetworkBuildTaskFactory(
+			final CyNetworkManager networkManager,
+			final CyNetworkNaming networkNaming,
+			final CyNetworkFactory networkFactory,
+			final CyNetworkViewFactory networkViewFactory,
+			final CyNetworkViewManager networkViewManager,
+			final CyLayoutAlgorithmManager layoutAlgorithmManager,
+			final VisualMappingManager visualMappingManager,
+			final NetworkQueryParameters networkQueryParameters
+	) {
+		this.networkManager = networkManager;
+		this.networkNaming = networkNaming;
+		this.networkFactory = networkFactory;
+		this.networkViewFactory = networkViewFactory;
 		this.networkViewManager = networkViewManager;
-		this.layoutMan = layoutManagerServiceRef;
-		this.vmm = visualMappingManager;
-		this.queryWindow = queryWindow;
+		this.layoutAlgorithmManager = layoutAlgorithmManager;
+		this.visualMappingManager = visualMappingManager;
+		this.networkQueryParameters = networkQueryParameters;
 
-		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
-		this.interactorPool = new UniProtEntrySet();
-		this.proteinOfInterestPool = new UniProtEntrySet();
-		
-		this.error_message = null;
+		this.errorMessage = null;
 	}
 
 	@Override
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
-		return new TaskIterator(
-			new PMBQueryInteractionTask(interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow),
-			new PMBCreateNetworkTask(this, netMgr, namingUtil, cnf, cnvf, networkViewManager, layoutMan, vmm, interactionsByOrg, interactorPool, proteinOfInterestPool, queryWindow, startTime)
+
+		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
+		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
+		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
+
+		TaskIterator taskIterator = new TaskIterator();
+		taskIterator.append(
+				new PMBInteractionQueryTaskFactory(
+						interactionsByOrg,
+						interactorPool,
+						proteinOfInterestPool,
+						networkQueryParameters
+				).createTaskIterator()
 		);
+		taskIterator.append(
+				new PMBCreateNetworkTask(
+						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
+						layoutAlgorithmManager, visualMappingManager, interactionsByOrg,
+						interactorPool, proteinOfInterestPool, networkQueryParameters, startTime
+				)
+		);
+		return taskIterator;
 	}
 
-	public void setError_message(String error_message) {
-		this.error_message = error_message;
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
 	}
-	
-	public String getError_message() {
-		return error_message;
+
+	public String getErrorMessage() {
+		return errorMessage;
 	}
-	
+
+	protected UniProtEntrySet getInteractorPool() {
+		return interactorPool;
+	}
+
+	protected HashMap<Organism, Collection<EncoreInteraction>> getInteractionsByOrg() {
+		return interactionsByOrg;
+	}
+
+	protected Set<UniProtEntry> getProteinOfInterestPool() {
+		return proteinOfInterestPool;
+	}
 }

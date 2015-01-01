@@ -40,7 +40,7 @@ public class ResultPanelAction implements RowsSetListener {
 						pmbResultPanel.showDefaultView();
 						break;
 					}
-					System.out.println(rowSetRecord.getRow());
+					//System.out.println(rowSetRecord.getRow());
 					myRow = rowSetRecord.getRow();
 				}
 			}
@@ -53,7 +53,7 @@ public class ResultPanelAction implements RowsSetListener {
 		}
 		
 		else if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultEdgeTable()) {
-			System.out.println("Edge selected");
+			//System.out.println("Edge selected");
 			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
 
 			int nbSelected = 0;

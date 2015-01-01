@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import com.google.common.collect.Sets;
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
@@ -10,22 +11,31 @@ import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.util.FileUtil;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
- * The PPiMapBuilder protein orthology cache uses a simplified representation of protein orthology between proteins of two different species.
- * In the current model, a protein can have zero or one ortholog protein in another organism (doesn't reflect reality).
- * The orthology links stored in PPiMapBuilder's ortholog cache don't have any score of quality.
+ * The PPiMapBuilder protein orthology cache uses a simplified representation of protein orthology between proteins of
+ * two different species.
+ * In the current model, a protein can have zero or one ortholog protein in another organism.
+ * The orthology links actually stores multiple orthologs and scores in an OrhtologGroup but only the ortholog with
+ * highest score is currently accessible
  */
-public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheClient {
+public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologClient implements ProteinOrthologCacheClient {
 
 	private static PMBProteinOrthologCacheClient _instance;
 	//private File orthologCacheIndexFile;
 	private CacheFile orthologCacheIndexFile;
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> orthologCacheIndex;
+
+	/**
+	 * Maximum number of species pair cache that can store a reading cache.
+	 */
+	public static final int MAX_NB_MEMORY_CACHE = 4;
+
+	/**
+	 * List of SpeciesPairProteinOrthologCache having reading cache on
+	 */
+	private final ArrayList<SpeciesPairProteinOrthologCache> speciesPairMemoryCached;
 
 	private PMBProteinOrthologCacheClient() throws IOException {
 		super();
@@ -40,17 +50,25 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 			orthologCacheIndex = empty();
 			save();
 		}
+
+		speciesPairMemoryCached = new ArrayList<SpeciesPairProteinOrthologCache>();
 	}
 
-	public static PMBProteinOrthologCacheClient getInstance() throws IOException {
-		if (_instance == null)
-			_instance = new PMBProteinOrthologCacheClient();
+	public static synchronized PMBProteinOrthologCacheClient getInstance() {
+		if (_instance == null) {
+			try {
+				_instance = new PMBProteinOrthologCacheClient();
+			} catch (IOException e) {
+				return null;
+			}
+		}
 		return _instance;
 	}
 
 	/**
 	 * Loads or creates the PMB orthology cache index form file "ortholog-cache.idx"
 	 */
+	@SuppressWarnings("unchecked")
 	private HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> load() throws IOException {
 		HashMap<Organism, HashMap<Organism, SpeciesPairProteinOrthologCache>> index = null;
 
@@ -86,7 +104,20 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	}
 
 	/**
-	 * Saves the ortholog cache index in file "ortholog-cache.idx"
+	 * Remove all file cache of protein orthology in the specified organism.
+	 */
+	public void emptyCacheLinkedToOrganism(Organism organism) {
+		for(SpeciesPairProteinOrthologCache cache : orthologCacheIndex.get(organism).values()) {
+			try {
+				cache.clear();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Saves the ortholog cache index in file "ortholog-cache.idx".
 	 */
 	public synchronized void save() throws IOException {
 		ObjectOutputStream out = null;
@@ -94,8 +125,6 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 			out = new ObjectOutputStream(new FileOutputStream(orthologCacheIndexFile.getOrCreateFile()));
 
 			out.writeObject(orthologCacheIndex);
-		} catch (IOException e) {
-			throw e;
 		} finally {
 			if (out != null) out.close();
 		}
@@ -104,8 +133,10 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	@Override
 	public OrthologGroup getOrthologGroup(Protein protein, Organism organism) throws Exception {
 		try {
-			SpeciesPairProteinOrthologCache cache = getSpeciesPairProteinOrthologCache(protein.getOrganism(), organism);
-			return cache.getOrthologGroup(protein, organism);
+			return getSpeciesPairProteinOrthologCache(
+				protein.getOrganism(),
+				organism
+			).getOrthologGroup(protein, organism);
 		} catch (NullPointerException e) {
 			return null;
 		}
@@ -129,20 +160,22 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 	}
 
 	/**
-	 * Gets the species pair ortholog cache from the ortholog index or create it using a species couple.
+	 * Gets the species pair ortholog cache from the ortholog index or create it using a species pair.
 	 */
 	public synchronized SpeciesPairProteinOrthologCache getSpeciesPairProteinOrthologCache(Organism organismA, Organism organismB) throws IOException {
 		//First organism exists in index?
 		HashMap<Organism, SpeciesPairProteinOrthologCache> d = this.orthologCacheIndex.get(organismA);
-		if (d == null)
-			//Doesn't exist, create an index entry
+		if (d == null) {
+			//Doesn't exists, create an index entry
 			this.orthologCacheIndex.put(organismA, (d = new HashMap<Organism, SpeciesPairProteinOrthologCache>()));
+		}
 
 		//Second organism leads to the organism pair orthology cache?
 		SpeciesPairProteinOrthologCache cache = d.get(organismB);
 		if (cache == null) {
-			//Doesn't exist, create a cache
+			//Doesn't exists, create a cache
 			cache = new SpeciesPairProteinOrthologCache(organismA, organismB);
+
 			d.put(organismB, cache);
 
 			HashMap<Organism, SpeciesPairProteinOrthologCache> f = this.orthologCacheIndex.get(organismB);
@@ -155,11 +188,30 @@ public class PMBProteinOrthologCacheClient extends AbstractProteinOrthologCacheC
 			save();
 		}
 
+		if(!speciesPairMemoryCached.contains(cache)) {
+			if (speciesPairMemoryCached.size() > MAX_NB_MEMORY_CACHE) {
+				SpeciesPairProteinOrthologCache cache1 = speciesPairMemoryCached.get(0);
+				cache1.clearReadCache();
+				speciesPairMemoryCached.remove(cache1);
+			}
+			speciesPairMemoryCached.add(cache);
+		}
+
 		return cache;
 	}
 
 	public boolean isFull(Organism organismA, Organism organismB) throws IOException {
 		return getSpeciesPairProteinOrthologCache(organismA, organismB).isFull();
+	}
+
+	/**
+	 * Clear memory cache built when reading ortholog file cache
+	 */
+	public void clearMemoryCache() {
+		for(SpeciesPairProteinOrthologCache cache : speciesPairMemoryCached) {
+			cache.clearReadCache();
+		}
+		speciesPairMemoryCached.clear();
 	}
 
 	/**

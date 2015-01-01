@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog;
 
+import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 
@@ -8,7 +9,7 @@ import java.util.*;
 
 /**
  * Data structure representing a group of proteins orthologous with each other.
- * Inspired by the OrthoXML specifications (but not compliant with them at all).
+ * Inspired by the OrthoXML specifications (but not compliant with them).
  */
 public class OrthologGroup implements Serializable {
 
@@ -27,7 +28,7 @@ public class OrthologGroup implements Serializable {
 	 * Constructs a {@link OrthologGroup} filled with several
 	 * orthologs as {@link OrthologScoredProtein}
 	 */
-	public OrthologGroup(OrthologScoredProtein ... orthologScoredProteins) {
+	public OrthologGroup(OrthologScoredProtein... orthologScoredProteins) {
 		this();
 		for (OrthologScoredProtein orthologScoredProtein : orthologScoredProteins)
 			add(orthologScoredProtein);
@@ -52,24 +53,29 @@ public class OrthologGroup implements Serializable {
 	}
 
 	/**
-	 * Gets the ortholog with the best score in the given {@link Organism}.
+	 * Gets the orthologs with the best score in the given {@link Organism}.
 	 */
-	public OrthologScoredProtein getBestOrthologInOrganism(Organism organism) {
+	public List<OrthologScoredProtein> getBestOrthologsInOrganism(Organism organism) {
+		List<OrthologScoredProtein> bestOrthologs = new ArrayList<OrthologScoredProtein>();
 		List<OrthologScoredProtein> proteins = members.get(organism);
 
-		if (proteins == null || proteins.size() == 0)
-			return null;
-		else {
-			if (proteins.size() > 1)
-				Collections.sort(proteins, new Comparator<OrthologScoredProtein>() {
-					@Override
-					public int compare(OrthologScoredProtein o1, OrthologScoredProtein o2) {
-						return o2.getScore().compareTo(o1.getScore());
-					}
-				});
+		if (proteins != null && proteins.size() > 0) {
+			Collections.sort(proteins, new Comparator<OrthologScoredProtein>() {
+				@Override
+				public int compare(OrthologScoredProtein o1, OrthologScoredProtein o2) {
+					return o2.getScore().compareTo(o1.getScore());
+				}
+			});
 
-			return proteins.get(0);
+			double bestScore = proteins.get(0).getScore();
+			for(OrthologScoredProtein protein : proteins) {
+				if(protein.getScore() == bestScore)
+					bestOrthologs.add(protein);
+				else break;
+			}
 		}
+
+		return bestOrthologs;
 	}
 
 	/**
@@ -111,4 +117,12 @@ public class OrthologGroup implements Serializable {
 	public boolean contains(Protein protein) {
 		return getProteins().contains(protein);
 	}
+
+	public OrthologScoredProtein find(Protein protein) {
+		for (OrthologScoredProtein orthologScoredProtein : members.get(protein.getOrganism()))
+			if (orthologScoredProtein.getUniProtId().equals(protein.getUniProtId()))
+				return orthologScoredProtein;
+		return null;
+	}
+
 }

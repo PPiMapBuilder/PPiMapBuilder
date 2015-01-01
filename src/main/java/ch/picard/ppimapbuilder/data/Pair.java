@@ -7,10 +7,10 @@ import java.util.List;
 /**
  * Convenient class to store object by pair
  */
-public class Pair<T> {
+public class Pair<T> implements Comparable<Pair<T>> {
 
-	private T first;
-	private T second;
+	private final T first;
+	private final T second;
 
 	public Pair(List<T> elems) {
 		this(elems.get(0), elems.get(1));
@@ -18,16 +18,6 @@ public class Pair<T> {
 
 	public Pair(T first, T second) {
 		this.first = first;
-		this.second = second;
-	}
-
-	public Pair() {}
-
-	public void setFirst(T first) {
-		this.first = first;
-	}
-
-	public void setSecond(T second) {
 		this.second = second;
 	}
 
@@ -39,7 +29,7 @@ public class Pair<T> {
 		return second;
 	}
 
-	public boolean isComplete() {
+	public boolean isNotNull() {
 		return first != null && second != null;
 	}
 
@@ -47,34 +37,36 @@ public class Pair<T> {
 		return first == null && second == null;
 	}
 
-	public void replace(T oldElement, T newElement) {
-		if(oldElement == first)
-			first = newElement;
-		else if(oldElement == second)
-			second = newElement;
-	}
-
 	@Override
 	public int hashCode() {
-		int f = first.hashCode(), s = second.hashCode();
-		int a = Math.max(f, s), b = Math.min(f, s);
-		//return Integer.parseInt(a + "" + b);
-		return Objects.hashCode(a, b);
+		return Objects.hashCode(first.hashCode(), -1, second.hashCode());
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if(obj instanceof Pair)
-			return ((Pair) obj).hashCode() == this.hashCode();
-		else
-			return false;
+	public boolean equals(Object other) {
+		if(other instanceof Pair){
+			Pair otherPair = (Pair) other;
+
+			return (
+					(otherPair.first == null && first == null) ||
+					(otherPair.first != null && otherPair.first.equals(first))
+				)
+					&&
+				(
+					(otherPair.second == null && second == null) ||
+					(otherPair.second != null && otherPair.second.equals(second))
+				);
+		}
+		else return false;
 	}
 
 	@Override
 	public String toString() {
-		int f = first.hashCode(), s = second.hashCode();
-		int a = Math.max(f, s), b = Math.min(f, s);
-		//return "Pair["+first.toString()+", "+second.toString()+"]";
-		return "Pair["+a+", "+b+"]";
+		return "Pair["+first.toString()+", "+second.toString()+"]";
+	}
+
+	@Override
+	public int compareTo(Pair<T> o) {
+		return toString().compareTo(o.toString());
 	}
 }
