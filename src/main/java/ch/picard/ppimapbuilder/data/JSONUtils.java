@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class JSONUtils {
@@ -11,6 +12,10 @@ public class JSONUtils {
 			list.add(jsonAble.toJSON());
 		}
 		return list;
+	}
+
+	public static List<String> jsonListToStringList(Collection<? extends JSONable> jsonAbles) {
+		return jsonListToStringList(jsonAbles.toArray(new JSONable[jsonAbles.size()]));
 	}
 
 }

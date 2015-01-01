@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.networkbuilder;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
@@ -17,6 +18,8 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * PPiMapBuilder network query and build
@@ -36,7 +39,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final NetworkQueryParameters networkQueryParameters;
 
 	// Data output from network querying
-	private UniProtEntrySet proteinOfInterestPool; // not the same as user input
+	private Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
 	private HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private UniProtEntrySet interactorPool;
 
@@ -71,7 +74,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
 		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
-		this.proteinOfInterestPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
+		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
 
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
@@ -108,7 +111,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		return interactionsByOrg;
 	}
 
-	protected UniProtEntrySet getProteinOfInterestPool() {
+	protected Set<UniProtEntry> getProteinOfInterestPool() {
 		return proteinOfInterestPool;
 	}
 }

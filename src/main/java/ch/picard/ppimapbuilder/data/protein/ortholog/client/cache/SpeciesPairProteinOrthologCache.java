@@ -53,7 +53,10 @@ public class SpeciesPairProteinOrthologCache extends AbstractProteinOrthologClie
 				if (checkOrthologyExists && orthologGroupExist(orthologGroup))
 					ok = false;
 
-				if (ok) out.writeObject(orthologGroup);
+				if (ok) {
+					out.writeObject(orthologGroup);
+					clearReadCache();
+				}
 			}
 		} finally {
 			if (out != null) out.close();

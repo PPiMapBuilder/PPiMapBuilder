@@ -8,6 +8,7 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -47,12 +48,12 @@ public class InteractionUtils {
 			}
 		}
 
-		Organism org = OrganismUtils.findOgranismInMITABTaxId(
+		Organism org = OrganismUtils.findOrganismInMITABTaxId(
 				InParanoidOrganismRepository.getInstance(),
 				interactor.getOrganism().getTaxid()
 		);
 
-		if(id != null && org != null)
+		if (id != null && org != null)
 			return new Protein(id, org);
 		return null;
 	}
@@ -75,7 +76,7 @@ public class InteractionUtils {
 
 		for (BinaryInteraction interaction : interactions) {
 			final Pair<Protein> interactorPair = getInteractors(interaction);
-			if(interactorPair.isNotNull()){
+			if (interactorPair.isNotNull()) {
 				interactors.add(interactorPair.getFirst());
 				interactors.add(interactorPair.getSecond());
 			}
@@ -87,12 +88,16 @@ public class InteractionUtils {
 	public static interface InteractionFilter {
 		public boolean isValidInteraction(BinaryInteraction interaction);
 	}
+
 	public static abstract class InteractorFilter implements InteractionFilter {
 		public abstract boolean isValidInteractor(Interactor interactor);
 
 		@Override
 		public boolean isValidInteraction(BinaryInteraction interaction) {
-			return isValidInteractor(interaction.getInteractorA()) && isValidInteractor(interaction.getInteractorB());
+			Interactor interactorA = interaction.getInteractorA();
+			Interactor interactorB = interaction.getInteractorB();
+			return  isValidInteractor(interactorA)
+					&& isValidInteractor(interactorB);
 		}
 	}
 
@@ -106,7 +111,7 @@ public class InteractionUtils {
 		@Override
 		public boolean isValidInteractor(Interactor interactor) {
 			return organism.equals(
-					OrganismUtils.findOgranismInMITABTaxId(
+					OrganismUtils.findOrganismInMITABTaxId(
 							InParanoidOrganismRepository.getInstance(),
 							interactor.getOrganism().getTaxid()
 					)
@@ -174,15 +179,23 @@ public class InteractionUtils {
 	public static ArrayList<BinaryInteraction> filterConcurrently(
 			ExecutorServiceManager executorServiceManager,
 			final List<BinaryInteraction> interactions,
+			final ProgressMonitor progressMonitor,
 			final InteractionFilter... filters
 	) {
 		final ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
+		final double[] percent = new double[]{0d};
+		final double size = interactions.size();
 		new ConcurrentExecutor<Boolean>(executorServiceManager, interactions.size()) {
 			@Override
 			public Callable<Boolean> submitRequests(final int index) {
 				return new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
+						if (progressMonitor != null) {
+							double progress = Math.floor((index / size) * 100) / 100;
+							if (progress > percent[0])
+								progressMonitor.setProgress(percent[0] = progress);
+						}
 						return isValidInteraction(interactions.get(index), filters);
 					}
 				};
@@ -190,7 +203,7 @@ public class InteractionUtils {
 
 			@Override
 			public void processResult(Boolean result, Integer index) {
-				if(result) validInteractions.add(interactions.get(index));
+				if (result) validInteractions.add(interactions.get(index));
 			}
 		}.run();
 		return validInteractions;

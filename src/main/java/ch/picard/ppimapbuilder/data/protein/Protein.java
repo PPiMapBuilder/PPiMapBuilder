@@ -46,16 +46,12 @@ public class Protein implements Serializable, JSONable {
 
 	@Override
 	public boolean equals(Object o) {
-		try {
-			return uniProtId.equals(((Protein) o).getUniProtId());
-		} catch (Exception e) {
-			return o instanceof String && uniProtId.equals((String) o);
-		}
+		return o instanceof Protein && uniProtId.equals(((Protein) o).uniProtId);
 	}
 
 	@Override
 	public int hashCode() {
-		return uniProtId.hashCode();
+		return uniProtId != null ? uniProtId.hashCode() : super.hashCode();
 	}
 
 	@Override

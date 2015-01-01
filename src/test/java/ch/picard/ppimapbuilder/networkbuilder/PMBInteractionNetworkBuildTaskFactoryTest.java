@@ -1,12 +1,17 @@
 package ch.picard.ppimapbuilder.networkbuilder;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import ch.picard.ppimapbuilder.util.test.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.work.TaskIterator;
+import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import org.junit.Test;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
@@ -31,10 +36,10 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 					//, new PsicquicService("MINT", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			),
 			Arrays.asList(
-					//"P04040",
-					"Q8VI75",
-					"B2RQC6",
-					"O75153"
+					  "P04040"//,
+					//"Q8VI75",
+					//"B2RQC6",
+					//"O75153"
 					//"P61106"
 					//"P14672",
 					//"Q8VI75",
@@ -87,22 +92,22 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 			Set<CyNode> POIsNodes = new HashSet<CyNode>();
 
 			for (CyNode node : nodes) {
-				if(networkBuild.getProteinOfInterestPool().contains(((DummyCyNode)node).getName()))
+				if (networkBuild.getProteinOfInterestPool().contains(((DummyCyNode) node).getName()))
 					POIsNodes.add(node);
 			}
 
 			Set<CyNode> nodesLinkedToPOIs = new HashSet<CyNode>();
 			nodesLinkedToPOIs.addAll(POIsNodes);
 			for (CyEdge edge : edges)
-				if(edge.getSource() != edge.getTarget())
-					if(POIsNodes.contains(edge.getSource()))
+				if (edge.getSource() != edge.getTarget())
+					if (POIsNodes.contains(edge.getSource()))
 						nodesLinkedToPOIs.add(edge.getTarget());
-					else if(POIsNodes.contains(edge.getTarget()))
+					else if (POIsNodes.contains(edge.getTarget()))
 						nodesLinkedToPOIs.add(edge.getSource());
 
 			System.out.println();
-			System.out.println("Edges: "+ edges.size());
-			System.out.println("Nodes: "+ nodes.size());
+			System.out.println("Edges: " + edges.size());
+			System.out.println("Nodes: " + nodes.size());
 			System.out.println("Nodes linked to at least one of the POIs: " + nodesLinkedToPOIs.size());
 			System.out.print("Unlinked nodes: ");
 			nodes.removeAll(nodesLinkedToPOIs);

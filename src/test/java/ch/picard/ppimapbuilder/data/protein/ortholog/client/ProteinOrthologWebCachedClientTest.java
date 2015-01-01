@@ -12,6 +12,8 @@ import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 public class ProteinOrthologWebCachedClientTest {
 
@@ -47,18 +49,17 @@ public class ProteinOrthologWebCachedClientTest {
 
 	@Test
 	public void testGetOrthologNotCached() throws Exception {
-		Protein expected;
-		Protein actual;
+		List<? extends Protein> expected, actual;
 
-		expected = P24270;
+		expected = Arrays.asList(P24270);
 		actual = client.getOrtholog(P04040, mouse, MINIMUM_ORTHOLOGY_SCORE);
 		Assert.assertEquals(expected, actual);
 
-		expected = P24270;
+		expected = Arrays.asList(P24270);
 		actual = client.getOrtholog(F1NGJ7, mouse, MINIMUM_ORTHOLOGY_SCORE);
 		Assert.assertEquals(expected, actual);
 
-		expected = P04040;
+		expected = Arrays.asList(P04040);
 		actual = client.getOrtholog(F1NGJ7, human, MINIMUM_ORTHOLOGY_SCORE);
 		Assert.assertEquals(expected, actual);
 	}

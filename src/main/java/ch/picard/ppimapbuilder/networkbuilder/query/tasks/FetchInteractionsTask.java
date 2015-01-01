@@ -3,6 +3,7 @@ package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
@@ -21,7 +22,7 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 	// Input
 	private final List<Organism> allOrganisms;
 	private final UniProtEntrySet interactorPool;
-	private final UniProtEntrySet proteinOfInterestPool;
+	private final Set<UniProtEntry> proteinOfInterestPool;
 	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
 
 	// Output
@@ -29,8 +30,9 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 	public FetchInteractionsTask(
 			ThreadedClientManager threadedClientManager,
-			List<Organism> allOrganisms, UniProtEntrySet interactorPool, UniProtEntrySet proteinOfInterestPool,
-			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg, HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
+			List<Organism> allOrganisms, UniProtEntrySet interactorPool, Set<UniProtEntry> proteinOfInterestPool,
+			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg,
+			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
 	) {
 		super(threadedClientManager);
 		this.allOrganisms = allOrganisms;
@@ -44,7 +46,9 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 	public void run(final TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetch secondary interactions in all organisms...");
 
-		final int[] i = new int[]{0};
+		final double size = allOrganisms.size();
+		final double[] progressPercent = new double[]{0, 0};
+		taskMonitor.setProgress(progressPercent[1] = 0d);
 		new ConcurrentExecutor<Collection<EncoreInteraction>>(threadedClientManager.getExecutorServiceManager(), allOrganisms.size()) {
 			@Override
 			public Callable<Collection<EncoreInteraction>> submitRequests(final int index) {
@@ -55,7 +59,7 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 						//Get proteins in the current organism
 						final Set<String> proteins = interactorPool.identifiersInOrganism(organism).keySet();
-						proteins.removeAll(proteinOfInterestPool);
+						//proteins.removeAll(interactorPool.identifiersInOrganism(proteinOfInterestPool, organism));
 
 						//Get secondary interactions
 						ThreadedPsicquicClient psicquicClient = threadedClientManager.getOrCreatePsicquicClient();
@@ -66,6 +70,7 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 						interactionsBinary = InteractionUtils.filterConcurrently(
 								threadedClientManager.getExecutorServiceManager(),
 								interactionsBinary,
+								null,
 								new InteractionUtils.UniProtInteractionFilter(),
 								new InteractionUtils.OrganismInteractionFilter(organism)
 						);
@@ -83,7 +88,9 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 			@Override
 			public void processResult(Collection<EncoreInteraction> result, Integer index) {
-				taskMonitor.setProgress(((double)i[0]++)/((double)allOrganisms.size()));
+				double percent = progressPercent[0]++ / size;
+				if(percent > progressPercent[1])
+					taskMonitor.setProgress(progressPercent[1] = percent);
 				interactionsByOrg.put(allOrganisms.get(index), result);
 			}
 
@@ -91,6 +98,7 @@ public class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 		//Free memory
 		threadedClientManager.clear();
+		if(progressPercent[1] < 1.0) taskMonitor.setProgress(1.0);
 	}
 
 }

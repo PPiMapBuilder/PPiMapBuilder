@@ -1,6 +1,7 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import org.cytoscape.work.TaskMonitor;
@@ -8,12 +9,13 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 
 public class FetchDirectInteractionReferenceOrganismTask extends AbstractInteractionQueryTask {
 
 	// Input
 	private final Organism referenceOrganism;
-	private final UniProtEntrySet proteinOfInterestPool;
+	private final Set<UniProtEntry> proteinOfInterestPool;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
 	// Output
@@ -22,7 +24,7 @@ public class FetchDirectInteractionReferenceOrganismTask extends AbstractInterac
 
 	public FetchDirectInteractionReferenceOrganismTask(
 			ThreadedClientManager threadedClientManager,
-			Organism referenceOrganism, UniProtEntrySet proteinOfInterestPool, Double minimum_orthology_score,
+			Organism referenceOrganism, Set<UniProtEntry> proteinOfInterestPool, Double minimum_orthology_score,
 			UniProtEntrySet interactorPool,
 			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg) {
 		super(threadedClientManager);
@@ -42,7 +44,6 @@ public class FetchDirectInteractionReferenceOrganismTask extends AbstractInterac
 				threadedClientManager, MINIMUM_ORTHOLOGY_SCORE,
 				taskMonitor
 		).call();
-		interactorPool.addAll(query.getNewInteractors());
 		directInteractionsByOrg.put(referenceOrganism, query.getNewInteractions());
 	}
 

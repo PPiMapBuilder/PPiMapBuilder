@@ -7,10 +7,13 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractProteinOrthologClient implements ProteinOrthologClient {
 
 	@Override
-	public OrthologScoredProtein getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
+	public List<OrthologScoredProtein> getOrtholog(Protein protein, Organism organism, Double score) throws Exception {
 		OrthologGroup group = getOrthologGroup(protein, organism);
 
 		if (group == null && !ProteinUtils.UniProtId.isStrict(protein.getUniProtId())) {
@@ -20,14 +23,14 @@ public abstract class AbstractProteinOrthologClient implements ProteinOrthologCl
 		}
 
 		if (group != null) {
-			OrthologScoredProtein ortholog = group.getBestOrthologInOrganism(organism);
+			List<OrthologScoredProtein> ortholog = group.getBestOrthologsInOrganism(organism);
 			OrthologScoredProtein originalProtein = group.find(protein);
 
-			if (ortholog != null && ortholog.getScore() >= score
+			if (!ortholog.isEmpty() && ortholog.get(0).getScore() >= score
 					&& originalProtein != null && originalProtein.getScore() >= score)
 				return ortholog;
 		}
-		return null;
+		return new ArrayList<OrthologScoredProtein>();
 	}
 
 }

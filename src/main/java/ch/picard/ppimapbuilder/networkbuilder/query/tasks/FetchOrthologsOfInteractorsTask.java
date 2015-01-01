@@ -44,26 +44,27 @@ public class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTas
 		int step = PMBProteinOrthologCacheClient.MAX_NB_MEMORY_CACHE - 1;
 
 		for (int i = 0; i < otherOrganisms.size(); i += step) {
-			taskMonitor.setProgress(((double)i)/((double)otherOrganisms.size()));
+			taskMonitor.setProgress(((double) i) / ((double) otherOrganisms.size()));
 
-			final Map<Protein, Map<Organism, OrthologScoredProtein>> map = proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
-					interactorPool,
-					otherOrganisms.subList(
-							i,
-							Math.min(
-									otherOrganisms.size(),
-									i + step
-							)
-					),
-					MINIMUM_ORTHOLOGY_SCORE
-			);
+			final Map<Protein, Map<Organism, List<OrthologScoredProtein>>> orthologs =
+					proteinOrthologClient.getOrthologsMultiOrganismMultiProtein(
+							interactorPool,
+							otherOrganisms.subList(
+									i,
+									Math.min(
+											otherOrganisms.size(),
+											i + step
+									)
+							),
+							MINIMUM_ORTHOLOGY_SCORE
+					);
 
-			for (UniProtEntry entry : interactorPool) {
-				final Collection<OrthologScoredProtein> orthologs = map.get(entry).values();
-				if(!orthologs.isEmpty()) {
-					entry.addOrthologs(orthologs);
-				}
-			}
+			interactorPool.addOrthologs(orthologs);
+
+/*			for (UniProtEntry entry : interactorPool) {
+				for (Organism organism : orthologs.get(entry).keySet())
+					entry.addOrthologs(orthologs.get(entry).get(organism));
+			}*/
 		}
 
 		threadedClientManager.unRegister(proteinOrthologClient);

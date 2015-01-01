@@ -1,16 +1,15 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.util.AbstractTaskProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractionQueryTask {
@@ -19,7 +18,7 @@ public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractio
 	private final List<Organism> otherOrganisms;
 	private final Organism referenceOrganism;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
-	private final UniProtEntrySet proteinOfInterestPool;
+	private final Set<UniProtEntry> proteinOfInterestPool;
 
 	// Output
 	private final UniProtEntrySet interactorPool;
@@ -27,7 +26,7 @@ public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractio
 
 	public FetchDirectInteractionOtherOrganismsTask(
 			ThreadedClientManager threadedClientManager,
-			List<Organism> otherOrganisms, Organism referenceOrganism, Double minimum_orthology_score, UniProtEntrySet proteinOfInterestPool,
+			List<Organism> otherOrganisms, Organism referenceOrganism, Double minimum_orthology_score, Set<UniProtEntry> proteinOfInterestPool,
 			UniProtEntrySet interactorPool,
 			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg
 	) {
@@ -47,42 +46,42 @@ public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractio
 		// Progress indicators
 		final Map<Organism, Double> progressByOrganism = new HashMap<Organism, Double>();
 		final Double[] progressPercent = new Double[]{0d};
+		taskMonitor.setProgress(progressPercent[0] = 0d);
 
 		final double size = otherOrganisms.size();
 		new ConcurrentExecutor<PrimaryInteractionQuery>(threadedClientManager.getExecutorServiceManager(), otherOrganisms.size()) {
 
 			@Override
 			public Callable<PrimaryInteractionQuery> submitRequests(final int index) {
+				final Organism organism = otherOrganisms.get(index);
 				return new PrimaryInteractionQuery(
-						referenceOrganism, otherOrganisms.get(index), proteinOfInterestPool, interactorPool,
+						referenceOrganism, organism, proteinOfInterestPool, interactorPool,
 						threadedClientManager, MINIMUM_ORTHOLOGY_SCORE,
 
-						//
-						new TaskMonitor() {
+						new AbstractTaskProgressMonitor() {
 							@Override
 							public void setProgress(double currentProgress) {
 								synchronized (progressPercent[0]) {
-									Double lastProgress = progressByOrganism.get(otherOrganisms.get(index));
-									if(lastProgress == null) lastProgress = 0d;
-									progressByOrganism.put(otherOrganisms.get(index), currentProgress);
-									double percent = Math.floor((progressPercent[0] - lastProgress + currentProgress)/size * 100) / 100;
-									if (percent > progressPercent[0])
-										taskMonitor.setProgress(progressPercent[0] = percent);
+									final Double previousProgress = progressByOrganism.get(organism);
+									progressByOrganism.put(organism, currentProgress);
+
+									if (previousProgress != null && currentProgress - previousProgress > 1d / size) {
+										double sum = 0d;
+										for (Double progress : progressByOrganism.values())
+											sum += progress;
+										double percent = Math.floor(sum / size * 100) / 100;
+										if (percent > progressPercent[0]) {
+											taskMonitor.setProgress(progressPercent[0] = percent);
+										}
+									}
 								}
 							}
-
-							public void setStatusMessage(String s) {}
-
-							public void setTitle(String s) {}
 						}
 				);
 			}
 
 			@Override
 			public void processResult(PrimaryInteractionQuery result, Integer index) {
-				synchronized (interactorPool) {
-					interactorPool.addAll(result.getNewInteractors());
-				}
 				directInteractionsByOrg.put(otherOrganisms.get(index), result.getNewInteractions());
 			}
 

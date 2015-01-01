@@ -1,5 +1,6 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog;
 
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -8,8 +9,10 @@ import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class OrthologGroupTest {
@@ -38,8 +41,8 @@ public class OrthologGroupTest {
 	@BeforeClass
 	public static void before() throws IOException {
 
-		human = UserOrganismRepository.getInstance().getOrganismByTaxId(9606);
-		mouse = UserOrganismRepository.getInstance().getOrganismByTaxId(10090);
+		human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
+		mouse = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090);
 
 		//Mouse proteins
 		P24270 = new Protein("P24270", mouse);
@@ -68,36 +71,46 @@ public class OrthologGroupTest {
 				new OrthologScoredProtein(Q6ZQM8, 0.246d)
 		);
 
-		inValidGroup = new OrthologGroup(new OrthologScoredProtein(P04040, 1d));
-	}
-
-	@Test
-	public void testAdd_GetBestOrthologInOrganism() {
-		Protein expected, actual;
 		catalaseOrthologGroup = new OrthologGroup(
 				new OrthologScoredProtein(P04040, 1d),
 				new OrthologScoredProtein(P24270, 1d)
 		);
 
-		expected = P04040;
-		actual = catalaseOrthologGroup.getBestOrthologInOrganism(human);
+		inValidGroup = new OrthologGroup(new OrthologScoredProtein(P04040, 1d));
+	}
+
+	@Test
+	public void testGetBestOrthologsInOrganismMultiple() {
+		Protein AAAAAA = new Protein("AAAAAA", human);
+		Protein aaaaaa = new Protein("aaaaaa", mouse);
+		Protein aaaaab = new Protein("aaaaab", mouse);
+
+		List<? extends Protein> expected, actual;
+		OrthologGroup orthologGroup = new OrthologGroup(
+				new OrthologScoredProtein(AAAAAA, 1d),
+				new OrthologScoredProtein(aaaaaa, 1d),
+				new OrthologScoredProtein(aaaaab, 1d)
+		);
+
+		expected = Arrays.asList(AAAAAA);
+		actual = orthologGroup.getBestOrthologsInOrganism(human);
 		Assert.assertEquals(expected, actual);
 
-		expected = P24270;
-		actual = catalaseOrthologGroup.getBestOrthologInOrganism(mouse);
+		expected = Arrays.asList(aaaaaa, aaaaab);
+		actual = orthologGroup.getBestOrthologsInOrganism(mouse);
 		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
-	public void testGetBestOrthologInOrganism() {
-		Protein expected, actual;
+	public void testGetBestOrthologsInOrganism() {
+		List<? extends Protein> expected, actual;
 
-		expected = Q9HAW7;
-		actual = UDPOrthologGroup.getBestOrthologInOrganism(human);
+		expected = Arrays.asList(Q9HAW7);
+		actual = UDPOrthologGroup.getBestOrthologsInOrganism(human);
 		Assert.assertEquals(expected, actual);
 
-		expected = E9PXN7;
-		actual = UDPOrthologGroup.getBestOrthologInOrganism(mouse);
+		expected = Arrays.asList(E9PXN7);
+		actual = UDPOrthologGroup.getBestOrthologsInOrganism(mouse);
 		Assert.assertEquals(expected, actual);
 	}
 
@@ -116,14 +129,7 @@ public class OrthologGroupTest {
 		Set<Protein> actual, expected;
 
 		expected = new HashSet<Protein>(Arrays.asList(
-				Q9HAW7,
-				Q9HAW9,
-				Q9HAW8,
-				O60656,
-				E9PXN7,
-				Q62452,
-				D3Z748,
-				Q6ZQM8
+				Q9HAW7, Q9HAW9, Q9HAW8, O60656, E9PXN7, Q62452, D3Z748, Q6ZQM8
 		));
 		actual = new HashSet<Protein>(UDPOrthologGroup.getProteins());
 		Assert.assertEquals(expected, actual);

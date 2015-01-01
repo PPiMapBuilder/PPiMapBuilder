@@ -26,7 +26,7 @@ public class OrganismUtils {
 		return out;
 	}
 
-	public static Organism findOgranismInMITABTaxId(OrganismRepository repository, String taxId) {
+	public static Organism findOrganismInMITABTaxId(OrganismRepository repository, String taxId) {
 		Matcher matcher;
 		int taxIdA = Integer.parseInt(taxId);
 		Organism organism = repository.getOrganismByTaxId(taxIdA);

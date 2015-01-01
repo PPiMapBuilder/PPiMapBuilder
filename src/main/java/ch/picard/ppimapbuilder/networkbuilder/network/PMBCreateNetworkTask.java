@@ -49,7 +49,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final NetworkQueryParameters networkQueryParameters;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
-	private final UniProtEntrySet proteinOfInterestPool;
+	private final Set<UniProtEntry> proteinOfInterestPool;
 
 	//Network data
 	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
@@ -65,7 +65,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			final VisualMappingManager visualMappingManager,
 			final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			final UniProtEntrySet interactorPool,
-			final UniProtEntrySet proteinOfInterestPool,
+			final Set<UniProtEntry> proteinOfInterestPool,
 			final NetworkQueryParameters networkQueryParameters,
 			long startTime
 	) {
@@ -110,6 +110,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 				createEdges(network);
 				monitor.setProgress(0.75);
+
+				removeNodeNotConnectedToPOIs(network);
 			}
 
 			CyNetworkView view;
@@ -131,6 +133,32 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			);
 		}
 		monitor.setProgress(1.0);
+	}
+
+	private void removeNodeNotConnectedToPOIs(CyNetwork network) {
+		Set<CyNode> nodes = new HashSet<CyNode>(network.getNodeList());
+		Set<CyNode> POIsNodes = new HashSet<CyNode>();
+
+		for(UniProtEntry poiEntry: proteinOfInterestPool) {
+			final CyNode node = getNode(poiEntry);
+			if(node != null)
+				POIsNodes.add(node);
+		}
+
+		Set<CyNode> nodesLinkedToPOIs = new HashSet<CyNode>();
+		nodesLinkedToPOIs.addAll(POIsNodes);
+		for (CyEdge edge : network.getEdgeList()) {
+			if (POIsNodes.contains(edge.getSource())) {
+				nodesLinkedToPOIs.add(edge.getTarget());
+			}
+			if (POIsNodes.contains(edge.getTarget())) {
+				nodesLinkedToPOIs.add(edge.getSource());
+			}
+		}
+
+		nodes.removeAll(nodesLinkedToPOIs);
+		//System.out.println(nodesLinkedToPOIs);
+		network.removeNodes(nodes);
 	}
 
 	private CyNetwork createNetwork() {
@@ -211,8 +239,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				String nodeAName = interaction.getInteractorA("uniprotkb");
 				String nodeBName = interaction.getInteractorB("uniprotkb");
 
-				final UniProtEntry refOrgProtA = interactorInOrganism.get(nodeAName);
-				final UniProtEntry refOrgProtB = interactorInOrganism.get(nodeBName);
+				final UniProtEntry refOrgProtA = getEntryByIdentifier(interactorInOrganism, nodeAName);
+				final UniProtEntry refOrgProtB = getEntryByIdentifier(interactorInOrganism, nodeBName);
 
 				CyNode nodeA = getOrCreateNode(network, refOrgProtA);
 				CyNode nodeB = getOrCreateNode(network, refOrgProtB);
@@ -241,14 +269,26 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					edgeAttr.set("Tax_id", String.valueOf(organism.getTaxId()));
 					edgeAttr.set("Interolog", Boolean.toString(!inRefOrg));
 				} else
-					System.out.println("node not found with : " + nodeAName + (nodeA == null ? "[null]" : "") + " -> " + nodeBName + (nodeB == null ? "[null]" : ""));
+					System.out.println("node not found with : " + nodeAName + (nodeA == null ? "[null]" : "") + " <-> " + nodeBName + (nodeB == null ? "[null]" : ""));
 			}
 		}
 	}
 
+	private UniProtEntry getEntryByIdentifier(Map<String, UniProtEntry> entries, String identifier) {
+		final UniProtEntry entry = entries.get(identifier);
+		if(entry == null)
+			return entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
+		return entry;
+	}
+
+	private CyNode getNode(UniProtEntry entry) {
+		return nodeNameMap.get(entry);
+	}
+
 	private CyNode getOrCreateNode(CyNetwork network, UniProtEntry entry) {
-		if (entry != null && !nodeNameMap.containsKey(entry)) {
-			CyNode node = network.addNode();
+		CyNode node = getNode(entry);
+		if (node == null) {
+			node = network.addNode();
 			nodeNameMap.put(entry, node);
 
 			final GeneOntologyTermSet geneOntologyTerms = entry.getGeneOntologyTerms();
@@ -270,40 +310,24 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			nodeAttr.set("Tax_id", String.valueOf(entry.getOrganism().getTaxId()));
 			nodeAttr.set("Reviewed", String.valueOf(entry.isReviewed()));
 			nodeAttr.set("Cellular_components_hidden",
-					JSONUtils.jsonListToStringList(
-							cellularComponent.toArray(
-									new JSONable[cellularComponent.size()]
-							)
-					)
+					JSONUtils.jsonListToStringList(cellularComponent)
 			);
 			nodeAttr.set("Cellular_components", cellularComponent.asStringList());
 			nodeAttr.set("Biological_processes_hidden",
-					JSONUtils.jsonListToStringList(
-							biologicalProcess.toArray(
-									new JSONable[biologicalProcess.size()]
-							)
-					)
+					JSONUtils.jsonListToStringList(biologicalProcess)
 			);
 			nodeAttr.set("Biological_processes", biologicalProcess.asStringList());
 			nodeAttr.set("Molecular_functions_hidden",
-					JSONUtils.jsonListToStringList(
-							molecularFunction.toArray(
-									new JSONable[molecularFunction.size()]
-							)
-					)
+					JSONUtils.jsonListToStringList(molecularFunction)
 			);
 			nodeAttr.set("Molecular_functions", molecularFunction.asStringList());
 			nodeAttr.set("Orthologs",
-					JSONUtils.jsonListToStringList(
-							entry.getOrthologs().toArray(
-									new JSONable[entry.getOrthologs().size()]
-							)
-					)
+					JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
 			);
 			nodeAttr.set("Queried", String.valueOf(proteinOfInterestPool.contains(entry)));
-			return node;
-		} else
-			return nodeNameMap.get(entry);
+		}
+
+		return node;
 	}
 
 	private CyNetworkView applyView(CyNetwork network) {

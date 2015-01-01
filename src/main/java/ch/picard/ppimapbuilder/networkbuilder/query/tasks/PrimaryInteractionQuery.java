@@ -6,10 +6,10 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClien
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntryCollection;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
+import ch.picard.ppimapbuilder.util.AbstractTaskProgressMonitor;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.Interactor;
@@ -28,7 +28,7 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 	private final Organism referenceOrganism;
 	private final Organism organism;
 	private final boolean inReferenceOrgansim;
-	private final UniProtEntrySet proteinOfInterestPool;
+	private final Set<UniProtEntry> proteinOfInterestPool;
 	private final UniProtEntrySet interactorPool;
 
 	private final ThreadedPsicquicClient psicquicClient;
@@ -36,11 +36,10 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 	private final UniProtEntryClient uniProtClient;
 
 	// Ouput
-	private final UniProtEntryCollection newInteractors;
 	private final Collection<BinaryInteraction> newInteractions;
 
 	public PrimaryInteractionQuery(
-			Organism referenceOrganism, Organism organism, UniProtEntrySet proteinOfInterestPool, UniProtEntrySet interactorPool,
+			Organism referenceOrganism, Organism organism, Set<UniProtEntry> proteinOfInterestPool, UniProtEntrySet interactorPool,
 			ThreadedClientManager threadedClientManager, Double minimum_orthology_score,
 			TaskMonitor taskMonitor
 	) {
@@ -59,13 +58,14 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
-		this.newInteractors = new UniProtEntryCollection(referenceOrganism);
 		this.newInteractions = new ArrayList<BinaryInteraction>();
 	}
 
 	public PrimaryInteractionQuery call() throws Exception {
+		taskMonitor.setProgress(0);
+
 		// Get list of protein of interest's orthologs in this organism
-		Set<String> proteinOfInterestInOrganism = proteinOfInterestPool.identifiersInOrganism(organism).keySet();
+		Set<String> proteinOfInterestInOrganism = interactorPool.identifiersInOrganism(proteinOfInterestPool, organism);
 
 		// Prepare MiQL queries
 		ArrayList<String> queries = new ArrayList<String>();
@@ -88,6 +88,12 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		newInteractions.addAll(InteractionUtils.filterConcurrently(
 				threadedClientManager.getExecutorServiceManager(),
 				interactions,
+				new AbstractTaskProgressMonitor() {
+					@Override
+					public void setProgress(double v) {
+						taskMonitor.setProgress(v);
+					}
+				},
 
 				new InteractionUtils.UniProtInteractionFilter(),
 				new InteractionUtils.OrganismInteractionFilter(organism),
@@ -99,55 +105,50 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 					public boolean isValidInteractor(Interactor interactor) {
 						final Protein interactorProtein = InteractionUtils.getProteinInteractor(interactor);
 
-						Protein proteinInReferenceOrganism = null;
+						Set<Protein> proteinsInReferenceOrganism = new HashSet<Protein>();
 						if (inReferenceOrgansim)
-							proteinInReferenceOrganism = interactorProtein;
+							proteinsInReferenceOrganism.add(interactorProtein);
 						else try {
-							proteinInReferenceOrganism = proteinOrthologClient.getOrtholog(interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
-						} catch (Exception ignored) {}
+							proteinsInReferenceOrganism.addAll(proteinOrthologClient.getOrtholog(interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE));
+						} catch (Exception ignored) {
+						}
 
-						if (proteinInReferenceOrganism != null) {
+						/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(interactorProtein.getUniProtId()))
+							System.out.println(interactorProtein.getUniProtId());*/
+
+						boolean ok = false;
+						for (Protein proteinInReferenceOrganism : proteinsInReferenceOrganism) {
 							String uniProtId = proteinInReferenceOrganism.getUniProtId();
 
+							/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(uniProtId))
+								System.out.println(uniProtId);*/
+
 							// Find in existing protein pools
-							UniProtEntry entry = proteinOfInterestPool.find(uniProtId);
-							if (entry == null) synchronized (interactorPool) {
-								entry = interactorPool.find(uniProtId);
-							}
-							if (entry == null) synchronized (newInteractors) {
-								entry = newInteractors.find(uniProtId);
-							}
-							if (entry != null) {
-								if (!inReferenceOrgansim)
-									entry.addOrtholog(interactorProtein);
-								return true;
+							UniProtEntry entry = null;
+							synchronized (interactorPool) {
+								entry = interactorPool.findByPrimaryAccession(uniProtId);
 							}
 
 							// Find on UniProt
-							try {
-								entry = uniProtClient.retrieveProteinData(uniProtId);
-							} catch (IOException ignored) {}
+							if (entry == null) {
+								try {
+									entry = uniProtClient.retrieveProteinData(uniProtId);
+
+									if (entry != null) synchronized (interactorPool) {
+										interactorPool.add(entry);
+									}
+								} catch (IOException ignored) {
+								}
+							}
 
 							if (entry != null) {
-								if (!inReferenceOrgansim)
-									entry.addOrtholog(interactorProtein);
-								synchronized (newInteractors) {
-									newInteractors.add(entry);
+								if (!inReferenceOrgansim) synchronized (interactorPool) {
+									interactorPool.addOrtholog(entry, Arrays.asList(interactorProtein));
 								}
-								return true;
+								ok = true;
 							}
 						}
-						return false;
-					}
-
-					@Override
-					public boolean isValidInteraction(BinaryInteraction interaction) {
-						synchronized (i[0]) {
-							double percent = Math.floor((++i[0] / size) * 100) / 100;
-							if (percent > i[1])
-								taskMonitor.setProgress(i[1] = percent);
-						}
-						return super.isValidInteraction(interaction);
+						return ok;
 					}
 				}
 		));
@@ -155,17 +156,13 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		threadedClientManager.unRegister(proteinOrthologClient);
 		threadedClientManager.unRegister(uniProtClient);
 
-		if(i[1] < 1.0) taskMonitor.setProgress(1.0);
+		if (i[1] < 1.0) taskMonitor.setProgress(1.0);
 
 		return this;
 	}
 
 	public Organism getOrganism() {
 		return organism;
-	}
-
-	public Collection<UniProtEntry> getNewInteractors() {
-		return newInteractors;
 	}
 
 	public Collection<BinaryInteraction> getNewInteractions() {

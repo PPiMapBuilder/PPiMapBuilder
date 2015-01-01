@@ -51,12 +51,12 @@ public class InParanoidClientTest {
 		F1NGJ7 = new Protein("F1NGJ7", gallus);
 
 		humanProts = new ArrayList<Protein>() {{
-			for (String id : Arrays.asList("Q9UBL6", "O68769", "P24409", "Q13867" ,"P30154", "Q14145", "P31944", "Q5NF37", "P04544",
+			for (String id : Arrays.asList("Q9UBL6", "O68769", "P24409", "Q13867", "P30154", "Q14145", "P31944", "Q5NF37", "P04544",
 					"A2AL36", "P61106", "Q77M19", "P62993", "Q02413", "Q15075", "P35293", "O43747", "Q92878", "P01040", "P05089", "Q2T9J0",
 					"P40337", "Q0IIN1", "P61254", "P60900", "Q6XUX3", "Q70EK8", "Q92692", "P30480", "Q81QG7", "P25311", "Q8CZX0", "Q8D092",
 					"A6NMY6", "Q14164", "P04040", "O14964", "P51610", "Q9NRH1", "Q9H0R8", "Q06124", "P20340", "Q15051", "Q08188", "Q8ZIG9",
 					"P15336", "P05067", "Q01968", "Q12933", "Q14315", "P48200")
-			) {
+					) {
 				add(new Protein(id, human));
 			}
 		}};
@@ -64,24 +64,26 @@ public class InParanoidClientTest {
 
 	@Test
 	public void testGetOrtholog() throws Exception {
-		Protein expected = P24270;
-		Protein actual = client.getOrtholog(P04040, mouse, MINIMUM_ORTHOLOGY_SCORE);
+		List<? extends Protein> expected, actual;
+
+		expected = Arrays.asList(P24270);
+		actual = client.getOrtholog(P04040, mouse, MINIMUM_ORTHOLOGY_SCORE);
 		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
 	public void testGetOrthologsMultiOrganisms() throws Exception {
-		Map<Organism, Protein> expected = new HashMap<Organism, Protein>() {{
-			put(mouse, P24270);
-			put(gallus, F1NGJ7);
+		Map<Organism, List<Protein>> expected = new HashMap<Organism, List<Protein>>() {{
+			put(mouse, Arrays.asList(P24270));
+			put(gallus, Arrays.asList(F1NGJ7));
 		}};
-		Map<Organism, OrthologScoredProtein> actual = client.getOrthologsMultiOrganism(P04040, Arrays.asList(mouse, gallus), MINIMUM_ORTHOLOGY_SCORE);
+		Map<Organism, List<OrthologScoredProtein>> actual = client.getOrthologsMultiOrganism(P04040, Arrays.asList(mouse, gallus), MINIMUM_ORTHOLOGY_SCORE);
 		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
 	public void testGetOrthologsMultiOrganismMultiProtein2Thread() throws Exception {
-		Map<Protein, Map<Organism, OrthologScoredProtein>> actual = client.getOrthologsMultiOrganismMultiProtein(humanProts, Arrays.asList(mouse, gallus), MINIMUM_ORTHOLOGY_SCORE);
+		Map<Protein, Map<Organism, List<OrthologScoredProtein>>> actual = client.getOrthologsMultiOrganismMultiProtein(humanProts, Arrays.asList(mouse, gallus), MINIMUM_ORTHOLOGY_SCORE);
 		System.out.println(actual);
 	}
 

@@ -3,6 +3,7 @@ package ch.picard.ppimapbuilder.networkbuilder.query;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.*;
@@ -23,7 +24,7 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 	private final List<Organism> allOrganisms;
 
 	// Data output
-	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
+	private final Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
 
@@ -39,7 +40,7 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 	public PMBInteractionQueryTaskFactory(
 			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			UniProtEntrySet interactorPool,
-			UniProtEntrySet proteinOfInterestPool,
+			Set<UniProtEntry> proteinOfInterestPool,
 			NetworkQueryParameters networkQueryParameters
 	) {
 		this.interactionsByOrg = interactionsByOrg;
@@ -60,7 +61,7 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 
 		// Store thread pool used by web client and this task
 		this.threadedClientManager = new ThreadedClientManager(
-                new ExecutorServiceManager((Math.min(2, Runtime.getRuntime().availableProcessors()) + 1)),
+                new ExecutorServiceManager((Math.min(2, Runtime.getRuntime().availableProcessors()) + 1)*2),
 				selectedDatabases
 		);
 

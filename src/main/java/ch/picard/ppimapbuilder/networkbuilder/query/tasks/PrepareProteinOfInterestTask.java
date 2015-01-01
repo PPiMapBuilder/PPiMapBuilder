@@ -6,12 +6,16 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
+import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import org.cytoscape.work.TaskMonitor;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 
@@ -21,7 +25,7 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 	private final Organism referenceOrganism;
 
 	// Output
-	private final UniProtEntrySet proteinOfInterestPool; // not the same as user input
+	private final Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
 	private final UniProtEntrySet interactorPool;
 
 	private final UniProtEntryClient uniProtEntryClient;
@@ -30,7 +34,7 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 	public PrepareProteinOfInterestTask(
 			ThreadedClientManager threadedClientManager,
 			Double minimum_orthology_score, List<String> inputProteinIDs, Organism referenceOrganism,
-			UniProtEntrySet proteinOfInterestPool, UniProtEntrySet interactorPool
+			Set<UniProtEntry> proteinOfInterestPool, UniProtEntrySet interactorPool
 	) {
 		super(threadedClientManager);
 
@@ -53,22 +57,21 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 		taskMonitor.setStatusMessage("Fetch UniProt data for input proteins...");
 
 		HashMap<String, UniProtEntry> uniProtEntries = uniProtEntryClient.retrieveProteinsData(inputProteinIDs);
-		for (int i = 0, inputProteinIDsSize = inputProteinIDs.size(); i < inputProteinIDsSize; i++) {
-			taskMonitor.setProgress(((double)i)/((double)inputProteinIDsSize));
-
-			String proteinID = inputProteinIDs.get(i);
+		for (double i = 0, size = inputProteinIDs.size(); i < size; taskMonitor.setProgress(++i / size)) {
+			String proteinID = inputProteinIDs.get((int) i);
 			UniProtEntry entry = uniProtEntries.get(proteinID);
 
 			if (entry != null) {
 				entry = ProteinUtils.correctEntryOrganism(entry, referenceOrganism);
 
 				if (!entry.getOrganism().equals(referenceOrganism)) {
-					Protein ortholog = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
-                    if(ortholog != null) {
-	                    entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
-	                    entry.addOrtholog(ortholog);
-                    }
-                    else entry = null;
+					List<? extends Protein> orthologs = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
+					if (!orthologs.isEmpty()) {
+						for (Protein ortholog : orthologs) {
+							entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
+							interactorPool.addOrtholog(entry, Arrays.asList(ortholog));
+						}
+					} else entry = null;
 				}
 			}
 
@@ -78,11 +81,11 @@ public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 				continue;
 			}
 
-			// Save the protein into the interactor pool
-			if(proteinOfInterestPool.add(entry)) {
-				interactorPool.add(entry);
-			}
+			// Save the protein into the interactor pool and protein of interest pool
+			proteinOfInterestPool.add(entry);
 		}
+
+		interactorPool.addAll(proteinOfInterestPool);
 
 		threadedClientManager.unRegister(proteinOrthologClient);
 		threadedClientManager.unRegister(uniProtEntryClient);
