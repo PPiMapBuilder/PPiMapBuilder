@@ -5,7 +5,7 @@
 	<!-- Project identifiers -->
 	<groupId>ch.picard</groupId>
 	<artifactId>PPiMapBuilder</artifactId>
-	<version>0.10-SNAPSHOT</version>
+	<version>0.10</version>
 	<name>PPiMapBuilder</name>
 	<description>Cytoscape 3 app for protein-protein interaction network generation and
 		prediction as described by Echeverría et al. (2011).</description>
