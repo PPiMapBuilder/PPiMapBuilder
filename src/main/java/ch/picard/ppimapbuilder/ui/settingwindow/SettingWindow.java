@@ -6,10 +6,18 @@ import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.panel.*;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagator;
+import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagatorListener;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabPanel;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.TaskManager;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,11 +26,15 @@ import java.util.ArrayList;
 /**
  * PPiMapBuilder setting window
  */
-public class SettingWindow extends JDialog {
+public class SettingWindow extends JDialog implements FocusPropagatorListener {
 
 	private static final long serialVersionUID = 1L;
 
-	private final TabPanel tabPanel;
+	private final JPanel mainPanel;
+	private final JPanel bottomPanel;
+
+
+	private final TabPanel settingTabPanel;
 	private final DatabaseSettingPanel databaseSettingPanel;
 	private final OrganismSettingPanel organismSettingPanel;
 	private final OrthologySettingPanel orthologySettingPanel;
@@ -33,38 +45,45 @@ public class SettingWindow extends JDialog {
 
 	private PMBSettingSaveTaskFactory saveSettingFactory;
 	private TaskManager taskManager;
-	private final OpenBrowser openBrowser;
 
 	private boolean modificationMade;
+
+	private final Border focusBorder = new CompoundBorder(
+			new MatteBorder(5, 5, 5, 5, PMBUIStyle.focusActiveTabColor),
+			PMBUIStyle.fancyPanelBorder
+	);
+	private final Border blurBorder = new CompoundBorder(
+			new MatteBorder(5, 5, 5, 5, PMBUIStyle.blurActiveTabColor),
+			PMBUIStyle.fancyPanelBorder
+	);
 
 	public SettingWindow(OpenBrowser openBrowser) {
 		setTitle("PPiMapBuilder Settings");
 		setLayout(new BorderLayout());
 
-		this.openBrowser = openBrowser;
+		final FocusPropagator focusPropagator = new FocusPropagator(this);
+		addWindowFocusListener(focusPropagator);
 
 		{// Main panel
-			JPanel main = new JPanel();
-			main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+			mainPanel = new JPanel();
+			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
-			main.add(tabPanel = new TabPanel(
+			mainPanel.add(settingTabPanel = new TabPanel<TabContent>(
+					focusPropagator,
 					databaseSettingPanel = new DatabaseSettingPanel(this),
 					organismSettingPanel = new OrganismSettingPanel(this),
 					orthologySettingPanel = new OrthologySettingPanel(openBrowser, this),
 					goSlimSettingPanel = new GOSlimSettingPanel(this)
 			));
-			add(main, BorderLayout.CENTER);
+			settingTabPanel.getViewportPanel().setBorder(focusBorder);
+			add(mainPanel, BorderLayout.CENTER);
 		}
 
 		{// Bottom panel
-			JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
 
-			bottom.add(close = new JButton("Close"));
-			Dimension size = new Dimension(
-					(int) close.getPreferredSize().getWidth() + 50,
-					(int) close.getPreferredSize().getHeight()
-			);
-			close.setPreferredSize(size);
+			bottomPanel.add(close = new JButton("Close"));
 			close.addActionListener(new ActionListener() {
 
 				@Override
@@ -74,8 +93,7 @@ public class SettingWindow extends JDialog {
 
 			});
 
-			bottom.add(saveSettings = new JButton("Save"));
-			saveSettings.setPreferredSize(size);
+			bottomPanel.add(saveSettings = new JButton("Save"));
 			saveSettings.addActionListener(new ActionListener() {
 
 				public void actionPerformed(ActionEvent e) {
@@ -84,14 +102,14 @@ public class SettingWindow extends JDialog {
 
 			});
 
-			add(bottom, BorderLayout.SOUTH);
+			add(bottomPanel, BorderLayout.SOUTH);
 		}
 
 		//getRootPane().setDefaultButton(saveSettings);
 
 		setModificationMade(false);
 
-		Dimension d = new Dimension(550, 420);
+		Dimension d = new Dimension(552, 420);
 		setBounds(new Rectangle(d));
 		setMinimumSize(d);
 		setResizable(true);
@@ -150,7 +168,7 @@ public class SettingWindow extends JDialog {
 	@Override
 	public void setVisible(boolean opening) {
 		if (opening) {
-			((TabPanel.TabContentPanel) tabPanel.getSelectedComponent()).resetUI();
+			settingTabPanel.getActivePanel().getComponent().validate();
 		} else {
 			if (!silent) {
 				if (modificationMade) {
@@ -174,9 +192,22 @@ public class SettingWindow extends JDialog {
 
 				GOSlimRepository.resetToSettings();
 				//this.dispose();
-			} else silent = false;
+			}
+			silent = false;
 		}
 		setModal(opening);
 		super.setVisible(opening);
+	}
+
+	@Override
+	public void gainedFocus() {
+		settingTabPanel.getViewportPanel().setBorder(focusBorder);
+		bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
+	}
+
+	@Override
+	public void lostFocus() {
+		settingTabPanel.getViewportPanel().setBorder(blurBorder);
+		bottomPanel.setBackground(PMBUIStyle.blurActiveTabColor);
 	}
 }

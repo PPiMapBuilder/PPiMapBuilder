@@ -5,9 +5,11 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.TabableView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
+public class DatabaseSettingPanel extends JPanel implements TabContent {
 
 	private static final long serialVersionUID = 1L;
 	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
@@ -27,7 +29,8 @@ public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
 	private boolean beenUpdated;
 
 	public DatabaseSettingPanel(final SettingWindow settingWindow) {
-		super(new BorderLayout(), "PSICQUIC Databases");
+		super(new BorderLayout());
+		setName("PSICQUIC Databases");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 		this.databases = new LinkedHashMap<PsicquicService, JCheckBox>();
@@ -74,48 +77,42 @@ public class DatabaseSettingPanel extends TabPanel.TabContentPanel {
 	public void setVisible(boolean opening) {
 		super.setVisible(opening);
 		if (opening) {
-			resetUI();
+			validate();
 		}
 	}
 
 	/**
-	 * Update the database list asynchronously
+	 * Update the database list
 	 */
 	@Override
-	public synchronized void resetUI() {
+	public void validate() {
 		if (!beenUpdated) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					PsicquicRegistry reg = PsicquicRegistry.getInstance();
+			PsicquicRegistry reg = PsicquicRegistry.getInstance();
 
-					try {
-						// Creation of the database list
-						databases.clear();
-						panSourceDatabases.removeAll();
-						try {
-							Thread.sleep(2000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+			try {
+				// Creation of the database list
+				databases.clear();
+				panSourceDatabases.removeAll();
 
-						for (PsicquicService db : reg.getServices()) {
-							JCheckBox j = new JCheckBox(db.getName(), true);
-							j.setEnabled(true);
-							j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
-							j.addActionListener(checkBoxClicked);
-							databases.put(db, j);
+				for (PsicquicService db : reg.getServices()) {
+					JCheckBox j = new JCheckBox(db.getName(), true);
+					j.setEnabled(true);
+					j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
+					j.addActionListener(checkBoxClicked);
+					databases.put(db, j);
 
-							panSourceDatabases.add(j);
-						}
-						beenUpdated = true;
-					} catch (IOException e) {
-						JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
-					}
-
-					repaint();
+					panSourceDatabases.add(j);
 				}
-			});
+				beenUpdated = true;
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
+			}
 		}
+		super.validate();
+	}
+
+	@Override
+	public JComponent getComponent() {
+		return this;
 	}
 }

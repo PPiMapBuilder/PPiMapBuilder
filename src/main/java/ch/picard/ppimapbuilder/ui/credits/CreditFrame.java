@@ -4,9 +4,9 @@ import ch.picard.ppimapbuilder.PMBActivator;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.ui.util.EscapeCloseListener;
-import ch.picard.ppimapbuilder.ui.util.JHyperlinkLabel;
-import ch.picard.ppimapbuilder.ui.util.LogoIcon;
-import ch.picard.ppimapbuilder.ui.util.PicardLabIcon;
+import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
+import ch.picard.ppimapbuilder.ui.util.label.LogoIcon;
+import ch.picard.ppimapbuilder.ui.util.label.PicardLabIcon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +16,6 @@ import java.net.URISyntaxException;
 public class CreditFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L; // Instance of the ppimapbuilder menu to prevent several instances 
-
-	private EscapeCloseListener escapeListener;
 
 	/**
 	 * Default constructor which is private to prevent several instances
@@ -127,7 +125,6 @@ public class CreditFrame extends JFrame {
 
 		// Close window on escape key
 		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		escapeListener = new EscapeCloseListener(this);
-		manager.addKeyEventDispatcher(escapeListener);
+		manager.addKeyEventDispatcher(new EscapeCloseListener(this));
 	}
 }

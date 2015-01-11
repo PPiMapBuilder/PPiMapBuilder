@@ -4,9 +4,10 @@ import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
-import ch.picard.ppimapbuilder.ui.util.JSearchTextField;
-import ch.picard.ppimapbuilder.ui.util.ListDeletableItem;
+import ch.picard.ppimapbuilder.ui.util.field.JSearchTextField;
+import ch.picard.ppimapbuilder.ui.util.field.ListDeletableItem;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,7 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class OrganismSettingPanel extends TabPanel.TabContentPanel {
+public class OrganismSettingPanel extends JPanel implements TabContent {
 
 	private final ListDeletableItem panSourceOrganism;
 	private final JPanel panSearchOrganism;
@@ -23,7 +24,8 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 	private final SettingWindow owner;
 
 	public OrganismSettingPanel(final SettingWindow owner) {
-		super(new BorderLayout(), "Organisms");
+		super(new BorderLayout());
+		setName("Organisms");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -57,7 +59,7 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 				public void actionPerformed(ActionEvent e) {
 					UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
 					owner.newModificationMade();
-					resetUI();
+					validate();
 				}
 
 			});
@@ -68,44 +70,45 @@ public class OrganismSettingPanel extends TabPanel.TabContentPanel {
 	}
 
 	@Override
-	public synchronized void resetUI() {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				panSourceOrganism.removeAllRow();
-				for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-					panSourceOrganism.addRow(
-						new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
+	public void validate() {
+		panSourceOrganism.removeAllRow();
+		for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+			panSourceOrganism.addRow(
+					new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
 							.addDeleteButton(new ActionListener() {
 
 								@Override
 								public void actionPerformed(ActionEvent e) {
 									//System.out.println(org.getScientificName()+" clicked");
 									UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-									resetUI();
+									validate();
 									owner.newModificationMade();
 								}
 							})
-					);
-				}
+			);
+		}
 
-				ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
-				for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
-					data.remove(o.getScientificName());
-				}
-				searchBox.setSuggestData(data);
-				searchBox.setText("");
+		ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
+		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+			data.remove(o.getScientificName());
+		}
+		searchBox.setSuggestData(data);
+		searchBox.setText("");
 
-				panSourceOrganism.repaint();
-			}
-		});
+		panSourceOrganism.repaint();
+		super.validate();
 	}
 
 	@Override
 	public void setVisible(boolean opening) {
 		super.setVisible(opening);
-		if(opening) {
-			resetUI();
+		if (opening) {
+			validate();
 		}
+	}
+
+	@Override
+	public JComponent getComponent() {
+		return this;
 	}
 }

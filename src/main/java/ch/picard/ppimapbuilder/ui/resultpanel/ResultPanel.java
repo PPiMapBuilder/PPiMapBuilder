@@ -10,7 +10,7 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.ui.util.JHyperlinkLabel;
+import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

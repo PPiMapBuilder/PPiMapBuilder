@@ -6,7 +6,8 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrth
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader.InParanoidCacheLoaderTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
-import ch.picard.ppimapbuilder.ui.util.InParanoidLogo;
+import ch.picard.ppimapbuilder.ui.util.label.InParanoidLogo;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 import ch.picard.ppimapbuilder.util.FileUtil;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
@@ -19,7 +20,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.List;
 
-public class OrthologySettingPanel extends TabPanel.TabContentPanel {
+public class OrthologySettingPanel extends JPanel implements TabContent {
 	private final JLabel lblCacheSize;
 	private final JLabel lblCachePercent;
 
@@ -31,7 +32,8 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 	private final InParanoidCacheLoaderTaskFactory inParanoidCacheLoaderTaskFactory;
 
 	public OrthologySettingPanel(OpenBrowser openBrowser, SettingWindow settingWindow) {
-		super(new MigLayout("ins 5", "[grow, right]10[grow, left]", ""), "Orthology");
+		super(new MigLayout("ins 5", "[grow, right]10[grow, left]", ""));
+		setName("Orthology");
 		this.settingWindow = settingWindow;
 		this.cache = PMBProteinOrthologCacheClient.getInstance();
 
@@ -59,7 +61,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					cache.empty();
-					resetUI();
+					validate();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -94,7 +96,7 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 													JOptionPane.ERROR_MESSAGE
 											);
 										}
-										resetUI();
+										validate();
 										settingWindow.setVisible(true);
 									}
 								});
@@ -111,35 +113,37 @@ public class OrthologySettingPanel extends TabPanel.TabContentPanel {
 	public void setVisible(boolean opening) {
 		super.setVisible(opening);
 		if (opening)
-			resetUI();
+			validate();
 	}
 
 	@Override
-	public synchronized void resetUI() {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				String orthologCacheSize = FileUtil.getHumanReadableFileSize(
-						PMBSettings.getInstance().getOrthologCacheFolder()
-				);
-				lblCacheSize.setText(orthologCacheSize);
+	public void validate() {
+		String orthologCacheSize = FileUtil.getHumanReadableFileSize(
+				PMBSettings.getInstance().getOrthologCacheFolder()
+		);
+		lblCacheSize.setText(orthologCacheSize);
 
-				String orthologPercentUserOrg;
-				try {
-					double percentLoadedFromOrganisms = PMBProteinOrthologCacheClient.getInstance().getPercentLoadedFromOrganisms(
-							UserOrganismRepository.getInstance().getOrganisms()
-					);
-					orthologPercentUserOrg =
-							(percentLoadedFromOrganisms < 10.0 ?
-									String.format("%,.2f", percentLoadedFromOrganisms) :
-									String.valueOf((int) percentLoadedFromOrganisms))
-									+ " %";
-				} catch (IOException e) {
-					orthologPercentUserOrg = "-";
-				}
-				lblCachePercent.setText(orthologPercentUserOrg);
-				repaint();
-			}
-		});
+		String orthologPercentUserOrg;
+		try {
+			double percentLoadedFromOrganisms = PMBProteinOrthologCacheClient.getInstance().getPercentLoadedFromOrganisms(
+					UserOrganismRepository.getInstance().getOrganisms()
+			);
+			orthologPercentUserOrg =
+					(percentLoadedFromOrganisms < 10.0 ?
+							String.format("%,.2f", percentLoadedFromOrganisms) :
+							String.valueOf((int) percentLoadedFromOrganisms))
+							+ " %";
+		} catch (IOException e) {
+			orthologPercentUserOrg = "-";
+		}
+		lblCachePercent.setText(orthologPercentUserOrg);
+
+		super.validate();
+		repaint();
+	}
+
+	@Override
+	public JComponent getComponent() {
+		return this;
 	}
 }

@@ -16,12 +16,10 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.events.RowsSetListener;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.NetworkViewTaskFactory;
-import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
@@ -40,7 +38,9 @@ import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +69,7 @@ public class PMBActivator extends AbstractCyActivator {
 	public void start(BundleContext bc) {
 		context = bc;
 		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
-		
+
 		// QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
 		SettingWindow settingWindow = new SettingWindow(openBrowser);
