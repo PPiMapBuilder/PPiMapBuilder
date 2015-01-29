@@ -7,24 +7,21 @@ import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFact
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.InteractomeNetworkQueryPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.NetworkQueryPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.ProteinNetworkQueryPanel;
+import ch.picard.ppimapbuilder.ui.util.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
-import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagatorListener;
-import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabPanel;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.work.TaskManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.List;
 
 /**
  * PPiMapBuilder interaction query window
  */
-public class QueryWindow extends JFrame implements NetworkQueryParameters, FocusPropagatorListener {
+public class QueryWindow extends JFrame implements NetworkQueryParameters, FocusListener {
 
 	/**
 	 * Instance of the PPiMapBuilder frame to prevent several instances
@@ -51,17 +48,28 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters, Focus
 
 		// Focus / Blur listener for component color change
 		FocusPropagator focusPropagator = new FocusPropagator(this);
+		focusPropagator.add(this);
 		this.addWindowFocusListener(focusPropagator);
 
 		{ // Init components
 			this.setLayout(new BorderLayout());
 
+			// Protein network panel
+			ProteinNetworkQueryPanel proteinNetworkQueryPanel =
+					new ProteinNetworkQueryPanel();
+			focusPropagator.add(proteinNetworkQueryPanel);
+
+			// Interactome network panel
+			InteractomeNetworkQueryPanel interactomeNetworkQueryPanel =
+					new InteractomeNetworkQueryPanel();
+			focusPropagator.add(interactomeNetworkQueryPanel);
+
 			// Tab panel with protein and interactome network query panels
 			networkQueryPanels = new TabPanel<NetworkQueryPanel>(
-					focusPropagator,
-					new ProteinNetworkQueryPanel(focusPropagator),
-					new InteractomeNetworkQueryPanel(focusPropagator)
+					proteinNetworkQueryPanel,
+					interactomeNetworkQueryPanel
 			);
+			focusPropagator.add(networkQueryPanels);
 			this.add(networkQueryPanels, BorderLayout.CENTER);
 
 			// Bottom panel
@@ -147,9 +155,9 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters, Focus
 	}
 
 	@Override
-	public void setVisible(boolean b) {
-		super.setVisible(b);
-		if (b) {
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
 			submitButton.grabFocus();
 			getRootPane().setDefaultButton(submitButton);
 			repaint();
@@ -157,12 +165,12 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters, Focus
 	}
 
 	@Override
-	public void gainedFocus() {
+	public void focusGained(FocusEvent e) {
 		bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
 	}
 
 	@Override
-	public void lostFocus() {
+	public void focusLost(FocusEvent e) {
 		bottomPanel.setBackground(PMBUIStyle.blurActiveTabColor);
 	}
 }

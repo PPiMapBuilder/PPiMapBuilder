@@ -115,4 +115,9 @@ public class DatabaseSettingPanel extends JPanel implements TabContent {
 	public JComponent getComponent() {
 		return this;
 	}
+
+	@Override
+	public void setActive(boolean active) {
+
+	}
 }

@@ -5,10 +5,12 @@ import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
-import ch.picard.ppimapbuilder.ui.settingwindow.panel.*;
+import ch.picard.ppimapbuilder.ui.settingwindow.panel.DatabaseSettingPanel;
+import ch.picard.ppimapbuilder.ui.settingwindow.panel.GOSlimSettingPanel;
+import ch.picard.ppimapbuilder.ui.settingwindow.panel.OrganismSettingPanel;
+import ch.picard.ppimapbuilder.ui.settingwindow.panel.OrthologySettingPanel;
+import ch.picard.ppimapbuilder.ui.util.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
-import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagator;
-import ch.picard.ppimapbuilder.ui.util.focus.FocusPropagatorListener;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabPanel;
 import org.cytoscape.util.swing.OpenBrowser;
@@ -21,12 +23,14 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
 
 /**
  * PPiMapBuilder setting window
  */
-public class SettingWindow extends JDialog implements FocusPropagatorListener {
+public class SettingWindow extends JDialog implements FocusListener {
 
 	private static final long serialVersionUID = 1L;
 
@@ -63,18 +67,19 @@ public class SettingWindow extends JDialog implements FocusPropagatorListener {
 
 		final FocusPropagator focusPropagator = new FocusPropagator(this);
 		addWindowFocusListener(focusPropagator);
+		focusPropagator.add(this);
 
 		{// Main panel
 			mainPanel = new JPanel();
 			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
 			mainPanel.add(settingTabPanel = new TabPanel<TabContent>(
-					focusPropagator,
 					databaseSettingPanel = new DatabaseSettingPanel(this),
 					organismSettingPanel = new OrganismSettingPanel(this),
 					orthologySettingPanel = new OrthologySettingPanel(openBrowser, this),
 					goSlimSettingPanel = new GOSlimSettingPanel(this)
 			));
+			focusPropagator.add(settingTabPanel);
 			settingTabPanel.getViewportPanel().setBorder(focusBorder);
 			add(mainPanel, BorderLayout.CENTER);
 		}
@@ -200,14 +205,16 @@ public class SettingWindow extends JDialog implements FocusPropagatorListener {
 	}
 
 	@Override
-	public void gainedFocus() {
+	public void focusGained(FocusEvent e) {
 		settingTabPanel.getViewportPanel().setBorder(focusBorder);
 		bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
+		//settingTabPanel.repaint();
 	}
 
 	@Override
-	public void lostFocus() {
+	public void focusLost(FocusEvent e) {
 		settingTabPanel.getViewportPanel().setBorder(blurBorder);
 		bottomPanel.setBackground(PMBUIStyle.blurActiveTabColor);
+		//settingTabPanel.repaint();
 	}
 }

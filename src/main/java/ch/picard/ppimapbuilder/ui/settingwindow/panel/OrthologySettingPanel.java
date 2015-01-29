@@ -61,7 +61,7 @@ public class OrthologySettingPanel extends JPanel implements TabContent {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					cache.empty();
-					validate();
+					setActive(true);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -96,7 +96,7 @@ public class OrthologySettingPanel extends JPanel implements TabContent {
 													JOptionPane.ERROR_MESSAGE
 											);
 										}
-										validate();
+										setActive(true);
 										settingWindow.setVisible(true);
 									}
 								});
@@ -113,37 +113,39 @@ public class OrthologySettingPanel extends JPanel implements TabContent {
 	public void setVisible(boolean opening) {
 		super.setVisible(opening);
 		if (opening)
-			validate();
-	}
-
-	@Override
-	public void validate() {
-		String orthologCacheSize = FileUtil.getHumanReadableFileSize(
-				PMBSettings.getInstance().getOrthologCacheFolder()
-		);
-		lblCacheSize.setText(orthologCacheSize);
-
-		String orthologPercentUserOrg;
-		try {
-			double percentLoadedFromOrganisms = PMBProteinOrthologCacheClient.getInstance().getPercentLoadedFromOrganisms(
-					UserOrganismRepository.getInstance().getOrganisms()
-			);
-			orthologPercentUserOrg =
-					(percentLoadedFromOrganisms < 10.0 ?
-							String.format("%,.2f", percentLoadedFromOrganisms) :
-							String.valueOf((int) percentLoadedFromOrganisms))
-							+ " %";
-		} catch (IOException e) {
-			orthologPercentUserOrg = "-";
-		}
-		lblCachePercent.setText(orthologPercentUserOrg);
-
-		super.validate();
-		repaint();
+			setActive(true);
 	}
 
 	@Override
 	public JComponent getComponent() {
 		return this;
+	}
+
+	@Override
+	public void setActive(boolean active) {
+		if (active) {
+			String orthologCacheSize = FileUtil.getHumanReadableFileSize(
+					PMBSettings.getInstance().getOrthologCacheFolder()
+			);
+			lblCacheSize.setText(orthologCacheSize);
+
+			String orthologPercentUserOrg;
+			try {
+				double percentLoadedFromOrganisms = PMBProteinOrthologCacheClient.getInstance().getPercentLoadedFromOrganisms(
+						UserOrganismRepository.getInstance().getOrganisms()
+				);
+				orthologPercentUserOrg =
+						(percentLoadedFromOrganisms < 10.0 ?
+								String.format("%,.2f", percentLoadedFromOrganisms) :
+								String.valueOf((int) percentLoadedFromOrganisms))
+								+ " %";
+			} catch (IOException e) {
+				orthologPercentUserOrg = "-";
+			}
+			lblCachePercent.setText(orthologPercentUserOrg);
+
+			validate();
+			repaint();
+		}
 	}
 }

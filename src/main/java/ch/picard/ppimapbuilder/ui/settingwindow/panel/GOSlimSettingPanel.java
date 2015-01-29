@@ -85,60 +85,22 @@ public class GOSlimSettingPanel extends JPanel implements TabContent {
 		}
 	}
 
-	@Override
-	public void validate() {
-		switchPanel(null);
-		goSlimListPanel.removeAllRow();
-
-		List<GOSlim> goSlims = GOSlimRepository.getInstance().getGOSlims();
-		Collections.sort(goSlims, new Comparator<GOSlim>() {
-			@Override
-			public int compare(GOSlim o1, GOSlim o2) {
-				return o1.getName().equals(GOSlim.DEFAULT) ?
-						-1 :
-						o2.getName().equals(GOSlim.DEFAULT) ?
-								1 :
-								0;
-			}
-		});
-
-		for (final GOSlim set : goSlims) {
-			ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
-					.addButton(newViewButton(set.getName()));
-
-			if (!set.getName().equals(GOSlim.DEFAULT)) {
-				listRow.addDeleteButton(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						GOSlimRepository.getInstance().remove(set.getName());
-						settingWindow.newModificationMade();
-						validate();
-					}
-				});
-			}
-
-			goSlimListPanel.addRow(listRow);
-		}
-		super.validate();
-		repaint();
-	}
-
-	private JButton newViewButton(final String goSlimName) {
-		ImageIcon icon = new ImageIcon(getClass().getResource("view.png"));
-		JButton button = new JButton(icon);
-		Dimension iconDim = new Dimension(icon.getIconWidth() + 2, icon.getIconHeight() + 2);
-		button.setMinimumSize(iconDim);
-		button.setMaximumSize(iconDim);
-		button.setPreferredSize(iconDim);
-		button.setContentAreaFilled(false);
-		button.setBorder(BorderFactory.createEmptyBorder());
-		button.addActionListener(new ActionListener() {
+	private JButton createViewButton(final String goSlimName) {
+		ImageIcon viewIcon = new ImageIcon(getClass().getResource("view.png"));
+		JButton viewButton = new JButton(viewIcon);
+		Dimension iconDim = new Dimension(viewIcon.getIconWidth() + 2, viewIcon.getIconHeight() + 2);
+		viewButton.setMinimumSize(iconDim);
+		viewButton.setMaximumSize(iconDim);
+		viewButton.setPreferredSize(iconDim);
+		viewButton.setContentAreaFilled(false);
+		viewButton.setBorder(BorderFactory.createEmptyBorder());
+		viewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				switchPanel(new GOSlimVisualizer(goSlimName));
 			}
 		});
-		return button;
+		return viewButton;
 	}
 
 	@Override
@@ -154,12 +116,54 @@ public class GOSlimSettingPanel extends JPanel implements TabContent {
 			add(listPanel, BorderLayout.CENTER);
 		else
 			add(panel, BorderLayout.CENTER);
-		getParent().repaint();
+
+		validate();
+		repaint();
 	}
 
 	@Override
 	public JComponent getComponent() {
 		return this;
+	}
+
+	@Override
+	public void setActive(boolean active) {
+		if (active) {
+			switchPanel(null);
+			goSlimListPanel.removeAllRow();
+
+			List<GOSlim> goSlims = GOSlimRepository.getInstance().getGOSlims();
+			Collections.sort(goSlims, new Comparator<GOSlim>() {
+				@Override
+				public int compare(GOSlim o1, GOSlim o2) {
+					return o1.getName().equals(GOSlim.DEFAULT) ?
+							-1 :
+							o2.getName().equals(GOSlim.DEFAULT) ?
+									1 :
+									0;
+				}
+			});
+
+			for (final GOSlim set : goSlims) {
+				ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
+						.addButton(createViewButton(set.getName()));
+
+				if (!set.getName().equals(GOSlim.DEFAULT)) {
+					listRow.addDeleteButton(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							GOSlimRepository.getInstance().remove(set.getName());
+							settingWindow.newModificationMade();
+							validate();
+						}
+					});
+				}
+
+				goSlimListPanel.addRow(listRow);
+			}
+			super.validate();
+			repaint();
+		}
 	}
 
 	private class GOSlimVisualizer extends JPanel {

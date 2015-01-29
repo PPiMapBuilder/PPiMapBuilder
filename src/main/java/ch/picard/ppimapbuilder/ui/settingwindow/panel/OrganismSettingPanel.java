@@ -70,36 +70,6 @@ public class OrganismSettingPanel extends JPanel implements TabContent {
 	}
 
 	@Override
-	public void validate() {
-		panSourceOrganism.removeAllRow();
-		for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-			panSourceOrganism.addRow(
-					new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
-							.addDeleteButton(new ActionListener() {
-
-								@Override
-								public void actionPerformed(ActionEvent e) {
-									//System.out.println(org.getScientificName()+" clicked");
-									UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-									validate();
-									owner.newModificationMade();
-								}
-							})
-			);
-		}
-
-		ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
-		for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
-			data.remove(o.getScientificName());
-		}
-		searchBox.setSuggestData(data);
-		searchBox.setText("");
-
-		panSourceOrganism.repaint();
-		super.validate();
-	}
-
-	@Override
 	public void setVisible(boolean opening) {
 		super.setVisible(opening);
 		if (opening) {
@@ -110,5 +80,38 @@ public class OrganismSettingPanel extends JPanel implements TabContent {
 	@Override
 	public JComponent getComponent() {
 		return this;
+	}
+
+	@Override
+	public void setActive(boolean active) {
+		if(active) {
+			for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
+				panSourceOrganism.addRow(
+						new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
+								.addDeleteButton(new ActionListener() {
+
+									@Override
+									public void actionPerformed(ActionEvent e) {
+										//System.out.println(org.getScientificName()+" clicked");
+										UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+										validate();
+										owner.newModificationMade();
+									}
+								})
+				);
+			}
+
+			ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
+			for (Organism o : UserOrganismRepository.getInstance().getOrganisms()) {
+				data.remove(o.getScientificName());
+			}
+			searchBox.setSuggestData(data);
+			searchBox.setText("");
+
+			validate();
+			repaint();
+		} else {
+			panSourceOrganism.removeAllRow();
+		}
 	}
 }
