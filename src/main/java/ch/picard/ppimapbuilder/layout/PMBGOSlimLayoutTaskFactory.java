@@ -17,16 +17,16 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 	public TaskIterator createTaskIterator(CyNetworkView view) {
 		//System.out.println("PMBGOSlimLayoutTaskFactory");
 		//System.out.println(view);
-		
+
 		CyNetwork network = view.getModel();
 		CyTable nodeTable = network.getDefaultNodeTable();
-		
+
 		if (nodeTable.getColumn("Go_slim") == null) {
 			nodeTable.createListColumn("Go_slim", String.class, false);
 		}
 
 		return new TaskIterator(
-			new PMBGOSlimQueryTask(network),
+			new PMBGOSlimQueryTask(network, view),
 			new PMBGOSlimLayoutTask(view, layoutManager)
 		);
 	}
