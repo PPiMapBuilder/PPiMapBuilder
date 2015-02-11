@@ -59,7 +59,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private static final ImageIcon ICN_UNREVIEWED = new ImageIcon(ResultPanel.class.getResource("unstar.png"));
 
-	/**
+	/*
 	 * Default font if nothing to show (italic)
 	 */
 	private static final Font NONE_FONT = new Font(null, Font.ITALIC, 11);

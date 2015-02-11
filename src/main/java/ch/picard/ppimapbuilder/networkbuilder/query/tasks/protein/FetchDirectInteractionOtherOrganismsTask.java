@@ -1,10 +1,11 @@
-package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
-import ch.picard.ppimapbuilder.util.AbstractTaskProgressMonitor;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
+import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -12,7 +13,7 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractionQueryTask {
+class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractionQueryTask {
 
 	// Input
 	private final List<Organism> otherOrganisms;
@@ -58,7 +59,7 @@ public class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractio
 						referenceOrganism, organism, proteinOfInterestPool, interactorPool,
 						threadedClientManager, MINIMUM_ORTHOLOGY_SCORE,
 
-						new AbstractTaskProgressMonitor() {
+						new ProgressTaskMonitor() {
 							@Override
 							public void setProgress(double currentProgress) {
 								synchronized (progressPercent[0]) {

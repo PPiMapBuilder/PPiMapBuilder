@@ -111,7 +111,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				createEdges(network);
 				monitor.setProgress(0.75);
 
-				removeNodeNotConnectedToPOIs(network);
+				if(!networkQueryParameters.isInteractomeQuery()) {
+					removeNodeNotConnectedToPOIs(network);
+				}
 			}
 
 			CyNetworkView view;
@@ -165,26 +167,38 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		CyNetwork network = networkFactory.createNetwork();
 		network.getRow(network).set(CyNetwork.NAME, networkNaming.getSuggestedNetworkTitle("PPiMapBuilder network"));
 
-		// Create columns
-		CyTable networkTable = network.getDefaultNetworkTable();
-		networkTable.createColumn("created by", String.class, true);
-		networkTable.createListColumn("proteins of interest", String.class, true);
-		networkTable.createColumn("reference organism", String.class, true);
-		networkTable.createListColumn("other organisms", String.class, true);
-		networkTable.createListColumn("source databases", String.class, true);
-		networkTable.createColumn("build time (seconds)", Integer.class, true);
 
-		// Fill columns
-		network.getRow(network).set(
-				"created by",
-				"PPiMapBuilder v"
-						+ PMBActivator.version
-						+ (PMBActivator.isSnapshot ? " " + PMBActivator.buildTimestamp : "") //display PMB build timestamp in snapshots
-		);
-		network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
-		network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
-		network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
-		network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
+		CyTable networkTable = network.getDefaultNetworkTable();
+		{ // Create columns
+			networkTable.createColumn("created by", String.class, true);
+			networkTable.createColumn("reference organism", String.class, true);
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				networkTable.createListColumn("proteins of interest", String.class, true);
+				networkTable.createListColumn("other organisms", String.class, true);
+			}
+			networkTable.createListColumn("source databases", String.class, true);
+			networkTable.createColumn("build time (seconds)", Integer.class, true);
+		}
+
+		{ // Fill columns
+			network.getRow(network).set(
+					"created by",
+					"PPiMapBuilder v"
+							+ PMBActivator.version
+							+ " " +
+							(
+									PMBActivator.isSnapshot ?
+											PMBActivator.buildTimestamp :
+											""
+							) //display PMB build timestamp in snapshots
+			);
+			network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
+				network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
+			}
+			network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
+		}
 		return network;
 	}
 
@@ -202,11 +216,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("Cellular_components_hidden", String.class, false);
 		nodeTable.createListColumn("Biological_processes_hidden", String.class, false);
 		nodeTable.createListColumn("Molecular_functions_hidden", String.class, false);
-		nodeTable.createListColumn("Orthologs", String.class, false);
 		nodeTable.createListColumn("Cellular_components", String.class, false);
 		nodeTable.createListColumn("Biological_processes", String.class, false);
 		nodeTable.createListColumn("Molecular_functions", String.class, false);
-		nodeTable.createColumn("Queried", String.class, false);
+		if(!networkQueryParameters.isInteractomeQuery()){
+			nodeTable.createListColumn("Orthologs", String.class, false);
+			nodeTable.createColumn("Queried", String.class, false);
+		}
+
 	}
 
 	private void createEdges(CyNetwork network) {
@@ -321,10 +338,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					JSONUtils.jsonListToStringList(molecularFunction)
 			);
 			nodeAttr.set("Molecular_functions", molecularFunction.asStringList());
-			nodeAttr.set("Orthologs",
-					JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
-			);
-			nodeAttr.set("Queried", String.valueOf(proteinOfInterestPool.contains(entry)));
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				nodeAttr.set("Orthologs",
+						JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
+				);
+				nodeAttr.set("Queried", String.valueOf(proteinOfInterestPool.contains(entry)));
+			}
 		}
 
 		return node;

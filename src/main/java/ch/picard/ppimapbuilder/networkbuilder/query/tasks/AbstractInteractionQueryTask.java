@@ -3,7 +3,7 @@ package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import org.cytoscape.work.Task;
 
-abstract class AbstractInteractionQueryTask implements Task {
+public abstract class AbstractInteractionQueryTask implements Task {
 
 	protected final ThreadedClientManager threadedClientManager;
 

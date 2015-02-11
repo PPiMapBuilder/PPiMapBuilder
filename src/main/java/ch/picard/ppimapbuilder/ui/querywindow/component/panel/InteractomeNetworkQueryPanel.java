@@ -4,7 +4,6 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.DatabaseSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.ReferenceOrganismSelectionPanel;
-import ch.picard.ppimapbuilder.ui.util.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import net.miginfocom.swing.MigLayout;
 
@@ -14,6 +13,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.util.ArrayList;
 import java.util.List;
 
 public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQueryPanel, FocusListener {
@@ -41,7 +41,7 @@ public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQuery
 
 	@Override
 	public List<String> getProteinOfInterestUniprotId() {
-		return null;
+		return new ArrayList<String>();
 	}
 
 	@Override
@@ -51,12 +51,17 @@ public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQuery
 
 	@Override
 	public List<Organism> getOtherOrganisms() {
-		return null;
+		return new ArrayList<Organism>();
 	}
 
 	@Override
 	public List<PsicquicService> getSelectedDatabases() {
 		return databaseSelectionPanel.getSelectedDatabases();
+	}
+
+	@Override
+	public boolean isInteractomeQuery() {
+		return true;
 	}
 
 	@Override

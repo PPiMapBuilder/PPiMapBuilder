@@ -13,6 +13,7 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Set;
 
 public class ProteinNetworkQueryPanel extends CustomSplitPane implements NetworkQueryPanel {
 
@@ -70,6 +71,11 @@ public class ProteinNetworkQueryPanel extends CustomSplitPane implements Network
 	@Override
 	public List<PsicquicService> getSelectedDatabases() {
 		return databaseSelectionPanel.getSelectedDatabases();
+	}
+
+	@Override
+	public boolean isInteractomeQuery() {
+		return false;
 	}
 
 	@Override

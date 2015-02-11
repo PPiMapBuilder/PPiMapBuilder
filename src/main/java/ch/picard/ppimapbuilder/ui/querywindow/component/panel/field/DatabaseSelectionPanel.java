@@ -8,8 +8,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -95,7 +94,7 @@ public class DatabaseSelectionPanel extends JPanel {
 	 * Get the list of selected databases
 	 */
 	public List<PsicquicService> getSelectedDatabases() {
-		ArrayList<PsicquicService> databaseList = new ArrayList<PsicquicService>();
+		Set<PsicquicService> databaseList = new LinkedHashSet<PsicquicService>();
 
 		// For each entry of the database linkedHashmap
 		for (Entry<PsicquicService, JCheckBox> entry : databases.entrySet()) {
@@ -104,7 +103,7 @@ public class DatabaseSelectionPanel extends JPanel {
 				databaseList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
 		}
-		return databaseList;
+		return new ArrayList<PsicquicService>(databaseList);
 	}
 
 }

@@ -1,9 +1,10 @@
-package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
@@ -11,7 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-public class FetchDirectInteractionReferenceOrganismTask extends AbstractInteractionQueryTask {
+class FetchDirectInteractionReferenceOrganismTask extends AbstractInteractionQueryTask {
 
 	// Input
 	private final Organism referenceOrganism;

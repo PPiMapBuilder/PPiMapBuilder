@@ -7,8 +7,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -69,7 +68,7 @@ public class OtherOrganismSelectionPanel extends JPanel {
 	 * Get the list of selected databases
 	 */
 	public List<Organism> getSelectedOrganisms() {
-		ArrayList<Organism> organismList = new ArrayList<Organism>();
+		Set<Organism> organismList = new LinkedHashSet<Organism>();
 
 		// For each entry of the database linkedHashmap
 		for (Entry<Organism, JCheckBox> entry : organisms.entrySet()) {
@@ -78,7 +77,7 @@ public class OtherOrganismSelectionPanel extends JPanel {
 				organismList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
 		}
-		return organismList;
+		return new ArrayList<Organism>(organismList);
 	}
 
 	public LinkedHashMap<Organism, JCheckBox> getOrganisms() {

@@ -17,6 +17,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Set;
 
 /**
  * PPiMapBuilder interaction query window
@@ -129,6 +130,11 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters, Focus
 	@Override
 	public List<PsicquicService> getSelectedDatabases() {
 		return networkQueryPanels.getActivePanel().getSelectedDatabases();
+	}
+
+	@Override
+	public boolean isInteractomeQuery() {
+		return networkQueryPanels.getActivePanel().isInteractomeQuery();
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import ch.picard.ppimapbuilder.data.PairUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,7 +17,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class ThreadedPsicquicClientTest {
 
 	private static final List<PsicquicService> services = Arrays.asList(
@@ -27,9 +27,22 @@ public class ThreadedPsicquicClientTest {
 			, new PsicquicService("MINT", null, "", "true", "1", "", "", "true", new ArrayList<String>())
 	);
 
+	private static final ProgressMonitor assertingCorrectProgression = new ProgressMonitor() {
+		private final double[] progress = new double[]{0d};
+		@Override
+		public void setProgress(double v) {
+			synchronized (progress) {
+				Assert.assertTrue(v > progress[0]);
+				progress[0] = v;
+				System.out.println("[PROGRESS] "+(v*100)+"%");
+			}
+		}
+	};
+
 	@Test
 	public void testGetByQuery() throws Exception {
 		for(int nbThread = 1; nbThread <= 10; nbThread++) {
+			System.out.println(nbThread+" THREADS");
 			final String query = "identifier:P04040";
 
 			final Map<String, String> expected = new HashMap<String, String>() {{
@@ -41,12 +54,21 @@ public class ThreadedPsicquicClientTest {
 			final Map<String, String> actual = new HashMap<String, String>();
 			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
-				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query, ProgressMonitor monitor) throws IOException, PsimiTabException {
+					monitor.setProgress(0.1);
+					monitor.setProgress(0.2);
+					monitor.setProgress(0.5);
 					actual.put(service.getName(), query);
+					monitor.setProgress(0.8);
+					monitor.setProgress(1);
 					return null;
 				}
 			};
-			client.getByQuery(query);
+
+			client.getByQuery(
+					query,
+					assertingCorrectProgression
+			);
 
 			Assert.assertEquals(expected, actual);
 		}
@@ -71,7 +93,7 @@ public class ThreadedPsicquicClientTest {
 			final Map<String, Set<String>> actual = new TreeMap<String, Set<String>>();
 			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
-				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query, ProgressMonitor monitor) throws IOException, PsimiTabException {
 					if (!actual.containsKey(service.getName()))
 						actual.put(service.getName(), new TreeSet<String>());
 
@@ -114,7 +136,7 @@ public class ThreadedPsicquicClientTest {
 
 			ThreadedPsicquicClient client = new ThreadedPsicquicClient(services, new ExecutorServiceManager(nbThread)) {
 				@Override
-				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+				protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query, ProgressMonitor monitor) throws IOException, PsimiTabException {
 					synchronized (treatedQuery) {
 						if(treatedQuery.contains(query))
 							return null;

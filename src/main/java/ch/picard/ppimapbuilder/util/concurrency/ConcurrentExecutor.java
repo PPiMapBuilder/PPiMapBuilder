@@ -39,7 +39,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 	 */
 	@Override
 	public final void run() {
-		if (executorService == null || nbRequests <= 1) {
+		if (executorService == null || nbRequests <= 1 || (executorServiceManager != null && executorServiceManager.getMaxNumberThread() <= 1)) {
 			// Fallback without concurrent requests
 			for (int i = 0; i < nbRequests; i++) {
 				try {
@@ -59,6 +59,13 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 				Callable<R> callable = submitRequests(i);
 				if(callable != null)
 					futuresIndexed.put(completionService.submit(callable), i);
+
+				// Wait a bit between first requests
+				if (executorServiceManager != null && executorServiceManager.getMaxNumberThread() >= i - 1) {
+					try {
+						Thread.sleep(100);
+					} catch (Exception ignore) {}
+				}
 			}
 
 			//Process results and errors

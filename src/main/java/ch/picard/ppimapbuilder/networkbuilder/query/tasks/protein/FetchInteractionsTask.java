@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
@@ -6,6 +6,7 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public class FetchInteractionsTask extends AbstractInteractionQueryTask {
+class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 	// Input
 	private final List<Organism> allOrganisms;

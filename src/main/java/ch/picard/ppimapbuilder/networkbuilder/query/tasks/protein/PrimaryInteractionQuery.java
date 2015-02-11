@@ -1,20 +1,18 @@
-package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
+import ch.picard.ppimapbuilder.data.interaction.client.web.UniProtFetcherInteractionFilter;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
-import ch.picard.ppimapbuilder.util.AbstractTaskProgressMonitor;
+import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
-import psidev.psi.mi.tab.model.Interactor;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -88,69 +86,15 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 		newInteractions.addAll(InteractionUtils.filterConcurrently(
 				threadedClientManager.getExecutorServiceManager(),
 				interactions,
-				new AbstractTaskProgressMonitor() {
-					@Override
-					public void setProgress(double v) {
-						taskMonitor.setProgress(v);
-					}
-				},
+				new ProgressTaskMonitor(taskMonitor),
 
 				new InteractionUtils.UniProtInteractionFilter(),
 				new InteractionUtils.OrganismInteractionFilter(organism),
 
-				// Filter that rejects interactions with at least one interactor not found in the reference organism (even with orthology)
-				// This filters also extracts the interactor UniProt entry to be stored in the newInteractors UniProtEntrySet
-				new InteractionUtils.InteractorFilter() {
-					@Override
-					public boolean isValidInteractor(Interactor interactor) {
-						final Protein interactorProtein = InteractionUtils.getProteinInteractor(interactor);
-
-						Set<Protein> proteinsInReferenceOrganism = new HashSet<Protein>();
-						if (inReferenceOrgansim)
-							proteinsInReferenceOrganism.add(interactorProtein);
-						else try {
-							proteinsInReferenceOrganism.addAll(proteinOrthologClient.getOrtholog(interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE));
-						} catch (Exception ignored) {
-						}
-
-						/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(interactorProtein.getUniProtId()))
-							System.out.println(interactorProtein.getUniProtId());*/
-
-						boolean ok = false;
-						for (Protein proteinInReferenceOrganism : proteinsInReferenceOrganism) {
-							String uniProtId = proteinInReferenceOrganism.getUniProtId();
-
-							/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(uniProtId))
-								System.out.println(uniProtId);*/
-
-							// Find in existing protein pools
-							UniProtEntry entry = null;
-							synchronized (interactorPool) {
-								entry = interactorPool.findByPrimaryAccession(uniProtId);
-							}
-
-							// Find on UniProt
-							if (entry == null) {
-								try {
-									entry = uniProtClient.retrieveProteinData(uniProtId);
-
-									if (entry != null) synchronized (interactorPool) {
-										interactorPool.add(entry);
-									}
-								} catch (IOException ignored) {
-								}
-							}
-
-							if (entry != null) {
-								if (!inReferenceOrgansim) synchronized (interactorPool) {
-									interactorPool.addOrtholog(entry, Arrays.asList(interactorProtein));
-								}
-								ok = true;
-							}
-						}
-						return ok;
-					}
-				}
+				new UniProtFetcherInteractionFilter(
+						proteinOrthologClient, inReferenceOrgansim, referenceOrganism,
+						MINIMUM_ORTHOLOGY_SCORE, interactorPool, uniProtClient
+				)
 		));
 
 		threadedClientManager.unRegister(proteinOrthologClient);

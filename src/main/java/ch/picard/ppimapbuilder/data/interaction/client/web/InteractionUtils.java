@@ -8,6 +8,10 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologClient;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
@@ -17,6 +21,7 @@ import psidev.psi.mi.tab.model.Interactor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -155,6 +160,7 @@ public class InteractionUtils {
 		}
 	}
 
+
 	public static boolean isValidInteraction(BinaryInteraction interaction, InteractionFilter... filters) {
 		for (InteractionFilter filter : filters)
 			if (!filter.isValidInteraction(interaction))
@@ -220,7 +226,7 @@ public class InteractionUtils {
 		return query.toString();
 	}
 
-	public static List<String> psicquicServicesToStrings(List<PsicquicService> services) {
+	public static List<String> psicquicServicesToStrings(Collection<PsicquicService> services) {
 		ArrayList<String> out = new ArrayList<String>();
 		for (PsicquicService service : services) {
 			out.add(service.getName());

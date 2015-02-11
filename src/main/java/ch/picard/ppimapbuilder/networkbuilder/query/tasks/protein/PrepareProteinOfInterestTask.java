@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
+package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
@@ -6,10 +6,9 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
-import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import org.cytoscape.work.TaskMonitor;
 
 import java.util.Arrays;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
+class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 
 	// Intput
 	private final Double MINIMUM_ORTHOLOGY_SCORE;

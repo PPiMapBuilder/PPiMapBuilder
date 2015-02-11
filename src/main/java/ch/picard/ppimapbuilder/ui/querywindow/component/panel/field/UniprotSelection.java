@@ -6,11 +6,14 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class UniprotSelection extends JPanel {
 
@@ -54,14 +57,14 @@ public class UniprotSelection extends JPanel {
 		this.add(button, "cell 0 2 2 1,alignx right,aligny center");
 	}
 
-	public ArrayList<String> getIdentifiers() {
-		ArrayList<String> identifierList = new ArrayList<String>();
+	public List<String> getIdentifiers() {
+		Set<String> identifierList = new LinkedHashSet<String>();
 		for (String str : identifiers.getText().split("\n")) {
 			if (!str.equals("")) {
 				identifierList.add(str.trim());
 			}
 		}
-		return identifierList;
+		return new ArrayList<String>(identifierList);
 	}
 
 }
