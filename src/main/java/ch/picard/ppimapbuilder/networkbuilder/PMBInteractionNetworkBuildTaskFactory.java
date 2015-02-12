@@ -5,6 +5,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.session.CyNetworkNaming;
@@ -76,20 +77,24 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
 		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
 
+		ExecutorServiceManager executorServiceManager =
+				new ExecutorServiceManager((Runtime.getRuntime().availableProcessors() + 1) * 2);
+
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
 				new PMBInteractionQueryTaskFactory(
 						interactionsByOrg,
 						interactorPool,
 						proteinOfInterestPool,
-						networkQueryParameters
+						networkQueryParameters,
+						executorServiceManager
 				).createTaskIterator()
 		);
 		taskIterator.append(
 				new PMBCreateNetworkTask(
 						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
 						layoutAlgorithmManager, visualMappingManager, interactionsByOrg,
-						interactorPool, proteinOfInterestPool, networkQueryParameters, startTime
+						interactorPool, proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
 				)
 		);
 		return taskIterator;

@@ -2,7 +2,7 @@ package ch.picard.ppimapbuilder.networkbuilder.network;
 
 import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.JSONUtils;
-import ch.picard.ppimapbuilder.data.JSONable;
+import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyCategory;
@@ -13,6 +13,8 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DifferedFetchUniProtEntryTask;
+import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
@@ -45,12 +47,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	// For the visual style
 	private final VisualMappingManager visualMappingManager;
 
+	private final ExecutorServiceManager executorServiceManager;
 
 	private final NetworkQueryParameters networkQueryParameters;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
-	private final Set<UniProtEntry> proteinOfInterestPool;
 
+	private final Set<UniProtEntry> proteinOfInterestPool;
 	//Network data
 	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
 	private final long startTime;
@@ -67,7 +70,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			final UniProtEntrySet interactorPool,
 			final Set<UniProtEntry> proteinOfInterestPool,
 			final NetworkQueryParameters networkQueryParameters,
-			long startTime
+			final ExecutorServiceManager executorServiceManager, long startTime
 	) {
 
 		// For the network
@@ -90,6 +93,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.proteinOfInterestPool = proteinOfInterestPool;
 
 		this.networkQueryParameters = networkQueryParameters;
+		this.executorServiceManager = executorServiceManager;
 
 		this.nodeNameMap = new HashMap<UniProtEntry, CyNode>();
 
@@ -133,6 +137,19 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					"build time (seconds)",
 					(((int) (System.currentTimeMillis() - startTime)) / 1000)
 			);
+
+			if(networkQueryParameters.isInteractomeQuery()) {
+				// For interactome => search uniprot entries in the background
+				PMBActivator
+						.getPMBBackgroundTaskManager()
+						.launchTask(
+								new DifferedFetchUniProtEntryTask(
+										executorServiceManager,
+										interactorPool,
+										network
+								)
+						);
+			}
 		}
 		monitor.setProgress(1.0);
 	}

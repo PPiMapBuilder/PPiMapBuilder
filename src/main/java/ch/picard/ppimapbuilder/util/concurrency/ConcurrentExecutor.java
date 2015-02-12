@@ -9,6 +9,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 	private final ExecutorService executorService;
 	private final int nbRequests;
 	private final ExecutorServiceManager executorServiceManager;
+	private boolean cancel = false;
 
 	private ConcurrentExecutor(ExecutorService executorService, ExecutorServiceManager executorServiceManager, int nbRequests) {
 		this.executorService = executorService == null ? executorServiceManager.getOrCreateThreadPool() : executorService;
@@ -42,6 +43,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 		if (executorService == null || nbRequests <= 1 || (executorServiceManager != null && executorServiceManager.getMaxNumberThread() <= 1)) {
 			// Fallback without concurrent requests
 			for (int i = 0; i < nbRequests; i++) {
+				if(cancel) return;
 				try {
 					processResult(submitRequests(i).call(), i);
 				} catch (Exception e) {
@@ -56,6 +58,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 			//Submit requests
 			for (int i = 0; i < nbRequests; i++) {
+				if(cancel) break;
 				Callable<R> callable = submitRequests(i);
 				if(callable != null)
 					futuresIndexed.put(completionService.submit(callable), i);
@@ -68,11 +71,18 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 				}
 			}
 
+			if(cancel) {
+				executorService.shutdown();
+				return;
+			}
+
 			//Process results and errors
 			for (Future<R> ignored : futuresIndexed.keySet()) {
 				Future<R> take = null;
 				Integer index = null;
 				try {
+					if (cancel)
+						executorService.shutdown();
 					if (executorService.isShutdown())
 						break;
 
@@ -126,5 +136,9 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 	public boolean processExecutionException(ExecutionException e, Integer index) {
 		e.printStackTrace();
 		return false;
+	}
+
+	public void cancel() {
+		this.cancel = true;
 	}
 }

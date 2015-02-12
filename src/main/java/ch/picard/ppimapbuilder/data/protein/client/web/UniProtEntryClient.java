@@ -5,6 +5,7 @@ import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.util.IOUtils;
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.jsoup.nodes.Document;
@@ -38,9 +39,17 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 	 * Retrieves UniProt entry data of a list of protein using threaded execution pool
 	 */
 	public HashMap<String, UniProtEntry> retrieveProteinsData(final Collection<String> uniProtIds) {
+		return retrieveProteinsData(uniProtIds, null);
+	}
+
+	/**
+	 * Retrieves UniProt entry data of a list of protein using threaded execution pool
+	 */
+	public HashMap<String, UniProtEntry> retrieveProteinsData(final Collection<String> uniProtIds, final ProgressMonitor progressMonitor) {
 		final List<String> proteinArray = new ArrayList<String>(new HashSet<String>(uniProtIds));
 
 		final HashMap<String, UniProtEntry> results = new HashMap<String, UniProtEntry>();
+		final double[] progress = new double[]{0d};
 		new ConcurrentExecutor<RetrieveProteinData>(getExecutorServiceManager(), uniProtIds.size()) {
 
 			@Override
@@ -50,6 +59,7 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 
 			@Override
 			public void processResult(RetrieveProteinData result, Integer index) {
+				progressMonitor.setProgress(++progress[0]/uniProtIds.size());
 				results.put(result.originalUniProtId, result.protein);
 			}
 

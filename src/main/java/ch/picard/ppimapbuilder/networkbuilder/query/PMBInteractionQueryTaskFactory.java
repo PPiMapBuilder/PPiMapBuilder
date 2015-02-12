@@ -39,8 +39,8 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg,
 			UniProtEntrySet interactorPool,
 			Set<UniProtEntry> proteinOfInterestPool,
-			NetworkQueryParameters networkQueryParameters
-	) {
+			NetworkQueryParameters networkQueryParameters,
+			ExecutorServiceManager executorServiceManager) {
 		this.networkQueryParameters = networkQueryParameters;
 
 		this.interactionsByOrg = interactionsByOrg;
@@ -54,7 +54,7 @@ public class PMBInteractionQueryTaskFactory implements TaskFactory {
 
 		// Store thread pool used by web client and this task
 		this.threadedClientManager = new ThreadedClientManager(
-				new ExecutorServiceManager((Runtime.getRuntime().availableProcessors() + 1) * 2),
+				executorServiceManager,
 				networkQueryParameters.getSelectedDatabases()
 		);
 

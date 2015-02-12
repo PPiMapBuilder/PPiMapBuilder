@@ -60,6 +60,12 @@ public class PMBActivator extends AbstractCyActivator {
 		super();
 	}
 
+	private static PMBBackgroundTaskManager pmbBackgroundTaskManager;
+
+	public static PMBBackgroundTaskManager getPMBBackgroundTaskManager() {
+		return pmbBackgroundTaskManager;
+	}
+
 	/**
 	 * This methods register all services of PPiMapBuilder
 	 *
@@ -97,6 +103,8 @@ public class PMBActivator extends AbstractCyActivator {
 
 			ResultPanel pmbResultPanel = new ResultPanel(openBrowser);
 			registerService(bc, pmbResultPanel, CytoPanelComponent.class, new Properties());
+
+			pmbBackgroundTaskManager = new PMBBackgroundTaskManager(pmbResultPanel);
 
 			int index = cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).indexOfComponent(pmbResultPanel);
 			if (index > 0)

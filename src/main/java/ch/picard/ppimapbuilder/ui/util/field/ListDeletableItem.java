@@ -59,16 +59,8 @@ public class ListDeletableItem {
 		}
 
 		public ListRow addDeleteButton(ActionListener deleteListener) {
-			ImageIcon icon = new ImageIcon(ListDeletableItem.class.getResource("delete.png"));
-			JButton deleteOrga = new JButton(icon);
-			Dimension iconDim = new Dimension(icon.getIconWidth() + 2, icon.getIconHeight() + 2);
-			deleteOrga.setMinimumSize(iconDim);
-			deleteOrga.setMaximumSize(iconDim);
-			deleteOrga.setPreferredSize(iconDim);
-			deleteOrga.setContentAreaFilled(false);
-			deleteOrga.setBorder(BorderFactory.createEmptyBorder());
+			JButton deleteOrga = new DeleteButton();
 			deleteOrga.addActionListener(deleteListener);
-
 			return addButton(deleteOrga);
 		}
 

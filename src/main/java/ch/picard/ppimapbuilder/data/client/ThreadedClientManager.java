@@ -9,8 +9,9 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrth
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 
-import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Manages all threaded web service clients used in the querying of the network.

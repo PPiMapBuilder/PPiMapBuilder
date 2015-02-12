@@ -11,6 +11,8 @@ import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
+import org.cytoscape.work.Task;
+import org.cytoscape.work.TaskMonitor;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -135,8 +137,23 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JTree treeSource;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
-	
-	
+
+	/**
+	 * Background task monitor
+	 */
+	private BackgroundTaskMonitor backgroundTaskPanel = null;
+
+	public void setBackgroundTask(BackgroundTaskMonitor backgroundTaskMonitor) {
+		if(backgroundTaskMonitor == null && this.backgroundTaskPanel != null) {
+			remove(this.backgroundTaskPanel);
+			repaint();
+		} else if (backgroundTaskMonitor != null) {
+			this.backgroundTaskPanel = backgroundTaskMonitor;
+			add(backgroundTaskPanel, BorderLayout.SOUTH);
+			repaint();
+		}
+	}
+
 	/**
 	 * Build a panel containing all the needed elements.
 	 * 

@@ -14,7 +14,6 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.Interactor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,59 +38,71 @@ class FilterInteractomeInteractionsTask extends AbstractInteractionQueryTask {
 
 	@Override
 	public void run(final TaskMonitor taskMonitor) throws Exception {
-
 		// Filter interactions
-		taskMonitor.setStatusMessage("Fetch UniProt protein entries...");
-		final UniProtEntryClient uniProtClient = threadedClientManager.getOrCreateUniProtClient();
+		taskMonitor.setStatusMessage("Filter interactions...");
+		final List<BinaryInteraction> filteredInteractions =
+				InteractionUtils.filterConcurrently(
+						threadedClientManager.getExecutorServiceManager(),
+						interactions,
+						new ProgressTaskMonitor(taskMonitor),
 
-		// Cluster interactions
-		interactionsByOrg.put(
-				referenceOrganism,
-				InteractionUtils.clusterInteraction(
-						InteractionUtils.filterConcurrently(
-								threadedClientManager.getExecutorServiceManager(),
-								interactions,
-								new ProgressTaskMonitor(taskMonitor),
+						new InteractionUtils.OrganismInteractionFilter(referenceOrganism),
+						new InteractionUtils.UniProtInteractionFilter(),
 
-								new InteractionUtils.OrganismInteractionFilter(referenceOrganism),
-								new InteractionUtils.UniProtInteractionFilter(),
+						new InteractionUtils.InteractorFilter() {
+							@Override
+							public boolean isValidInteractor(Interactor interactor) {
+								final Protein interactorProtein = InteractionUtils.getProteinInteractor(interactor);
 
-								new InteractionUtils.InteractorFilter() {
-									@Override
-									public boolean isValidInteractor(Interactor interactor) {
-										final Protein interactorProtein = InteractionUtils.getProteinInteractor(interactor);
+								if(interactorProtein != null) {
+									synchronized (interactorPool) {
+										interactorPool.add(
+												new UniProtEntry.Builder(interactorProtein).build()
+										);
+									}
+									return true;
+								}
+								return false;
+								/*boolean ok = false;
+								String uniProtId = interactorProtein.getUniProtId();
 
-										boolean ok = false;
-										String uniProtId = interactorProtein.getUniProtId();
+								// Find in existing protein pools
+								UniProtEntry entry = null;
+								synchronized (interactorPool) {
+									entry = interactorPool.findByPrimaryAccession(uniProtId);
+								}
 
-										// Find in existing protein pools
-										UniProtEntry entry = null;
-										synchronized (interactorPool) {
-											entry = interactorPool.findByPrimaryAccession(uniProtId);
+								// Find on UniProt
+								if (entry == null) {
+									try {
+										entry = uniProtClient.retrieveProteinData(uniProtId);
+
+										if (entry != null) synchronized (interactorPool) {
+											interactorPool.add(entry);
 										}
-
-										// Find on UniProt
-										if (entry == null) {
-											try {
-												entry = uniProtClient.retrieveProteinData(uniProtId);
-
-												if (entry != null) synchronized (interactorPool) {
-													interactorPool.add(entry);
-												}
-											} catch (IOException ignored) {
-											}
-										}
-
-										if (entry != null) {
-											ok = true;
-										}
-										return ok;
+									} catch (IOException ignored) {
 									}
 								}
-						)
-				)
-		);
 
-		threadedClientManager.unRegister(uniProtClient);
+								if (entry != null) {
+									ok = true;
+								}
+								return ok;*/
+							}
+						}
+				);
+
+
+		// Cluster interactions
+		final Collection<EncoreInteraction> clusteredInteractions =
+				InteractionUtils.clusterInteraction(
+						filteredInteractions
+				);
+
+		// Save them
+		interactionsByOrg.put(
+				referenceOrganism,
+				clusteredInteractions
+		);
 	}
 }
