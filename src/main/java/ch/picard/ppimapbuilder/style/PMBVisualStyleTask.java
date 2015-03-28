@@ -56,7 +56,7 @@ public class PMBVisualStyleTask extends AbstractTask {
 
 		//NODE
 		//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
-		//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(255, 255, 255)); // Node color
+		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(235, 235, 235)); // Node color
 		vs.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ROUND_RECTANGLE);
 		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 1.5);
 		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_PAINT, Color.BLACK);
@@ -67,7 +67,7 @@ public class PMBVisualStyleTask extends AbstractTask {
 		vs.addVisualMappingFunction(pMapping);
 		DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
 		dMapping.putMapValue("true", new Color(255, 255, 51));
-		dMapping.putMapValue("false", new Color(255, 255, 255));
+		dMapping.putMapValue("false", new Color(235, 235, 235));
 		vs.addVisualMappingFunction(dMapping);
 
 		//EDGE
