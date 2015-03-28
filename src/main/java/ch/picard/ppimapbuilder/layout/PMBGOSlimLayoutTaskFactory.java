@@ -26,8 +26,7 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		}
 
 		return new TaskIterator(
-			new PMBGOSlimQueryTask(network, view),
-			new PMBGOSlimLayoutTask(view, layoutManager)
+			new PMBGOSlimLayoutTask(network, view, layoutManager)
 		);
 	}
 
