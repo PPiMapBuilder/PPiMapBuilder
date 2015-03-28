@@ -8,7 +8,7 @@ import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.label.InParanoidLogo;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
-import ch.picard.ppimapbuilder.util.FileUtil;
+import ch.picard.ppimapbuilder.util.io.FileUtil;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.work.AbstractTask;

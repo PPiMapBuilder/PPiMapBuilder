@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.util;
+package ch.picard.ppimapbuilder.util.io;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;

@@ -1,19 +1,19 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks;
 
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.Task;
 
 public abstract class AbstractInteractionQueryTask implements Task {
 
-	protected final ThreadedClientManager threadedClientManager;
+	protected final ExecutorServiceManager executorServiceManager;
 
-	public AbstractInteractionQueryTask(ThreadedClientManager threadedClientManager) {
-		this.threadedClientManager = threadedClientManager;
+	public AbstractInteractionQueryTask(ExecutorServiceManager executorServiceManager) {
+		this.executorServiceManager = executorServiceManager;
 	}
 
 	@Override
 	public void cancel() {
-		threadedClientManager.shutdown();
+		executorServiceManager.shutdown();
 	}
 
 }

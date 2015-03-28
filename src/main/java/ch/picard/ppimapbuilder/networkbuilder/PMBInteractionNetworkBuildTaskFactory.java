@@ -5,7 +5,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.session.CyNetworkNaming;

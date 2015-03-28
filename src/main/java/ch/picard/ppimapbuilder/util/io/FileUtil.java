@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.util;
+package ch.picard.ppimapbuilder.util.io;
 
 import org.apache.commons.io.FileUtils;
 

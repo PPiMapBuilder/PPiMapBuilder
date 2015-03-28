@@ -24,21 +24,21 @@ public class MiQLExpressionBuilder extends AbstractMiQLQueryElement {
 		setRoot(exp.root);
 	}
 
-	public void addCondition(Operator op, String element) {
+	public void add(Operator op, String element) {
 		if (size() > 0 && op != null)
 			add(op.toString());
 		add(element);
 	}
 
-	public void addCondition(Operator op, AbstractMiQLQueryElement condition) {
+	public void add(Operator op, AbstractMiQLQueryElement condition) {
 		if (size() > 0 && op != null)
 			add(op.toString());
 		add(condition);
 	}
 
-	public void addAllCondition(Operator op, List<String> conditions) {
+	public void addAll(Operator op, List<String> conditions) {
 		for (String elem : conditions) {
-			addCondition(op, elem);
+			add(op, elem);
 		}
 	}
 

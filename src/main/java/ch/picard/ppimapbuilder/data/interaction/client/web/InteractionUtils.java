@@ -1,28 +1,25 @@
 package ch.picard.ppimapbuilder.data.interaction.client.web;
 
 import ch.picard.ppimapbuilder.data.Pair;
-import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
-import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologClient;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -208,22 +205,11 @@ public class InteractionUtils {
 			}
 
 			@Override
-			public void processResult(Boolean result, Integer index) {
-				if (result) validInteractions.add(interactions.get(index));
+			public void processResult(Boolean intermediraryResult, Integer index) {
+				if (intermediraryResult) validInteractions.add(interactions.get(index));
 			}
 		}.run();
 		return validInteractions;
-	}
-
-	public static String generateMiQLQueryIDTaxID(final String id, final Integer taxId) {
-		MiQLExpressionBuilder query = new MiQLExpressionBuilder();
-
-		query.setRoot(true);
-		query.add(new MiQLParameterBuilder("taxidA", taxId));
-		query.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("taxidB", taxId));
-		query.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("id", id));
-
-		return query.toString();
 	}
 
 	public static List<String> psicquicServicesToStrings(Collection<PsicquicService> services) {
@@ -232,6 +218,14 @@ public class InteractionUtils {
 			out.add(service.getName());
 		}
 		return out;
+	}
+
+	public static List<PsicquicSimpleClient> psicquicServicesToPsicquicSimpleClients(Collection<PsicquicService> services) {
+		final ArrayList<PsicquicSimpleClient> clients = new ArrayList<PsicquicSimpleClient>();
+		for (PsicquicService service : services) {
+			clients.add(new PsicquicSimpleClient(service.getRestUrl()));
+		}
+		return clients;
 	}
 
 }

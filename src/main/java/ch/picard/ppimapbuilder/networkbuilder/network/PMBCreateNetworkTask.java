@@ -2,7 +2,6 @@ package ch.picard.ppimapbuilder.networkbuilder.network;
 
 import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.JSONUtils;
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyCategory;
@@ -14,7 +13,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DifferedFetchUniProtEntryTask;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;

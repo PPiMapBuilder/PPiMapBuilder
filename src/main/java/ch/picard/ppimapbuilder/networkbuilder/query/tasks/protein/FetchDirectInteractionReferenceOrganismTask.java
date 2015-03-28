@@ -1,10 +1,11 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
@@ -22,13 +23,16 @@ class FetchDirectInteractionReferenceOrganismTask extends AbstractInteractionQue
 	// Output
 	private final UniProtEntrySet interactorPool;
 	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
+	private final Collection<PsicquicService> psicquicServices;
 
 	public FetchDirectInteractionReferenceOrganismTask(
-			ThreadedClientManager threadedClientManager,
+			ExecutorServiceManager webServiceClientFactory,
+			Collection<PsicquicService> psicquicServices,
 			Organism referenceOrganism, Set<UniProtEntry> proteinOfInterestPool, Double minimum_orthology_score,
 			UniProtEntrySet interactorPool,
 			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg) {
-		super(threadedClientManager);
+		super(webServiceClientFactory);
+		this.psicquicServices = psicquicServices;
 
 		this.referenceOrganism = referenceOrganism;
 		this.proteinOfInterestPool = proteinOfInterestPool;
@@ -41,8 +45,8 @@ class FetchDirectInteractionReferenceOrganismTask extends AbstractInteractionQue
 	public void run(TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetch direct interactions of input proteins in reference organism...");
 		final PrimaryInteractionQuery query = new PrimaryInteractionQuery(
-				referenceOrganism, referenceOrganism, proteinOfInterestPool, interactorPool,
-				threadedClientManager, MINIMUM_ORTHOLOGY_SCORE,
+				executorServiceManager, psicquicServices, referenceOrganism, referenceOrganism, proteinOfInterestPool, interactorPool,
+				MINIMUM_ORTHOLOGY_SCORE,
 				taskMonitor
 		).call();
 		directInteractionsByOrg.put(referenceOrganism, query.getNewInteractions());

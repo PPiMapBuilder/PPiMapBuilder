@@ -4,7 +4,7 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
-import ch.picard.ppimapbuilder.util.AppendingObjectOutputStream;
+import ch.picard.ppimapbuilder.util.io.AppendingObjectOutputStream;
 
 import java.io.*;
 import java.util.Arrays;

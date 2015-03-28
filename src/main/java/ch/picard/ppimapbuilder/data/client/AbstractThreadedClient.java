@@ -1,8 +1,7 @@
 package ch.picard.ppimapbuilder.data.client;
 
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 
-import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 /**

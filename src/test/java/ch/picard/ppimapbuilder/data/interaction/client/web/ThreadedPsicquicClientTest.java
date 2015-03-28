@@ -3,10 +3,8 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.PairUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.junit.Assert;
 import org.junit.Test;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -17,6 +15,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * /!\ ThreadedPsicquicClient is now replaced by PsicquicRequestBuilder
+ */
+@Deprecated
 public class ThreadedPsicquicClientTest {
 
 	private static final List<PsicquicService> services = Arrays.asList(

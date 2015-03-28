@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.util;
+package ch.picard.ppimapbuilder.util.io;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;

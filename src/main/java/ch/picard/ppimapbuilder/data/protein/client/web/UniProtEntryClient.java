@@ -4,10 +4,10 @@ import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.util.IOUtils;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.io.IOUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -58,9 +58,10 @@ public class UniProtEntryClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(RetrieveProteinData result, Integer index) {
-				progressMonitor.setProgress(++progress[0]/uniProtIds.size());
-				results.put(result.originalUniProtId, result.protein);
+			public void processResult(RetrieveProteinData intermediaryResult, Integer index) {
+				if(progressMonitor != null)
+					progressMonitor.setProgress(++progress[0]/uniProtIds.size());
+				results.put(intermediaryResult.originalUniProtId, intermediaryResult.protein);
 			}
 
 			@Override

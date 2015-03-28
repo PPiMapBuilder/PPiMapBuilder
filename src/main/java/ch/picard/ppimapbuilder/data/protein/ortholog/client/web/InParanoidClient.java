@@ -8,7 +8,7 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.ProteinOrthologCacheClient;
-import ch.picard.ppimapbuilder.util.IOUtils;
+import ch.picard.ppimapbuilder.util.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

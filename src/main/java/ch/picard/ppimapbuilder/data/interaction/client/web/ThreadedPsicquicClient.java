@@ -5,10 +5,10 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBu
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.util.SteppedProgressMonitorFactory;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.SteppedProgressMonitorFactory;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import com.google.common.collect.Lists;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -25,9 +25,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 /**
+ * /!\ ThreadedPsicquicClient is now replaced by PsicquicRequestBuilder
+ *
  * A PSICQUIC client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
+@Deprecated
 public class ThreadedPsicquicClient extends AbstractThreadedClient {
 
 	// Clients for each services
@@ -90,11 +93,11 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 				}
 
 				@Override
-				public void processResult(Collection<BinaryInteraction> result, Integer index) {
+				public void processResult(Collection<BinaryInteraction> intermediraryResult, Integer index) {
 					if (progressMonitor != null) {
 						progressMonitor.setProgress(++nbDone[0] / numberPages);
 					}
-					interactions.addAll(result);
+					interactions.addAll(intermediraryResult);
 				}
 
 				@Override
@@ -142,8 +145,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
+				results.addAll(intermediraryResult);
 			}
 
 			@Override
@@ -188,8 +191,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
+				results.addAll(intermediraryResult);
 			}
 
 		}.run();
@@ -233,8 +236,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
+				results.addAll(intermediraryResult);
 			}
 
 			@Override
@@ -287,9 +290,9 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
+			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
 				if (progressMonitor != null) progressMonitor.setProgress(index / queryList.size());
-				results.addAll(result);
+				results.addAll(intermediraryResult);
 			}
 
 		}.run();
@@ -308,7 +311,7 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 		List<String> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
 		baseQuery.setRoot(true);
-		baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
+		baseQuery.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
 
 		// baseInteractionQuery.addParam(new MiQLParameterBuilder("type", "association"));
 
@@ -372,15 +375,15 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 					for (int j = i; j < protsExprs.size(); j++) {
 						protsIdB = protsExprs.get(j);
 						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
+						q.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
+						q.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
 						queries.add(q.toString());
 						//System.out.println(q);
 					}
 				}
 			} else {
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idA);
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idB);
+				baseQuery.add(MiQLExpressionBuilder.Operator.AND, idA);
+				baseQuery.add(MiQLExpressionBuilder.Operator.AND, idB);
 				queries.add(baseQuery.toString());
 			}
 			System.gc();

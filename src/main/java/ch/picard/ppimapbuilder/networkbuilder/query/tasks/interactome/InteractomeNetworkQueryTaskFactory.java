@@ -1,8 +1,9 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome;
 
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -14,17 +15,19 @@ import java.util.HashMap;
 import java.util.List;
 
 public class InteractomeNetworkQueryTaskFactory implements TaskFactory {
-	private final ThreadedClientManager threadedClientManager;
+	private final ExecutorServiceManager executorServiceManager;
 	private final Organism referenceOrganism;
 	private final UniProtEntrySet interactorPool;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
+	private final Collection<PsicquicService> psicquicServices;
 
 	public InteractomeNetworkQueryTaskFactory(
-			ThreadedClientManager threadedClientManager,
-			Organism referenceOrganism, UniProtEntrySet interactorPool,
+			ExecutorServiceManager executorServiceManager,
+			Collection<PsicquicService> psicquicServices, Organism referenceOrganism, UniProtEntrySet interactorPool,
 			HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
 	) {
-		this.threadedClientManager = threadedClientManager;
+		this.executorServiceManager = executorServiceManager;
+		this.psicquicServices = psicquicServices;
 		this.referenceOrganism = referenceOrganism;
 		this.interactorPool = interactorPool;
 		this.interactionsByOrg = interactionsByOrg;
@@ -35,12 +38,13 @@ public class InteractomeNetworkQueryTaskFactory implements TaskFactory {
 		List<BinaryInteraction> interactions = new ArrayList<BinaryInteraction>();
 		return new TaskIterator(
 				new FetchInteractomeInteractionsTask(
-						threadedClientManager,
+						executorServiceManager,
+						psicquicServices,
 						referenceOrganism,
 						interactions
 				),
 				new FilterInteractomeInteractionsTask(
-						threadedClientManager,
+						executorServiceManager,
 						referenceOrganism, interactions,
 						interactorPool, interactionsByOrg
 				)

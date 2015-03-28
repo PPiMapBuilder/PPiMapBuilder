@@ -1,14 +1,14 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
-import com.google.common.collect.Sets;
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.AbstractProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
-import ch.picard.ppimapbuilder.util.FileUtil;
+import ch.picard.ppimapbuilder.util.io.FileUtil;
+import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.util.*;

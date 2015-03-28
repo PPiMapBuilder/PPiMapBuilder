@@ -6,12 +6,16 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskMonitor;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -28,14 +32,14 @@ class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 	private final UniProtEntrySet interactorPool;
 
 	private final UniProtEntryClient uniProtEntryClient;
-	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
+	private final ThreadedProteinOrthologClient proteinOrthologClient;
 
 	public PrepareProteinOfInterestTask(
-			ThreadedClientManager threadedClientManager,
+			ExecutorServiceManager executorServiceManager,
 			Double minimum_orthology_score, List<String> inputProteinIDs, Organism referenceOrganism,
 			Set<UniProtEntry> proteinOfInterestPool, UniProtEntrySet interactorPool
 	) {
-		super(threadedClientManager);
+		super(executorServiceManager);
 
 		this.MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 		this.inputProteinIDs = inputProteinIDs;
@@ -44,8 +48,20 @@ class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.interactorPool = interactorPool;
 
-		uniProtEntryClient = threadedClientManager.getOrCreateUniProtClient();
-		proteinOrthologClient = threadedClientManager.getOrCreateProteinOrthologClient();
+		uniProtEntryClient = new UniProtEntryClient(executorServiceManager);
+
+		{
+			final InParanoidClient inParanoidClient = new InParanoidClient();
+			inParanoidClient.setCache(PMBProteinOrthologCacheClient.getInstance());
+
+			proteinOrthologClient = new ThreadedProteinOrthologClientDecorator(
+					new ProteinOrthologWebCachedClient(
+							inParanoidClient,
+							PMBProteinOrthologCacheClient.getInstance()
+					),
+					executorServiceManager
+			);
+		}
 	}
 
 	@Override
@@ -68,7 +84,7 @@ class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 					if (!orthologs.isEmpty()) {
 						for (Protein ortholog : orthologs) {
 							entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
-							interactorPool.addOrtholog(entry, Arrays.asList(ortholog));
+							interactorPool.addOrtholog(entry, Collections.singletonList(ortholog));
 						}
 					} else entry = null;
 				}
@@ -85,9 +101,6 @@ class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
 		}
 
 		interactorPool.addAll(proteinOfInterestPool);
-
-		threadedClientManager.unRegister(proteinOrthologClient);
-		threadedClientManager.unRegister(uniProtEntryClient);
 	}
 
 }

@@ -1,7 +1,7 @@
-package ch.picard.ppimapbuilder.util;
+package ch.picard.ppimapbuilder.util.io;
 
-import junit.framework.TestCase;
 import ch.picard.ppimapbuilder.TestUtils;
+import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.io.File;

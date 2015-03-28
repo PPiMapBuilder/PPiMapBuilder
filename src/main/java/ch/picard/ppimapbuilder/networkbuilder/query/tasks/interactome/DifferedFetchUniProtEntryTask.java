@@ -7,8 +7,8 @@ import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
@@ -41,13 +41,22 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 	public void run(final TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetching UniProt entries...");
 
+		//Index node
+		final Map<String, CyNode> nodes = new HashMap<String, CyNode>();
+		for (CyNode node : network.getNodeList()) {
+			nodes.put(
+					network.getRow(node).get("Uniprot_id", String.class),
+					node
+			);
+		}
+
 		// Get list of protein UniProt identifiers
 		final List<String> uniProtIds =
 				new ArrayList<String>(ProteinUtils.asIdentifiers(interactorPool));
 
 		// Fetch UniProt entries
 		final HashMap<String, UniProtEntry> entries = new HashMap<String, UniProtEntry>();
-		concurrentExecutor = new ConcurrentExecutor<UniProtEntry>(executorServiceManager, uniProtIds.size()) {
+		new ConcurrentExecutor<UniProtEntry>(executorServiceManager, uniProtIds.size()) {
 			UniProtEntryClient uniProtClient = new UniProtEntryClient(executorServiceManager);
 			double progress = 0d;
 
@@ -65,18 +74,24 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 			public void processResult(UniProtEntry entry, Integer index) {
 				taskMonitor.setProgress(++progress / (double) uniProtIds.size());
 				entries.put(uniProtIds.get(index), entry);
+
+				if(entries.size() > 1000) {
+					// Update CyTable
+					updateCyTable(entries, nodes);
+				}
 			}
-		};
+		}.run();
 
-		concurrentExecutor.run();
+		updateCyTable(entries, nodes);
+	}
 
-		// Update CyTable
-		for (CyNode node : network.getNodeList()) {
-			final CyRow row = network.getRow(node);
-			final String uniprotId = row.get("Uniprot_id", String.class);
-			final UniProtEntry entry = entries.get(uniprotId);
+	private void updateCyTable(Map<String, UniProtEntry> entries, Map<String, CyNode> nodes) {
+		for (String uniProtId : entries.keySet()) {
+			final CyNode node = nodes.get(uniProtId);
+			final UniProtEntry entry = entries.get(uniProtId);
 
-			if (entry != null) {
+			if(node != null && entry != null) {
+				final CyRow row = network.getRow(node);
 				final GeneOntologyTermSet geneOntologyTerms = entry.getGeneOntologyTerms();
 
 				row.set("Accessions", new ArrayList<String>(entry.getAccessions()));
@@ -109,6 +124,8 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 				row.set("Molecular_functions", molecularFunction.asStringList());
 			}
 		}
+
+		entries.clear();
 	}
 
 	@Override

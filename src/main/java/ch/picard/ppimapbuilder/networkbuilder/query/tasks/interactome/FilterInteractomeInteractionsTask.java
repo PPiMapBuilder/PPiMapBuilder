@@ -1,14 +1,13 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome;
 
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.Interactor;
@@ -25,11 +24,11 @@ class FilterInteractomeInteractionsTask extends AbstractInteractionQueryTask {
 	private final Organism referenceOrganism;
 
 	public FilterInteractomeInteractionsTask(
-			ThreadedClientManager threadedClientManager,
+			ExecutorServiceManager executorServiceManager,
 			Organism referenceOrganism, List<BinaryInteraction> interactions,
 			UniProtEntrySet interactorPool, HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg
 	) {
-		super(threadedClientManager);
+		super(executorServiceManager);
 		this.interactions = interactions;
 		this.interactorPool = interactorPool;
 		this.interactionsByOrg = interactionsByOrg;
@@ -42,7 +41,7 @@ class FilterInteractomeInteractionsTask extends AbstractInteractionQueryTask {
 		taskMonitor.setStatusMessage("Filter interactions...");
 		final List<BinaryInteraction> filteredInteractions =
 				InteractionUtils.filterConcurrently(
-						threadedClientManager.getExecutorServiceManager(),
+						executorServiceManager,
 						interactions,
 						new ProgressTaskMonitor(taskMonitor),
 

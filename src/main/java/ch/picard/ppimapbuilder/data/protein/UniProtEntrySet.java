@@ -146,9 +146,13 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 
 	public Set<String> identifiersInOrganism(Collection<UniProtEntry> entries, Organism organism) {
 		Set<String> identifiers = new HashSet<String>();
-		for(Map.Entry<String, UniProtEntry> entry : uniprotEntriesIndexed.get(organism).entrySet()) {
-			if(entries.contains(entry.getValue()))
-				identifiers.add(entry.getKey());
+		final Map<String, UniProtEntry> inOrgEntries = uniprotEntriesIndexed.get(organism);
+		if(inOrgEntries != null) {
+			for(Map.Entry<String, UniProtEntry> entry : inOrgEntries.entrySet()) {
+				if(entries.contains(entry.getValue())) {
+					identifiers.add(entry.getKey());
+				}
+			}
 		}
 		return identifiers;
 	}

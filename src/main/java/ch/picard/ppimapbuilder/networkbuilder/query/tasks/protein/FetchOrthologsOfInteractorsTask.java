@@ -4,15 +4,17 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
-import ch.picard.ppimapbuilder.data.client.ThreadedClientManager;
+import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskMonitor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTask {
 
@@ -21,18 +23,30 @@ class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTask {
 	private final UniProtEntrySet interactorPool;
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
-	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
+	private final ThreadedProteinOrthologClient proteinOrthologClient;
 
 	public FetchOrthologsOfInteractorsTask(
-			ThreadedClientManager threadedClientManager,
+			ExecutorServiceManager executorServiceManager,
 			List<Organism> otherOrganisms, UniProtEntrySet interactorPool, Double minimum_orthology_score
 	) {
-		super(threadedClientManager);
+		super(executorServiceManager);
 		this.otherOrganisms = otherOrganisms;
 		this.interactorPool = interactorPool;
 		this.MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
-		this.proteinOrthologClient = threadedClientManager.getOrCreateProteinOrthologClient();
+
+		{
+			final InParanoidClient inParanoidClient = new InParanoidClient();
+			inParanoidClient.setCache(PMBProteinOrthologCacheClient.getInstance());
+
+			proteinOrthologClient = new ThreadedProteinOrthologClientDecorator(
+					new ProteinOrthologWebCachedClient(
+							inParanoidClient,
+							PMBProteinOrthologCacheClient.getInstance()
+					),
+					executorServiceManager
+			);
+		}
 	}
 
 	@Override
@@ -66,8 +80,6 @@ class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTask {
 					entry.addOrthologs(orthologs.get(entry).get(organism));
 			}*/
 		}
-
-		threadedClientManager.unRegister(proteinOrthologClient);
 	}
 
 }

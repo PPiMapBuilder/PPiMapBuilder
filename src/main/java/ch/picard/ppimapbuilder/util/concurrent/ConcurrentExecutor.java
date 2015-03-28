@@ -1,4 +1,4 @@
-package ch.picard.ppimapbuilder.util.concurrency;
+package ch.picard.ppimapbuilder.util.concurrent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,10 +114,10 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 	/**
 	 * Method to implement in order to process result of requests.
-	 * @param result the result of a request obtained
+	 * @param intermediraryResult the result of a request obtained
 	 * @param index the index of the request from which this result comes
 	 */
-	public void processResult(R result, Integer index) {}
+	public void processResult(R intermediraryResult, Integer index) {}
 
 	/**
 	 * Method to override in order to process InterruptedException occurring during a request
