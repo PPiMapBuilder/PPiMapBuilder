@@ -112,9 +112,6 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
 			CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc, CyNetworkViewManager.class);
 
-			
-
-
 
 			// Visual Style services
 			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);

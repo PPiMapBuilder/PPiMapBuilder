@@ -135,6 +135,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JTree treeSource;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
+	/**
+	 * Cluster view
+	 */
+	private JPanel clusterPanel = new JPanel();
+	private JLabel cluster;
 	
 	
 	/**
@@ -168,11 +173,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		/* Build interaction view panel */
 		this.setStaticInteractionView();
-		interactionPanel.setVisible(false);		
+		interactionPanel.setVisible(false);
+		
+		/* Build cluster view panel */
+		this.setStaticClusterView();
+		clusterPanel.setVisible(false);
 		
 		mainPanel.add(voidPanel);
 		mainPanel.add(proteinPanel);
 		mainPanel.add(interactionPanel);
+		mainPanel.add(clusterPanel);
 	}
 
 	/**
@@ -188,6 +198,28 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		voidPanel.add(lblLogo, "cell 0 1");
 
 		voidPanel.setVisible(true);
+	}
+	
+	/**
+	 * Build the cluster view. When one or several nodes are clicked and sharing a cluster.
+	 */
+	private void setStaticClusterView() {
+		clusterPanel.setLayout(new MigLayout("hidemode 3", "[grow,center]", "[80px:n,center][]"));
+		
+		final JLabel lblCluster = new JLabel("GO cluster:");
+		clusterPanel.add(lblCluster, "cell 0 1,alignx left");
+
+		cluster = NONE_LABEL();
+		clusterPanel.add(cluster, "cell 1 1");
+		
+		clusterPanel.setVisible(true);
+	}
+	
+	public void setClusterView(String c) {
+		System.out.println(c);
+		this.setCluster(c);
+		
+		this.showClusterView();
 	}
 
 	/**
@@ -466,10 +498,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	
 	public void showInteractionView() {
 		voidPanel.setVisible(false);
-
 		proteinPanel.setVisible(false);
-
 		interactionPanel.setVisible(true);
+		clusterPanel.setVisible(false);
 
 		this.repaint();
 	}
@@ -481,6 +512,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		proteinPanel.setVisible(false);
 		interactionPanel.setVisible(false);
 		voidPanel.setVisible(true);
+		clusterPanel.setVisible(false);
 
 		this.repaint();
 	}
@@ -492,6 +524,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		voidPanel.setVisible(false);
 		interactionPanel.setVisible(false);
 		proteinPanel.setVisible(true);
+		clusterPanel.setVisible(false);
+
+		this.repaint();
+	}
+	
+	public void showClusterView() {
+		voidPanel.setVisible(false);
+		interactionPanel.setVisible(false);
+		proteinPanel.setVisible(false);
+		clusterPanel.setVisible(true);
 
 		this.repaint();
 	}
@@ -957,6 +999,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 	}
 	
+	public void setCluster(String c) {
+		this.cluster.setText(c);
+	}
 	
 
 }

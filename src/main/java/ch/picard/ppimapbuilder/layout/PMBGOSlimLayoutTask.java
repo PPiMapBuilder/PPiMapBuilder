@@ -4,6 +4,7 @@ import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.ontology.client.web.QuickGOClient;
 import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
 import org.cytoscape.model.CyNetwork;
@@ -151,7 +152,6 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 			Object context = layout.createLayoutContext();
 			String layoutAttribute = "Go_slim_group";
 			insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
-			
 		}
 
 

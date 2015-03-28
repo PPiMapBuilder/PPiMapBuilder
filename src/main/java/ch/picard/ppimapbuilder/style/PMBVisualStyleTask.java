@@ -29,8 +29,6 @@ public class PMBVisualStyleTask extends AbstractTask {
 	private final VisualStyleFactory visualStyleFactoryServiceRef;
 	
 	public PMBVisualStyleTask(VisualMappingManager visualMappingManager, VisualMappingFunctionFactory vmfFactoryD, VisualMappingFunctionFactory vmfFactoryP, VisualStyleFactory visualStyleFactoryServiceRef) {
-		System.out.println("visual style constructor");
-		
 		this.visualMappingManager = visualMappingManager;
 		this.vmfFactoryD = vmfFactoryD;
 		this.vmfFactoryP = vmfFactoryP;
@@ -40,8 +38,6 @@ public class PMBVisualStyleTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
-		System.out.println("visual style task");
-		
 		//VISUAL STYLE
 		// If the style already existed, remove it first
 		for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
@@ -55,7 +51,6 @@ public class PMBVisualStyleTask extends AbstractTask {
 		VisualStyle vs = visualStyleFactoryServiceRef.createVisualStyle("PPiMapBuilder Visual Style");
 
 		//NODE
-		//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
 		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(235, 235, 235)); // Node color
 		vs.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ROUND_RECTANGLE);
 		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 1.5);
