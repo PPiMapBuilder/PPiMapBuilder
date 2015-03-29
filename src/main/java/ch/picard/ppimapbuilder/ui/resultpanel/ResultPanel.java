@@ -7,6 +7,7 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang.NotImplementedException;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.data.protein.Protein;
@@ -113,6 +114,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JLabel ecNum;
 	private JLabel proteinOrganism;
 	private JLabel geneName;
+	private JLabel goCluster;
 	private DefaultListModel synonymsList;
 	private JTree treeOntology;
 	private DefaultMutableTreeNode treeModelGO;
@@ -135,6 +137,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JTree treeSource;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
+	/**
+	 * Cluster view
+	 */
+	private JPanel clusterPanel = new JPanel();
+	private JLabel cluster;
 	
 	
 	/**
@@ -168,11 +175,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		/* Build interaction view panel */
 		this.setStaticInteractionView();
-		interactionPanel.setVisible(false);		
+		interactionPanel.setVisible(false);
+		
+		/* Build cluster view panel */
+		this.setStaticClusterView();
+		clusterPanel.setVisible(false);
 		
 		mainPanel.add(voidPanel);
 		mainPanel.add(proteinPanel);
 		mainPanel.add(interactionPanel);
+		mainPanel.add(clusterPanel);
 	}
 
 	/**
@@ -188,6 +200,28 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		voidPanel.add(lblLogo, "cell 0 1");
 
 		voidPanel.setVisible(true);
+	}
+	
+	/**
+	 * Build the cluster view. When one or several nodes are clicked and sharing a cluster.
+	 */
+	private void setStaticClusterView() {
+		clusterPanel.setLayout(new MigLayout("hidemode 3", "[grow,center]", "[80px:n,center][]"));
+		
+		final JLabel lblCluster = new JLabel("PMB cluster");
+		lblCluster.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		clusterPanel.add(lblCluster, "cell 0 1,alignx left");
+
+		cluster = NONE_LABEL();
+		clusterPanel.add(cluster, "cell 0 2");
+		
+		clusterPanel.setVisible(true);
+	}
+	
+	public void setClusterView(String c) {
+		this.setCluster(c);
+		
+		this.showClusterView();
 	}
 
 	/**
@@ -229,11 +263,15 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		toggleButton.setBackground(Color.GRAY);
 		proteinPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
 
+
+		final JLabel lblCluster = new JLabel("PMB cluster:");
+		proteinPanel.add(lblCluster, "cell 0 6,alignx left");
+
 		final JScrollPane scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setOpaque(false);
 		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		proteinPanel.add(scrollPane_Orthologs, "cell 0 6 3 1,grow");
+		proteinPanel.add(scrollPane_Orthologs, "cell 0 7 3 1,grow");
 
 		panelOrthologs = new JPanel();
 		scrollPane_Orthologs.setViewportView(panelOrthologs);
@@ -268,7 +306,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		 */
 		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		proteinPanel.add(scrollPane_GO, "cell 0 7 3 1,grow");
+		proteinPanel.add(scrollPane_GO, "cell 0 8 3 1,grow");
 
 		final JPanel panel_GO = new JPanel();
 		scrollPane_GO.setViewportView(panel_GO);
@@ -289,6 +327,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		geneName = NONE_LABEL();
 		proteinPanel.add(geneName, "cell 1 4");
+		
+		goCluster = NONE_LABEL();
+		proteinPanel.add(goCluster, "cell 1 6");
 
 		JList geneNameSynonyms = new JList();
 		geneNameSynonyms.setVisibleRowCount(3);
@@ -363,6 +404,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		String tax_id = row.get("Tax_id", String.class);
 
 		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
+		
+		if (row.get("Go_slim_group_term", String.class) != null) {
+			this.setGOCluster(row.get("Go_slim_group_term", String.class));
+		}
+
 
 		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "");
 
@@ -466,10 +512,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	
 	public void showInteractionView() {
 		voidPanel.setVisible(false);
-
 		proteinPanel.setVisible(false);
-
 		interactionPanel.setVisible(true);
+		clusterPanel.setVisible(false);
 
 		this.repaint();
 	}
@@ -481,6 +526,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		proteinPanel.setVisible(false);
 		interactionPanel.setVisible(false);
 		voidPanel.setVisible(true);
+		clusterPanel.setVisible(false);
 
 		this.repaint();
 	}
@@ -492,6 +538,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		voidPanel.setVisible(false);
 		interactionPanel.setVisible(false);
 		proteinPanel.setVisible(true);
+		clusterPanel.setVisible(false);
+
+		this.repaint();
+	}
+	
+	public void showClusterView() {
+		voidPanel.setVisible(false);
+		interactionPanel.setVisible(false);
+		proteinPanel.setVisible(false);
+		clusterPanel.setVisible(true);
 
 		this.repaint();
 	}
@@ -957,6 +1013,13 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 	}
 	
+	public void setCluster(String c) {
+		this.cluster.setText(c);
+	}
+	
+	public void setGOCluster(String c) {
+		this.goCluster.setText(c);
+	}
 	
 
 }
