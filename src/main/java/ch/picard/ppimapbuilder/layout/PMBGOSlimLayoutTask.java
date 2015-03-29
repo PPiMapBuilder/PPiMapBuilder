@@ -123,7 +123,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 			ValueComparator bvc =  new ValueComparator(goOccurrences);
 			TreeMap<String,Integer> sortedGoOccurrences = new TreeMap<String,Integer>(bvc); // Stores the GO ordered by amount
 			sortedGoOccurrences.putAll(goOccurrences);
-			// System.out.println(sortedGoOccurrences);
+			//System.out.println(sortedGoOccurrences);
 
 			// Assign one major GO for each prot
 			if (nodeTable.getColumn("Go_slim_group") == null) { // Create node attribute to store the cluster assignement
@@ -134,15 +134,20 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 			}
 			for (CyNode n : network.getNodeList()) {
 				List<String> tempGOList = network.getRow(n).getList("Go_slim", String.class);
-				if(tempGOList == null) continue;
-				for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
-					if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node
-						//System.out.print(key);
-						network.getRow(n).set("Go_slim_group", key); // We consider this GO as the major to cluster this node
-						network.getRow(n).set("Go_slim_group_term", mapGoTerm.get(key));
-						break;
+				if(tempGOList == null) {
+					network.getRow(n).set("Go_slim_group_term", "Outside any cluster");
+				}
+				else {
+					for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
+						if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node
+							//System.out.print(key);
+							network.getRow(n).set("Go_slim_group", key); // We consider this GO as the major to cluster this node
+							network.getRow(n).set("Go_slim_group_term", mapGoTerm.get(key));
+							break;
+						}
 					}
 				}
+				
 			}
 		}
 
@@ -153,6 +158,10 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 			String layoutAttribute = "Go_slim_group";
 			insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 		}
+		
+		CyTable networkTable = network.getDefaultNetworkTable();
+		networkTable.createColumn("layout", Boolean.class, false);
+		network.getRow(network).set("layout", true);
 
 
 	}

@@ -82,13 +82,11 @@ public class ResultPanelAction implements RowsSetListener {
 		else if (nbNodeSelected == 1) {
 			// System.out.println("node");
 			pmbResultPanel.setProteinView(myNodeRow);
-			
-			// TODO: display GO cluster panel after protein panel
 		}
 		else {
 			// System.out.println("several nodes");
 			
-			if (clusters.keySet().size() == 1) {
+			if (clusters.keySet().size() == 1 && network.getRow(network).get("layout", Boolean.class)) {
 				String cl = clusters.keySet().iterator().next();
 				pmbResultPanel.setClusterView(cl);
 			} else {
