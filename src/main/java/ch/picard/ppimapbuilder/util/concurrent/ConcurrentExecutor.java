@@ -42,8 +42,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 	public final void run() {
 		if (executorService == null || nbRequests <= 1 || (executorServiceManager != null && executorServiceManager.getMaxNumberThread() <= 1)) {
 			// Fallback without concurrent requests
-			for (int i = 0; i < nbRequests; i++) {
-				if(cancel) return;
+			for (int i = 0; i < nbRequests && !cancel; i++) {
 				try {
 					processResult(submitRequests(i).call(), i);
 				} catch (Exception e) {
@@ -57,8 +56,7 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 			final CompletionService<R> completionService = new ExecutorCompletionService<R>(executorService);
 
 			//Submit requests
-			for (int i = 0; i < nbRequests; i++) {
-				if(cancel) break;
+			for (int i = 0; i < nbRequests && !cancel; i++) {
 				Callable<R> callable = submitRequests(i);
 				if(callable != null)
 					futuresIndexed.put(completionService.submit(callable), i);
@@ -114,10 +112,10 @@ public abstract class ConcurrentExecutor<R> implements Runnable {
 
 	/**
 	 * Method to implement in order to process result of requests.
-	 * @param intermediraryResult the result of a request obtained
+	 * @param intermediaryResult the result of a request obtained
 	 * @param index the index of the request from which this result comes
 	 */
-	public void processResult(R intermediraryResult, Integer index) {}
+	public void processResult(R intermediaryResult, Integer index) {}
 
 	/**
 	 * Method to override in order to process InterruptedException occurring during a request

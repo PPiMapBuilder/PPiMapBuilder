@@ -78,7 +78,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
 
 		ExecutorServiceManager executorServiceManager =
-				new ExecutorServiceManager((Runtime.getRuntime().availableProcessors() + 1) * 2);
+				new ExecutorServiceManager((Runtime.getRuntime().availableProcessors() + 1) * 3);
 
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(

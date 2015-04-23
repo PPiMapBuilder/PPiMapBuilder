@@ -64,8 +64,8 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 			}
 
 			@Override
-			public void processResult(List<OrthologScoredProtein> intermediraryResult, Integer index) {
-				orthologs.put(organismList.get(index), intermediraryResult);
+			public void processResult(List<OrthologScoredProtein> intermediaryResult, Integer index) {
+				orthologs.put(organismList.get(index), intermediaryResult);
 			}
 		}.run();
 
@@ -101,8 +101,8 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 			}
 
 			@Override
-			public void processResult(Map<Organism, List<OrthologScoredProtein>> intermediraryResult, Integer index) {
-				out.put(proteinList.get(index), intermediraryResult);
+			public void processResult(Map<Organism, List<OrthologScoredProtein>> intermediaryResult, Integer index) {
+				out.put(proteinList.get(index), intermediaryResult);
 			}
 		}.run();
 

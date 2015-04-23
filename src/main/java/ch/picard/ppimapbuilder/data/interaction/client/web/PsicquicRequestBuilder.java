@@ -18,6 +18,7 @@ public class PsicquicRequestBuilder {
 	private final List<PsicquicSimpleClient> clients;
 	private final List<PsicquicRequest> requests;
 	private int maxResultsPerPages = 1000;
+	private int estimatedInteractionsCount = 0;
 
 	public PsicquicRequestBuilder(Collection<PsicquicService> services) {
 		this(InteractionUtils.psicquicServicesToPsicquicSimpleClients(services));
@@ -44,6 +45,7 @@ public class PsicquicRequestBuilder {
 		for (PsicquicSimpleClient client : clients) {
 			try {
 				long count = client.countByQuery(query);
+				estimatedInteractionsCount += count;
 				final int numberPages = (int) Math.ceil((double) count / (double) maxResultsPerPages);
 
 				for (int page = 0; page < numberPages; page++) {
@@ -178,4 +180,7 @@ public class PsicquicRequestBuilder {
 		return requests;
 	}
 
+	public int getEstimatedInteractionsCount() {
+		return estimatedInteractionsCount;
+	}
 }

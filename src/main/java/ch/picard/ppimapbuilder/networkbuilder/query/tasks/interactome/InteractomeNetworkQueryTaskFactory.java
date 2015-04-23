@@ -6,13 +6,10 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
-import psidev.psi.mi.tab.model.BinaryInteraction;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 public class InteractomeNetworkQueryTaskFactory implements TaskFactory {
 	private final ExecutorServiceManager executorServiceManager;
@@ -35,18 +32,11 @@ public class InteractomeNetworkQueryTaskFactory implements TaskFactory {
 
 	@Override
 	public TaskIterator createTaskIterator() {
-		List<BinaryInteraction> interactions = new ArrayList<BinaryInteraction>();
 		return new TaskIterator(
-				new FetchInteractomeInteractionsTask(
+				new FetchInteractionsTask(
 						executorServiceManager,
-						psicquicServices,
-						referenceOrganism,
-						interactions
-				),
-				new FilterInteractomeInteractionsTask(
-						executorServiceManager,
-						referenceOrganism, interactions,
-						interactorPool, interactionsByOrg
+						interactorPool, interactionsByOrg, psicquicServices,
+						referenceOrganism
 				)
 		);
 	}

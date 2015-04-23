@@ -1,11 +1,11 @@
 package ch.picard.ppimapbuilder.data.interaction.client.web;
 
 import ch.picard.ppimapbuilder.data.Pair;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
 import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
@@ -13,13 +13,11 @@ import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.CrossReference;
 import psidev.psi.mi.tab.model.Interactor;
+import uk.ac.ebi.enfin.mi.cluster.ClusterServiceException;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import uk.ac.ebi.enfin.mi.cluster.InteractionCluster;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -33,6 +31,15 @@ public class InteractionUtils {
 	 */
 	public static Collection<EncoreInteraction> clusterInteraction(List<BinaryInteraction> interactions) {
 		// Cluster interaction results to remove duplicates
+		InteractionCluster cluster = new InteractionCluster(interactions);
+		cluster.setMappingIdDbNames("uniprotkb");
+		cluster.runService();
+
+		return cluster.getInteractionMapping().values();
+	}
+
+	public static Collection<EncoreInteraction> clusterInteraction(final Iterator<BinaryInteraction> interactions)
+			throws ClusterServiceException {
 		InteractionCluster cluster = new InteractionCluster(interactions);
 		cluster.setMappingIdDbNames("uniprotkb");
 		cluster.runService();
@@ -87,74 +94,16 @@ public class InteractionUtils {
 		return interactors;
 	}
 
-	public static interface InteractionFilter {
-		public boolean isValidInteraction(BinaryInteraction interaction);
-	}
-
-	public static abstract class InteractorFilter implements InteractionFilter {
-		public abstract boolean isValidInteractor(Interactor interactor);
-
-		@Override
-		public boolean isValidInteraction(BinaryInteraction interaction) {
-			Interactor interactorA = interaction.getInteractorA();
-			Interactor interactorB = interaction.getInteractorB();
-			return  isValidInteractor(interactorA)
-					&& isValidInteractor(interactorB);
-		}
-	}
-
-	public static final class OrganismInteractionFilter extends InteractorFilter {
-		private final Organism organism;
-
-		public OrganismInteractionFilter(Organism organism) {
-			this.organism = organism;
-		}
-
-		@Override
-		public boolean isValidInteractor(Interactor interactor) {
-			return organism.equals(
-					OrganismUtils.findOrganismInMITABTaxId(
-							InParanoidOrganismRepository.getInstance(),
-							interactor.getOrganism().getTaxid()
-					)
-			);
-		}
-	}
-
-	public static final class UniProtInteractionFilter extends InteractorFilter {
-		@Override
-		public boolean isValidInteractor(Interactor interactor) {
-			final List<CrossReference> ids = interactor.getIdentifiers();
-			ids.addAll(interactor.getAlternativeIdentifiers());
-
-			if (ids.size() == 1 && !ids.get(0).getDatabase().equals("uniprotkb"))
-				return false;
-
-			CrossReference uniprot = null;
-			boolean hasUniprot = false;
-			for (CrossReference ref : ids) {
-				hasUniprot = hasUniprot || (
-						ref.getDatabase().equals("uniprotkb") // Is UniProt
-								&&
-								ProteinUtils.UniProtId.isValid(ref.getIdentifier()) // Valid UniProt
-				);
-				if (hasUniprot) {
-					uniprot = ref;
-					break;
-				}
+	public static <F extends InteractionFilter> InteractionFilter combineFilters(final F... filters) {
+		return new InteractionFilter() {
+			@Override
+			public boolean isValidInteraction(BinaryInteraction interaction) {
+				for (F filter : filters)
+					if (!filter.isValidInteraction(interaction))
+						return false;
+				return true;
 			}
-
-			if (!hasUniprot)
-				return false;
-
-			List<CrossReference> sortedIdentifiers = new ArrayList<CrossReference>();
-			ids.remove(uniprot);
-			sortedIdentifiers.add(uniprot);
-			sortedIdentifiers.addAll(ids);
-			interactor.setIdentifiers(sortedIdentifiers);
-
-			return true;
-		}
+		};
 	}
 
 
@@ -171,6 +120,7 @@ public class InteractionUtils {
 	 * @param interactions
 	 * @param filters
 	 */
+	@Deprecated
 	public static ArrayList<BinaryInteraction> filter(List<BinaryInteraction> interactions, InteractionFilter... filters) {
 		ArrayList<BinaryInteraction> validInteractions = new ArrayList<BinaryInteraction>();
 		for (BinaryInteraction interaction : interactions)
@@ -179,6 +129,7 @@ public class InteractionUtils {
 		return validInteractions;
 	}
 
+	@Deprecated
 	public static ArrayList<BinaryInteraction> filterConcurrently(
 			ExecutorServiceManager executorServiceManager,
 			final List<BinaryInteraction> interactions,
@@ -205,8 +156,8 @@ public class InteractionUtils {
 			}
 
 			@Override
-			public void processResult(Boolean intermediraryResult, Integer index) {
-				if (intermediraryResult) validInteractions.add(interactions.get(index));
+			public void processResult(Boolean intermediaryResult, Integer index) {
+				if (intermediaryResult) validInteractions.add(interactions.get(index));
 			}
 		}.run();
 		return validInteractions;

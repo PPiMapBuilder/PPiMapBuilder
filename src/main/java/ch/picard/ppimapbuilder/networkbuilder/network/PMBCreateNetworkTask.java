@@ -235,11 +235,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("Cellular_components", String.class, false);
 		nodeTable.createListColumn("Biological_processes", String.class, false);
 		nodeTable.createListColumn("Molecular_functions", String.class, false);
-		if(!networkQueryParameters.isInteractomeQuery()){
-			nodeTable.createListColumn("Orthologs", String.class, false);
-			nodeTable.createColumn("Queried", String.class, false);
-		}
-
+		nodeTable.createColumn("Queried", String.class, false);
+		nodeTable.createListColumn("Orthologs", String.class, false);
 	}
 
 	private void createEdges(CyNetwork network) {
@@ -354,12 +351,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					JSONUtils.jsonListToStringList(molecularFunction)
 			);
 			nodeAttr.set("Molecular_functions", molecularFunction.asStringList());
+			boolean queried = false;
 			if(!networkQueryParameters.isInteractomeQuery()) {
 				nodeAttr.set("Orthologs",
 						JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
 				);
-				nodeAttr.set("Queried", String.valueOf(proteinOfInterestPool.contains(entry)));
+				queried = proteinOfInterestPool.contains(entry);
 			}
+			nodeAttr.set("Queried", String.valueOf(queried));
 		}
 
 		return node;

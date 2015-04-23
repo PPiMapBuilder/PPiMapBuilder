@@ -4,17 +4,17 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
 import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.util.*;
 import java.util.concurrent.Callable;
 
-class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractionQueryTask {
+class FetchDirectInteractionOtherOrganismsTask extends AbstractThreadedTask {
 
 	private final Collection<PsicquicService> psicquicServices;
 
@@ -86,8 +86,8 @@ class FetchDirectInteractionOtherOrganismsTask extends AbstractInteractionQueryT
 			}
 
 			@Override
-			public void processResult(PrimaryInteractionQuery intermediraryResult, Integer index) {
-				directInteractionsByOrg.put(otherOrganisms.get(index), intermediraryResult.getNewInteractions());
+			public void processResult(PrimaryInteractionQuery intermediaryResult, Integer index) {
+				directInteractionsByOrg.put(otherOrganisms.get(index), intermediaryResult.getNewInteractions());
 			}
 
 		}.run();

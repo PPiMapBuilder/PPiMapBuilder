@@ -112,10 +112,10 @@ public class QuickGOClient {
 					}
 
 					@Override
-					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> intermediraryResult, Integer index) {
+					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> intermediaryResult, Integer index) {
 						if(progressMonitor != null)
 							progressMonitor.setProgress(((double)++i[0])/((double)URIs.size()));
-						results.putAll(intermediraryResult);
+						results.putAll(intermediaryResult);
 					}
 				}.run();
 

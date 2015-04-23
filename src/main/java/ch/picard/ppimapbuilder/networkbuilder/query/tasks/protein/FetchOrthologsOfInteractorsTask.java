@@ -9,14 +9,14 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrtho
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
 import org.cytoscape.work.TaskMonitor;
 
 import java.util.List;
 import java.util.Map;
 
-class FetchOrthologsOfInteractorsTask extends AbstractInteractionQueryTask {
+class FetchOrthologsOfInteractorsTask extends AbstractThreadedTask {
 
 	// Input
 	private final List<Organism> otherOrganisms;

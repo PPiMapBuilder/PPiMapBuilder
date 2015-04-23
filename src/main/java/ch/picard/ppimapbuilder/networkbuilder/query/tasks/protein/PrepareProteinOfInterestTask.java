@@ -11,8 +11,8 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrtho
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
 import org.cytoscape.work.TaskMonitor;
 
 import java.util.Collections;
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-class PrepareProteinOfInterestTask extends AbstractInteractionQueryTask {
+class PrepareProteinOfInterestTask extends AbstractThreadedTask {
 
 	// Intput
 	private final Double MINIMUM_ORTHOLOGY_SCORE;

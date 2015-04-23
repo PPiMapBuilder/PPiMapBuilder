@@ -43,7 +43,6 @@ public class PsicquicRequestBuilderTest {
 		for (PsicquicRequest request : requests) {
 			Assert.assertEquals(request.getQuery(), query);
 		}
-
 	}
 
 	@Test

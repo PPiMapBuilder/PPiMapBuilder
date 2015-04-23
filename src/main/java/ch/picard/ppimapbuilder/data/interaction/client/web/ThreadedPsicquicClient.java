@@ -93,11 +93,11 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 				}
 
 				@Override
-				public void processResult(Collection<BinaryInteraction> intermediraryResult, Integer index) {
+				public void processResult(Collection<BinaryInteraction> intermediaryResult, Integer index) {
 					if (progressMonitor != null) {
 						progressMonitor.setProgress(++nbDone[0] / numberPages);
 					}
-					interactions.addAll(intermediraryResult);
+					interactions.addAll(intermediaryResult);
 				}
 
 				@Override
@@ -145,8 +145,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
-				results.addAll(intermediraryResult);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
 			}
 
 			@Override
@@ -191,8 +191,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
-				results.addAll(intermediraryResult);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
 			}
 
 		}.run();
@@ -236,8 +236,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
-				results.addAll(intermediraryResult);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
 			}
 
 			@Override
@@ -290,9 +290,9 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> intermediraryResult, Integer index) {
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
 				if (progressMonitor != null) progressMonitor.setProgress(index / queryList.size());
-				results.addAll(intermediraryResult);
+				results.addAll(intermediaryResult);
 			}
 
 		}.run();

@@ -83,12 +83,12 @@ class InParanoidCacheLoaderTask extends AbstractTask {
 			}
 
 			@Override
-			public void processResult(CacheLoadRequest intermediraryResult, Integer index) {
+			public void processResult(CacheLoadRequest intermediaryResult, Integer index) {
 				monitor.setStep(
 						"Loaded: " +
-								intermediraryResult.organismA.getSimpleScientificName() +
+								intermediaryResult.organismA.getSimpleScientificName() +
 								" - " +
-								intermediraryResult.organismB.getSimpleScientificName()
+								intermediaryResult.organismB.getSimpleScientificName()
 				);
 				i[0]++;
 			}

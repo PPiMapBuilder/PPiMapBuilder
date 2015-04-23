@@ -3,24 +3,25 @@ package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRequestBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.OrganismInteractorFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.UniProtInteractorFilter;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.AbstractInteractionQueryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrent.ConcurrentListExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentFetcherIterator;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
+import com.google.common.collect.Iterators;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
-class FetchInteractionsTask extends AbstractInteractionQueryTask {
+class FetchInteractionsTask extends AbstractThreadedTask {
 
 	private final Collection<PsicquicService> psicquicServices;
 
@@ -53,9 +54,11 @@ class FetchInteractionsTask extends AbstractInteractionQueryTask {
 		taskMonitor.setStatusMessage("Fetch secondary interactions in all organisms...");
 
 		final double size = allOrganisms.size();
-		final double[] progressPercent = new double[]{0, 0};
-		taskMonitor.setProgress(progressPercent[1] = 0d);
+		taskMonitor.setProgress(0d);
 		new ConcurrentExecutor<Collection<EncoreInteraction>>(executorServiceManager, allOrganisms.size()) {
+			double num = 0d;
+			double progress = 0d;
+
 			@Override
 			public Callable<Collection<EncoreInteraction>> submitRequests(final int index) {
 				return new Callable<Collection<EncoreInteraction>>() {
@@ -63,35 +66,32 @@ class FetchInteractionsTask extends AbstractInteractionQueryTask {
 					public Collection<EncoreInteraction> call() throws Exception {
 						final Organism organism = allOrganisms.get(index);
 
-						//Get proteins in the current organism
+						// Get proteins in the current organism
 						final Set<String> proteins = interactorPool.identifiersInOrganism(organism).keySet();
 						//proteins.removeAll(interactorPool.identifiersInOrganism(proteinOfInterestPool, organism));
 
-						//Prepare Psicquic requests
+						// Prepare Psicquic requests
 						final PsicquicRequestBuilder requestBuilder = new PsicquicRequestBuilder(psicquicServices)
 								.addGetByProteinPool(proteins, organism.getTaxId());
 
-						//Get secondary interactions
-						final List<BinaryInteraction> interactionsBinary = ConcurrentListExecutor.getResults(
+						// Get concurrent iterator of BinaryInteraction
+						final Iterator<BinaryInteraction> interactionIterator = new ConcurrentFetcherIterator<BinaryInteraction>(
 								requestBuilder.getPsicquicRequests(),
 								executorServiceManager
 						);
 
-						//Filter non uniprot and non current organism
-						final List<BinaryInteraction> interactionsBinaryFiltered = InteractionUtils.filterConcurrently(
-								executorServiceManager,
-								interactionsBinary,
-								null,
-								new InteractionUtils.UniProtInteractionFilter(),
-								new InteractionUtils.OrganismInteractionFilter(organism)
+						//Combined interaction filter. Filtering out non uniprot and non current organism
+						final InteractionFilter filter = InteractionUtils.combineFilters(
+								new UniProtInteractorFilter(),
+								new OrganismInteractorFilter(organism)
 						);
 
-						//Add primary interactions
-						interactionsBinaryFiltered.addAll(directInteractionsByOrg.get(organism));
-
-						//Cluster
+						// Interaction object stream = Fetch interactions > Filter interactions > Cluster interactions
 						return InteractionUtils.clusterInteraction(
-								interactionsBinaryFiltered
+								Iterators.filter(
+										interactionIterator,
+										filter
+								)
 						);
 					}
 				};
@@ -99,15 +99,15 @@ class FetchInteractionsTask extends AbstractInteractionQueryTask {
 
 			@Override
 			public void processResult(Collection<EncoreInteraction> intermediaryResult, Integer index) {
-				double percent = progressPercent[0]++ / size;
-				if(percent > progressPercent[1])
-					taskMonitor.setProgress(progressPercent[1] = percent);
+				double percent = ++num / size;
+				if(percent > progress)
+					taskMonitor.setProgress(progress = percent);
 				interactionsByOrg.put(allOrganisms.get(index), intermediaryResult);
 			}
 
 		}.run();
 
-		if(progressPercent[1] < 1.0) taskMonitor.setProgress(1.0);
+		taskMonitor.setProgress(1.0);
 	}
 
 }

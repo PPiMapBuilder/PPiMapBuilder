@@ -1,5 +1,6 @@
-package ch.picard.ppimapbuilder.data.interaction.client.web;
+package ch.picard.ppimapbuilder.data.interaction.client.web.filter;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
@@ -18,7 +19,7 @@ import java.util.Set;
  * Filter that rejects interactions with at least one interactor not found in the reference organism (even with orthology).
  * This filters also extracts the interactor UniProt entry to be stored in the newInteractors UniProtEntrySet
  */
-public class UniProtFetcherInteractionFilter extends InteractionUtils.InteractorFilter {
+public class UniProtFetcherInteractionFilter extends InteractorFilter {
 	private final ProteinOrthologClient proteinOrthologClient;
 	private final boolean inReferenceOrgansim;
 	private final Organism referenceOrganism;
