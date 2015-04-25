@@ -26,6 +26,10 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
+import uk.ac.ebi.ook.web.services.Query;
+import uk.ac.ebi.ook.web.services.QueryService;
+import uk.ac.ebi.ook.web.services.QueryServiceLocator;
+
 import java.util.*;
 
 public class PMBCreateNetworkTask extends AbstractTask {
@@ -250,24 +254,56 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 					CyRow rowA = network.getRow(nodeA);
 					CyRow rowB = network.getRow(nodeB);
+					
+					try {
+					    QueryService locator = new QueryServiceLocator();
+					    Query qs = locator.getOntologyQuery();
+					    
+					    CyRow edgeAttr = network.getRow(myEdge);
+						edgeAttr.set("Reference_organism_interactor_A", refOrgProtA.getUniProtId());
+						edgeAttr.set("Reference_organism_interactor_B", refOrgProtB.getUniProtId());
+						edgeAttr.set("Interactor_A", nodeAName);
+						edgeAttr.set("Interactor_B", nodeBName);
+						edgeAttr.set("Gene_name_A", rowA.get("gene_name", String.class));
+						edgeAttr.set("Gene_name_B", rowB.get("gene_name", String.class));
+						edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
+						edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
+						edgeAttr.set("Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
+						System.out.println("# Det method");
+						System.out.println(interaction.getMethodToPubmed());
+						System.out.println(interaction.getMethodToPubmed().keySet());
+						System.out.println(PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
+						
+						// TODO: create a method which stores queries to do not rerun them
+						List<String> methods = new ArrayList<String>();
+						for (String m : interaction.getMethodToPubmed().keySet()){
+							methods.add(qs.getTermById(m, "MI"));
+						}
+						System.out.println(methods);
+						edgeAttr.set("Detmethod", methods);
+						System.out.println("# Type");
+						System.out.println(interaction.getTypeToPubmed());
+						System.out.println(interaction.getTypeToPubmed().keySet());
+						System.out.println(PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));
+						
+						List<String> types = new ArrayList<String>();
+						for (String t : interaction.getTypeToPubmed().keySet()){
+							types.add(qs.getTermById(t, "MI"));
+						}
+						System.out.println(types);
+						edgeAttr.set("Type", types);
+						//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
+						edgeAttr.set("Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
+						edgeAttr.set("Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
+						edgeAttr.set("Tax_id", String.valueOf(organism.getTaxId()));
+						edgeAttr.set("Interolog", Boolean.toString(!inRefOrg));
+					    
+					    
+					} catch (Exception e) {
+					    System.out.println("Can't create edge between "+refOrgProtA.getUniProtId()+" and "+refOrgProtB.getUniProtId());
+					}
 
-					CyRow edgeAttr = network.getRow(myEdge);
-					edgeAttr.set("Reference_organism_interactor_A", refOrgProtA.getUniProtId());
-					edgeAttr.set("Reference_organism_interactor_B", refOrgProtB.getUniProtId());
-					edgeAttr.set("Interactor_A", nodeAName);
-					edgeAttr.set("Interactor_B", nodeBName);
-					edgeAttr.set("Gene_name_A", rowA.get("gene_name", String.class));
-					edgeAttr.set("Gene_name_B", rowB.get("gene_name", String.class));
-					edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
-					edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
-					edgeAttr.set("Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-					edgeAttr.set("Detmethod", PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
-					edgeAttr.set("Type", PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));
-					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
-					edgeAttr.set("Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
-					edgeAttr.set("Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
-					edgeAttr.set("Tax_id", String.valueOf(organism.getTaxId()));
-					edgeAttr.set("Interolog", Boolean.toString(!inRefOrg));
+					
 				} else
 					System.out.println("node not found with : " + nodeAName + (nodeA == null ? "[null]" : "") + " <-> " + nodeBName + (nodeB == null ? "[null]" : ""));
 			}

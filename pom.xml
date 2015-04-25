@@ -484,5 +484,12 @@
             <artifactId>opencsv</artifactId>
             <version>2.0</version>
         </dependency>
+        
+        <dependency>
+	      <groupId>uk.ac.ebi</groupId>
+	      <artifactId>ols</artifactId>
+	      <version>1.14.1</version>
+	    </dependency>
+        
     </dependencies>
 </project>
