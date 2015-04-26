@@ -262,21 +262,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
 					edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
 					edgeAttr.set("Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-					
-					System.out.println("# Det method");
-					System.out.println(interaction.getMethodToPubmed());
-					System.out.println(interaction.getMethodToPubmed().keySet());
-					List<String> methods = OLSClient.getInstance().convert(interaction.getMethodToPubmed().keySet());
-					System.out.println(methods);
-					edgeAttr.set("Detmethod", methods);
-					
-					System.out.println("# Type");
-					System.out.println(interaction.getTypeToPubmed());
-					System.out.println(interaction.getTypeToPubmed().keySet());
-					List<String> types = OLSClient.getInstance().convert(interaction.getTypeToPubmed().keySet());
-					System.out.println(types);
-					edgeAttr.set("Type", types);
-					
+					edgeAttr.set("Detmethod", OLSClient.getInstance().convert(interaction.getMethodToPubmed().keySet()));
+					edgeAttr.set("Type", OLSClient.getInstance().convert(interaction.getTypeToPubmed().keySet()));
 					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
 					edgeAttr.set("Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
 					edgeAttr.set("Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
