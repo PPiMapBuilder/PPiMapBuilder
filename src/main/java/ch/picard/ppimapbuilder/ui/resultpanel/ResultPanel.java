@@ -105,6 +105,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * Protein view
 	 */
 	private JPanel proteinPanel = new JPanel();
+	private JPanel panelSynonyms;
+	private JTree treeSynonyms;
 	private JPanel panelOrthologs;
 	private JTree treeOrthologs;
 
@@ -230,7 +232,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private void setStaticProteinView() {
 
-		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
+		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
 		/*
 		 * HEADER - GENERAL INFORMATION
 		 */
@@ -250,51 +252,64 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		final JLabel lblGeneName = new JLabel("Gene name:");
 		proteinPanel.add(lblGeneName, "flowx,cell 0 4,alignx left");
-
-		final JLabel lblSynonyms = new JLabel("Synonyms:");
-		proteinPanel.add(lblSynonyms, "flowx,cell 0 5,alignx left,aligny top");
-
-		final JScrollPane scrollPane_Synonyms = new JScrollPane();
-		proteinPanel.add(scrollPane_Synonyms, "cell 1 5,grow");
-
-		final JToggleButton toggleButton = new JToggleButton("+");
-		toggleButton.setMargin(new Insets(2, 5, 2, 5));
-		toggleButton.setBorder(new LineBorder(Color.black, 1));
-		toggleButton.setBackground(Color.GRAY);
-		proteinPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
-
+		
 
 		final JLabel lblCluster = new JLabel("PMB cluster:");
-		proteinPanel.add(lblCluster, "cell 0 6,alignx left");
+		proteinPanel.add(lblCluster, "cell 0 5,alignx left");
 
+//		final JLabel lblSynonyms = new JLabel("Synonyms:");
+//		proteinPanel.add(lblSynonyms, "flowx,cell 0 5,alignx left,aligny top");
+//
+//		final JScrollPane scrollPane_Synonyms = new JScrollPane();
+//		proteinPanel.add(scrollPane_Synonyms, "cell 1 5,grow");
+		
+		final JScrollPane scrollPane_Synonyms = new JScrollPane();
+		scrollPane_Synonyms.setOpaque(false);
+		scrollPane_Synonyms.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Synonyms", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		proteinPanel.add(scrollPane_Synonyms, "cell 0 6 3 1,grow");
+		panelSynonyms = new JPanel();
+		scrollPane_Synonyms.setViewportView(panelSynonyms);
+		panelSynonyms.setBorder(null);
+		panelSynonyms.setLayout(new BoxLayout(panelSynonyms, BoxLayout.Y_AXIS));
+		treeSynonyms = new JTree();
+		panelSynonyms.add(treeSynonyms);
+		
+
+//		final JToggleButton toggleButton = new JToggleButton("+");
+//		toggleButton.setMargin(new Insets(2, 5, 2, 5));
+//		toggleButton.setBorder(new LineBorder(Color.black, 1));
+//		toggleButton.setBackground(Color.GRAY);
+//		proteinPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
+
+
+		
 		final JScrollPane scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setOpaque(false);
 		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
 		proteinPanel.add(scrollPane_Orthologs, "cell 0 7 3 1,grow");
-
 		panelOrthologs = new JPanel();
 		scrollPane_Orthologs.setViewportView(panelOrthologs);
 		panelOrthologs.setBorder(null);
 		panelOrthologs.setLayout(new BoxLayout(panelOrthologs, BoxLayout.Y_AXIS));
-
 		treeOrthologs = new JTree();
 		panelOrthologs.add(treeOrthologs);
 
-		ItemListener itemListener = new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent arg0) {
-				int state = arg0.getStateChange();
-				if (state == ItemEvent.SELECTED) {
-					toggleButton.setText("-");
-					scrollPane_Synonyms.setVisible(true);
-				} else {
-					toggleButton.setText("+");
-					scrollPane_Synonyms.setVisible(false);
-				}
-			}
-		};
-		toggleButton.addItemListener(itemListener);
+//		ItemListener itemListener = new ItemListener() {
+//			@Override
+//			public void itemStateChanged(ItemEvent arg0) {
+//				int state = arg0.getStateChange();
+//				if (state == ItemEvent.SELECTED) {
+//					toggleButton.setText("-");
+//					scrollPane_Synonyms.setVisible(true);
+//				} else {
+//					toggleButton.setText("+");
+//					scrollPane_Synonyms.setVisible(false);
+//				}
+//			}
+//		};
+//		toggleButton.addItemListener(itemListener);
 
 		final JScrollPane scrollPane_GO = new JScrollPane();
 		scrollPane_GO.setOpaque(false);
@@ -329,18 +344,18 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		proteinPanel.add(geneName, "cell 1 4");
 		
 		goCluster = NONE_LABEL();
-		proteinPanel.add(goCluster, "cell 1 6");
+		proteinPanel.add(goCluster, "cell 1 5");
 
-		JList geneNameSynonyms = new JList();
-		geneNameSynonyms.setVisibleRowCount(3);
-		geneNameSynonyms.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+//		JList geneNameSynonyms = new JList();
+//		geneNameSynonyms.setVisibleRowCount(3);
+//		geneNameSynonyms.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+//
+//		synonymsList = new DefaultListModel();
+//		synonymsList.addElement("");
+//		geneNameSynonyms.setModel(synonymsList);
 
-		synonymsList = new DefaultListModel();
-		synonymsList.addElement("");
-		geneNameSynonyms.setModel(synonymsList);
-
-		scrollPane_Synonyms.setViewportView(geneNameSynonyms);
-		scrollPane_Synonyms.setVisible(false);
+//		scrollPane_Synonyms.setViewportView(geneNameSynonyms);
+//		scrollPane_Synonyms.setVisible(false);
 
 		treeModelGO = new DefaultMutableTreeNode("GeneOntology");
 		treeOntology = new JTree(treeModelGO);
@@ -413,6 +428,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "");
 
 		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
+		
 		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
 				row.getList("Molecular_functions_hidden", String.class));
 
@@ -425,7 +441,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	}
 
 	private void setStaticInteractionView() {
-		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][::50px][10px:n][30px:80px,grow]"));
+		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
 
 		/*
 		 * HEADER - GENERAL INFORMATION
@@ -832,20 +848,41 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		};
 	}
 
+//	/**
+//	 * Set the gene name synonyms
+//	 * 
+//	 * @param synonyms
+//	 */
+//	private void setGeneNameSynonyms(List<String> synonyms) {
+//		synonymsList.clear();
+//		if (!synonyms.isEmpty()) {
+//			for (String s : synonyms) {
+//				synonymsList.addElement(s);
+//			}
+//		} else {
+//			synonymsList.addElement("");
+//		}
+//	}
 	/**
 	 * Set the gene name synonyms
 	 * 
 	 * @param synonyms
 	 */
 	private void setGeneNameSynonyms(List<String> synonyms) {
-		synonymsList.clear();
+		this.panelSynonyms.removeAll();
+		
 		if (!synonyms.isEmpty()) {
-			for (String s : synonyms) {
-				synonymsList.addElement(s);
-			}
-		} else {
-			synonymsList.addElement("");
+			for (String str : synonyms) {
+				this.panelSynonyms.add(new JLabel(" •   " + str));
+			}			
+//			this.panelSynonyms.setVisible(true);
 		}
+		else {
+//			this.panelSynonyms.setVisible(false);
+			this.panelSynonyms.add(new JLabel(""));
+		}
+		
+
 	}
 
 	/**
