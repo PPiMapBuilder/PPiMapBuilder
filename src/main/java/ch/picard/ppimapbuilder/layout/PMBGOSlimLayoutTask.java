@@ -160,7 +160,9 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		}
 		
 		CyTable networkTable = network.getDefaultNetworkTable();
-		networkTable.createColumn("layout", Boolean.class, false);
+		if (networkTable.getColumn("layout") == null) { // Create network attribute to indicate if the layout was made
+			networkTable.createColumn("layout", Boolean.class, false);
+		}
 		network.getRow(network).set("layout", true);
 
 
