@@ -271,7 +271,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		scrollPane_Synonyms.setOpaque(false);
 		scrollPane_Synonyms.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Synonyms", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		proteinPanel.add(scrollPane_Synonyms, "cell 0 6 3 1,grow");
+		// proteinPanel.add(scrollPane_Synonyms, "cell 0 6 3 1,grow");
 		panelSynonyms = new JPanel();
 		scrollPane_Synonyms.setViewportView(panelSynonyms);
 		panelSynonyms.setBorder(null);
@@ -284,7 +284,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		scrollPane_Orthologs.setOpaque(false);
 		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		proteinPanel.add(scrollPane_Orthologs, "cell 0 7 3 1,grow");
+		// proteinPanel.add(scrollPane_Orthologs, "cell 0 7 3 1,grow");
 		panelOrthologs = new JPanel();
 		scrollPane_Orthologs.setViewportView(panelOrthologs);
 		panelOrthologs.setBorder(null);
@@ -297,7 +297,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		scrollPane_GO.setOpaque(false);
 		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		proteinPanel.add(scrollPane_GO, "cell 0 8 3 1,grow");
+		// proteinPanel.add(scrollPane_GO, "cell 0 8 3 1,grow");
 		final JPanel panel_GO = new JPanel();
 		scrollPane_GO.setViewportView(panel_GO);
 		panel_GO.setBorder(null);
@@ -378,31 +378,52 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
 		// TODO: put N/A if gene name begins by [ptn]
 		
+		int i = 5;
+		
 		// CLUSTER NAME
 		if (row.get("Go_slim_group_term", String.class) != null) {
 			this.setGOCluster(row.get("Go_slim_group_term", String.class));
 			lblCluster.setVisible(true);
 			goCluster.setVisible(true);
-		}
-		else {
+			i = i + 1;
+		} else {
 			lblCluster.setVisible(false);
 			goCluster.setVisible(false);
 		}
 		
 		// SYNONYMS
-		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
-		scrollPane_Synonyms.setVisible(!row.getList("Synonym_gene_names", String.class).isEmpty());
+		if (!row.getList("Synonym_gene_names", String.class).isEmpty()) {
+			proteinPanel.remove(scrollPane_Synonyms);
+			proteinPanel.add(scrollPane_Synonyms, "cell 0 "+i+" 3 1,grow");
+			this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
+			scrollPane_Synonyms.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Synonyms.setVisible(false);
+		}
 
 		// ORTHOLOGS
-		this.setOrthologs(row.getList("Orthologs", String.class));
-		scrollPane_Orthologs.setVisible(!row.getList("Orthologs", String.class).isEmpty());		
+		if (!row.getList("Orthologs", String.class).isEmpty()) {
+			proteinPanel.add(scrollPane_Orthologs, "cell 0 "+i+" 3 1,grow");
+			this.setOrthologs(row.getList("Orthologs", String.class));
+			scrollPane_Orthologs.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Orthologs.setVisible(false);
+		}	
 		
 		// GENE ONTOLOGY
-		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
-				row.getList("Molecular_functions_hidden", String.class));
-		scrollPane_GO.setVisible(!(row.getList("Biological_processes_hidden", String.class).isEmpty() &&
+		if (!(row.getList("Biological_processes_hidden", String.class).isEmpty() &&
 				row.getList("Cellular_components_hidden", String.class).isEmpty() &&
-				row.getList("Molecular_functions_hidden", String.class).isEmpty()));
+				row.getList("Molecular_functions_hidden", String.class).isEmpty())) {
+			proteinPanel.add(scrollPane_GO, "cell 0 "+i+" 3 1,grow");
+			this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
+					row.getList("Molecular_functions_hidden", String.class));
+			scrollPane_GO.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_GO.setVisible(false);
+		}
 
 		this.showProteinView();
 	}
