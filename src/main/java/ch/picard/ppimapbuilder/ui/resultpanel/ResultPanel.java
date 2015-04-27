@@ -81,14 +81,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			setOpenIcon(ICN_OPEN);
 			setClosedIcon(ICN_CLOSED);
 			setLeafIcon(ICN_LEAF);
-			// setBackground(new
-			// Color(UIManager.getColor("Button.background").getRed(),
-			// UIManager.getColor("Button.background").getGreen(),
-			// UIManager.getColor("Button.background").getBlue()));
-			// setForeground(new
-			// Color(UIManager.getColor("Panel.foreground").getRed(),
-			// UIManager.getColor("Panel.foreground").getGreen(),
-			// UIManager.getColor("Panel.foreground").getBlue()));
 			setTextSelectionColor(getTextNonSelectionColor());
 		}
 	};
@@ -116,6 +108,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JLabel ecNum;
 	private JLabel proteinOrganism;
 	private JLabel geneName;
+	private JLabel lblCluster;
 	private JLabel goCluster;
 	private DefaultListModel synonymsList;
 	private JTree treeOntology;
@@ -125,6 +118,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JHyperlinkLabel lblExtLinkECnum;
 	private JHyperlinkLabel lblExtLinkOrganism;
 	private JHyperlinkLabel lblExtLinkGenename;
+	
+	private JScrollPane scrollPane_Synonyms;
+	private JScrollPane scrollPane_Orthologs;
+	private JScrollPane scrollPane_GO;
 
 	/**
 	 * Interaction view
@@ -231,39 +228,46 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * may not be needed).
 	 */
 	private void setStaticProteinView() {
-
 		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
-		/*
-		 * HEADER - GENERAL INFORMATION
-		 */
+
+		// PROTEIN NAME
 		ptnName = new JLabel("Protein View");
 		ptnName.setBorder(new EmptyBorder(3, 8, 3, 0));
 		ptnName.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		proteinPanel.add(ptnName, "cell 0 0 2 1,grow");
-
+		
+		// UNIPROT ID
 		final JLabel lblUniprotId = new JLabel("Uniprot ID:");
 		proteinPanel.add(lblUniprotId, "cell 0 1,alignx left");
+		proteinId = NONE_LABEL();
+		proteinPanel.add(proteinId, "cell 1 1");
 
+		// EC NUMBER
 		final JLabel lblEcNumber = new JLabel("EC Number:");
 		proteinPanel.add(lblEcNumber, "flowx,cell 0 2,alignx left");
+		ecNum = NONE_LABEL();
+		proteinPanel.add(ecNum, "cell 1 2");
 
+		// ORGANISM
 		final JLabel lblNewLabel = new JLabel("Organism:");
 		proteinPanel.add(lblNewLabel, "cell 0 3,alignx left");
+		proteinOrganism = NONE_LABEL();
+		proteinPanel.add(proteinOrganism, "cell 1 3");
 
+		// GENE NAME
 		final JLabel lblGeneName = new JLabel("Gene name:");
 		proteinPanel.add(lblGeneName, "flowx,cell 0 4,alignx left");
+		geneName = NONE_LABEL();
+		proteinPanel.add(geneName, "cell 1 4");
 		
-
-		final JLabel lblCluster = new JLabel("PMB cluster:");
+		// CLUSTER NAME
+		lblCluster = new JLabel("PMB cluster:");
 		proteinPanel.add(lblCluster, "cell 0 5,alignx left");
+		goCluster = NONE_LABEL();
+		proteinPanel.add(goCluster, "cell 1 5");
 
-//		final JLabel lblSynonyms = new JLabel("Synonyms:");
-//		proteinPanel.add(lblSynonyms, "flowx,cell 0 5,alignx left,aligny top");
-//
-//		final JScrollPane scrollPane_Synonyms = new JScrollPane();
-//		proteinPanel.add(scrollPane_Synonyms, "cell 1 5,grow");
-		
-		final JScrollPane scrollPane_Synonyms = new JScrollPane();
+		// SYNONYMS
+		scrollPane_Synonyms = new JScrollPane();
 		scrollPane_Synonyms.setOpaque(false);
 		scrollPane_Synonyms.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Synonyms", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
@@ -274,17 +278,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		panelSynonyms.setLayout(new BoxLayout(panelSynonyms, BoxLayout.Y_AXIS));
 		treeSynonyms = new JTree();
 		panelSynonyms.add(treeSynonyms);
-		
 
-//		final JToggleButton toggleButton = new JToggleButton("+");
-//		toggleButton.setMargin(new Insets(2, 5, 2, 5));
-//		toggleButton.setBorder(new LineBorder(Color.black, 1));
-//		toggleButton.setBackground(Color.GRAY);
-//		proteinPanel.add(toggleButton, "cell 2 5,alignx center,aligny top");
-
-
-		
-		final JScrollPane scrollPane_Orthologs = new JScrollPane();
+		// ORTHOLOGS
+		scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setOpaque(false);
 		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
@@ -296,67 +292,16 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		treeOrthologs = new JTree();
 		panelOrthologs.add(treeOrthologs);
 
-//		ItemListener itemListener = new ItemListener() {
-//			@Override
-//			public void itemStateChanged(ItemEvent arg0) {
-//				int state = arg0.getStateChange();
-//				if (state == ItemEvent.SELECTED) {
-//					toggleButton.setText("-");
-//					scrollPane_Synonyms.setVisible(true);
-//				} else {
-//					toggleButton.setText("+");
-//					scrollPane_Synonyms.setVisible(false);
-//				}
-//			}
-//		};
-//		toggleButton.addItemListener(itemListener);
-
-		final JScrollPane scrollPane_GO = new JScrollPane();
+		// GENE ONTOLOGY
+		scrollPane_GO = new JScrollPane();
 		scrollPane_GO.setOpaque(false);
-		/*
-		 * scrollPane_GO.setVerticalScrollBarPolicy(ScrollPaneConstants.
-		 * VERTICAL_SCROLLBAR_NEVER); scrollPane_GO
-		 * .setHorizontalScrollBarPolicy
-		 * (ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		 */
 		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
 		proteinPanel.add(scrollPane_GO, "cell 0 8 3 1,grow");
-
 		final JPanel panel_GO = new JPanel();
 		scrollPane_GO.setViewportView(panel_GO);
 		panel_GO.setBorder(null);
 		panel_GO.setLayout(new BorderLayout(0, 0));
-
-		/*
-		 * VARIABLE LABELS
-		 */
-		proteinId = NONE_LABEL();
-		proteinPanel.add(proteinId, "cell 1 1");
-
-		ecNum = NONE_LABEL();
-		proteinPanel.add(ecNum, "cell 1 2");
-
-		proteinOrganism = NONE_LABEL();
-		proteinPanel.add(proteinOrganism, "cell 1 3");
-
-		geneName = NONE_LABEL();
-		proteinPanel.add(geneName, "cell 1 4");
-		
-		goCluster = NONE_LABEL();
-		proteinPanel.add(goCluster, "cell 1 5");
-
-//		JList geneNameSynonyms = new JList();
-//		geneNameSynonyms.setVisibleRowCount(3);
-//		geneNameSynonyms.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-//
-//		synonymsList = new DefaultListModel();
-//		synonymsList.addElement("");
-//		geneNameSynonyms.setModel(synonymsList);
-
-//		scrollPane_Synonyms.setViewportView(geneNameSynonyms);
-//		scrollPane_Synonyms.setVisible(false);
-
 		treeModelGO = new DefaultMutableTreeNode("GeneOntology");
 		treeOntology = new JTree(treeModelGO);
 		treeOntology.setRootVisible(false);
@@ -364,6 +309,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		treeOntology.setCellRenderer(cellRenderer);
 		treeOntology.setToggleClickCount(1);
 		panel_GO.add(treeOntology);
+		
+		
 		/*
 		 * ICONS
 		 */
@@ -412,30 +359,50 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * @param row
 	 */
 	public void setProteinView(CyRow row) {
-		this.setProteinId(row.get("Uniprot_id", String.class));
+		// PROTEIN NAME
 		this.setPtnName(row.get("Protein_name", String.class));
 		this.setReviewState(row.get("Reviewed", String.class).equalsIgnoreCase("true"));
-
-		String tax_id = row.get("Tax_id", String.class);
-
-		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
 		
-		if (row.get("Go_slim_group_term", String.class) != null) {
-			this.setGOCluster(row.get("Go_slim_group_term", String.class));
-		}
-
-
+		// UNIPROT ID
+		this.setProteinId(row.get("Uniprot_id", String.class));
+		
+		// EC NUMBER
 		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "");
-
-		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
 		
-		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
-				row.getList("Molecular_functions_hidden", String.class));
-
+		// ORGANISM
+		String tax_id = row.get("Tax_id", String.class);
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
 		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id);
 
+		// GENE NAME
+		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id);
+		// TODO: put N/A if gene name begins by [ptn]
+		
+		// CLUSTER NAME
+		if (row.get("Go_slim_group_term", String.class) != null) {
+			this.setGOCluster(row.get("Go_slim_group_term", String.class));
+			lblCluster.setVisible(true);
+			goCluster.setVisible(true);
+		}
+		else {
+			lblCluster.setVisible(false);
+			goCluster.setVisible(false);
+		}
+		
+		// SYNONYMS
+		this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class));
+		scrollPane_Synonyms.setVisible(!row.getList("Synonym_gene_names", String.class).isEmpty());
+
+		// ORTHOLOGS
 		this.setOrthologs(row.getList("Orthologs", String.class));
+		scrollPane_Orthologs.setVisible(!row.getList("Orthologs", String.class).isEmpty());		
+		
+		// GENE ONTOLOGY
+		this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
+				row.getList("Molecular_functions_hidden", String.class));
+		scrollPane_GO.setVisible(!(row.getList("Biological_processes_hidden", String.class).isEmpty() &&
+				row.getList("Cellular_components_hidden", String.class).isEmpty() &&
+				row.getList("Molecular_functions_hidden", String.class).isEmpty()));
 
 		this.showProteinView();
 	}
@@ -847,22 +814,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			}
 		};
 	}
-
-//	/**
-//	 * Set the gene name synonyms
-//	 * 
-//	 * @param synonyms
-//	 */
-//	private void setGeneNameSynonyms(List<String> synonyms) {
-//		synonymsList.clear();
-//		if (!synonyms.isEmpty()) {
-//			for (String s : synonyms) {
-//				synonymsList.addElement(s);
-//			}
-//		} else {
-//			synonymsList.addElement("");
-//		}
-//	}
+	
 	/**
 	 * Set the gene name synonyms
 	 * 
@@ -874,11 +826,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		if (!synonyms.isEmpty()) {
 			for (String str : synonyms) {
 				this.panelSynonyms.add(new JLabel(" •   " + str));
-			}			
-//			this.panelSynonyms.setVisible(true);
+			}
 		}
 		else {
-//			this.panelSynonyms.setVisible(false);
 			this.panelSynonyms.add(new JLabel(""));
 		}
 		
