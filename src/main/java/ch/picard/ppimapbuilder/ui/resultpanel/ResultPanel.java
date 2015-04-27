@@ -97,20 +97,27 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * Protein view
 	 */
 	private JPanel proteinPanel = new JPanel();
-	private JPanel panelSynonyms;
-	private JTree treeSynonyms;
-	private JPanel panelOrthologs;
-	private JTree treeOrthologs;
-
+	
 	private JLabel ptnName;
 	private JLabel lblReviewed;
 	private JLabel proteinId;
 	private JLabel ecNum;
 	private JLabel proteinOrganism;
 	private JLabel geneName;
+
 	private JLabel lblCluster;
 	private JLabel goCluster;
+	
+	private JScrollPane scrollPane_Synonyms;
+	private JPanel panelSynonyms;
+	private JTree treeSynonyms;
 	private DefaultListModel synonymsList;
+
+	private JScrollPane scrollPane_Orthologs;
+	private JPanel panelOrthologs;
+	private JTree treeOrthologs;
+
+	private JScrollPane scrollPane_GO;
 	private JTree treeOntology;
 	private DefaultMutableTreeNode treeModelGO;
 
@@ -119,9 +126,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JHyperlinkLabel lblExtLinkOrganism;
 	private JHyperlinkLabel lblExtLinkGenename;
 	
-	private JScrollPane scrollPane_Synonyms;
-	private JScrollPane scrollPane_Orthologs;
-	private JScrollPane scrollPane_GO;
 
 	/**
 	 * Interaction view
@@ -130,12 +134,27 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JLabel intAName;
 	private JLabel intBName;
 	private JLabel interactionOrganism;
-	private JPanel panelPubId;
-	private JTree treePubId;
+
+	private JScrollPane scrollPane_Source;
 	private JPanel panelSource;
 	private JTree treeSource;
+
+	private JScrollPane scrollPane_Type;
+	private JPanel panelType;
+	private JTree treeType;
+
+	private JScrollPane scrollPane_DetMeth;
+	private JPanel panelDetMeth;
+	private JTree treeDetMeth;
+
+	private JScrollPane scrollPane_Confidence;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
+	
+	private JScrollPane scrollPane_Publication;
+	private JPanel panelPubId;
+	private JTree treePubId;
+	
 	/**
 	 * Cluster view
 	 */
@@ -266,12 +285,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		goCluster = NONE_LABEL();
 		proteinPanel.add(goCluster, "cell 1 5");
 
-		// SYNONYMS
+		// SYNONYMS (position in panel decided case by case)
 		scrollPane_Synonyms = new JScrollPane();
 		scrollPane_Synonyms.setOpaque(false);
 		scrollPane_Synonyms.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Synonyms", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		// proteinPanel.add(scrollPane_Synonyms, "cell 0 6 3 1,grow");
 		panelSynonyms = new JPanel();
 		scrollPane_Synonyms.setViewportView(panelSynonyms);
 		panelSynonyms.setBorder(null);
@@ -279,12 +297,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		treeSynonyms = new JTree();
 		panelSynonyms.add(treeSynonyms);
 
-		// ORTHOLOGS
+		// ORTHOLOGS (position in panel decided case by case)
 		scrollPane_Orthologs = new JScrollPane();
 		scrollPane_Orthologs.setOpaque(false);
 		scrollPane_Orthologs.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Orthologs", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		// proteinPanel.add(scrollPane_Orthologs, "cell 0 7 3 1,grow");
 		panelOrthologs = new JPanel();
 		scrollPane_Orthologs.setViewportView(panelOrthologs);
 		panelOrthologs.setBorder(null);
@@ -292,12 +309,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		treeOrthologs = new JTree();
 		panelOrthologs.add(treeOrthologs);
 
-		// GENE ONTOLOGY
+		// GENE ONTOLOGY (position in panel decided case by case)
 		scrollPane_GO = new JScrollPane();
 		scrollPane_GO.setOpaque(false);
 		scrollPane_GO.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Gene Ontology", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		// proteinPanel.add(scrollPane_GO, "cell 0 8 3 1,grow");
 		final JPanel panel_GO = new JPanel();
 		scrollPane_GO.setViewportView(panel_GO);
 		panel_GO.setBorder(null);
@@ -431,85 +447,148 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private void setStaticInteractionView() {
 		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
 
-		/*
-		 * HEADER - GENERAL INFORMATION
-		 */
+		// INTERACTOR A
 		intAName = new JLabel("Interaction View");
 		intAName.setBorder(new EmptyBorder(3, 8, 3, 0));
 		intAName.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		interactionPanel.add(intAName, "cell 0 0 2 1,grow");
 		
+		// INTERACTOR B
 		intBName = new JLabel();
 		intBName.setBorder(new EmptyBorder(3, 8, 3, 0));
 		intBName.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		interactionPanel.add(intBName, "cell 0 1 2 1,grow");
 		
+		// ORGANISM
 		final JLabel lblInteractionOrganism = new JLabel("Organism:");
 		interactionPanel.add(lblInteractionOrganism, "cell 0 2,alignx left");
+		interactionOrganism = NONE_LABEL();
+		interactionPanel.add(interactionOrganism, "cell 1 2");
 		
-		final JScrollPane scrollPane_Publication = new JScrollPane();
-		scrollPane_Publication.setOpaque(false);
-		scrollPane_Publication.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Publication", TitledBorder.LEADING, TitledBorder.TOP, null,
-				null));
-		interactionPanel.add(scrollPane_Publication, "cell 0 3 3 1,grow");
-		
-		panelPubId = new JPanel();
-		scrollPane_Publication.setViewportView(panelPubId);
-		panelPubId.setBorder(null);
-		panelPubId.setLayout(new BoxLayout(panelPubId, BoxLayout.Y_AXIS));
-
-		//treePubId = new JTree();
-		//panelPubId.add(treePubId);
-		
-		final JScrollPane scrollPane_Source = new JScrollPane();
+		// DATABASES (position in panel decided case by case)
+		scrollPane_Source = new JScrollPane();
 		scrollPane_Source.setOpaque(false);
-		scrollPane_Source.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Source", TitledBorder.LEADING, TitledBorder.TOP, null,
+		scrollPane_Source.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Sources", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		interactionPanel.add(scrollPane_Source, "cell 0 4 3 1,grow");
-		
 		panelSource = new JPanel();
 		scrollPane_Source.setViewportView(panelSource);
 		panelSource.setBorder(null);
 		panelSource.setLayout(new BoxLayout(panelSource, BoxLayout.Y_AXIS));
-
 		treeSource = new JTree();
 		panelSource.add(treeSource);
 		
-		final JScrollPane scrollPane_Confidence = new JScrollPane();
+		// INTERACTION TYPES (position in panel decided case by case)
+		scrollPane_Type = new JScrollPane();
+		scrollPane_Type.setOpaque(false);
+		scrollPane_Type.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Interaction types", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		panelType = new JPanel();
+		scrollPane_Type.setViewportView(panelType);
+		panelType.setBorder(null);
+		panelType.setLayout(new BoxLayout(panelType, BoxLayout.Y_AXIS));
+		treeType = new JTree();
+		panelType.add(treeType);
+		
+		// DETECTION METHODS (position in panel decided case by case)
+		scrollPane_DetMeth = new JScrollPane();
+		scrollPane_DetMeth.setOpaque(false);
+		scrollPane_DetMeth.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Detection methods", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		panelDetMeth = new JPanel();
+		scrollPane_DetMeth.setViewportView(panelDetMeth);
+		panelDetMeth.setBorder(null);
+		panelDetMeth.setLayout(new BoxLayout(panelDetMeth, BoxLayout.Y_AXIS));
+		treeDetMeth = new JTree();
+		panelDetMeth.add(treeDetMeth);
+		
+		// CONFIDENCE (position in panel decided case by case)
+		scrollPane_Confidence = new JScrollPane();
 		scrollPane_Confidence.setOpaque(false);
 		scrollPane_Confidence.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Confidence", TitledBorder.LEADING, TitledBorder.TOP, null,
 				null));
-		interactionPanel.add(scrollPane_Confidence, "cell 0 5 3 1,grow");
-		
 		panelConfidence = new JPanel();
 		scrollPane_Confidence.setViewportView(panelConfidence);
 		panelConfidence.setBorder(null);
 		panelConfidence.setLayout(new BoxLayout(panelConfidence, BoxLayout.Y_AXIS));
-
 		treeConfidence = new JTree();
 		panelConfidence.add(treeConfidence);
 		
+		// PUBLICATIONS (position in panel decided case by case)
+		scrollPane_Publication = new JScrollPane();
+		scrollPane_Publication.setOpaque(false);
+		scrollPane_Publication.setBorder(new TitledBorder(new LineBorder(new Color(180, 180, 180), 1, true), "Publications", TitledBorder.LEADING, TitledBorder.TOP, null,
+				null));
+		panelPubId = new JPanel();
+		scrollPane_Publication.setViewportView(panelPubId);
+		panelPubId.setBorder(null);
+		panelPubId.setLayout(new BoxLayout(panelPubId, BoxLayout.Y_AXIS));
 		
-		/*
-		 * VARIABLE LABELS
-		 */
-		interactionOrganism = NONE_LABEL();
-		interactionPanel.add(interactionOrganism, "cell 1 2");
-
 
 	}
 
 	public void setInteractionView(CyRow row) {
+		// INTERACTOR A
 		this.setIntAName(row.get("Protein_name_A", String.class));
+		
+		// INTERACTOR B
 		this.setIntBName(row.get("Protein_name_B", String.class));
 
+		// ORGANISM
 		String tax_id = row.get("Tax_id", String.class);
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
 		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id);
 
-		this.setPubId(row.getList("Pubid", String.class));
-		this.setSource(row.getList("Source", String.class));
-		this.setConfidence(row.getList("Confidence", String.class));
+		int i = 3;
+
+		// DATABASES
+		if (!row.getList("Source", String.class).isEmpty()) {
+			interactionPanel.add(scrollPane_Source, "cell 0 "+i+" 3 1,grow");
+			this.setSource(row.getList("Source", String.class));
+			scrollPane_Source.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Source.setVisible(false);
+		}
+		
+		// INTERACTION TYPE
+		if (!row.getList("Type", String.class).isEmpty()) {
+			interactionPanel.add(scrollPane_Type, "cell 0 "+i+" 3 1,grow");
+			this.setType(row.getList("Type", String.class));
+			scrollPane_Type.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Type.setVisible(false);
+		}
+		
+		// DETECTION METHODS
+		if (!row.getList("Detmethod", String.class).isEmpty()) {
+			interactionPanel.add(scrollPane_DetMeth, "cell 0 "+i+" 3 1,grow");
+			this.setDetMeth(row.getList("Detmethod", String.class));
+			scrollPane_DetMeth.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_DetMeth.setVisible(false);
+		}
+				
+		// CONFIDENCE
+		if (!row.getList("Confidence", String.class).isEmpty()) {
+			interactionPanel.add(scrollPane_Confidence, "cell 0 "+i+" 3 1,grow");
+			this.setConfidence(row.getList("Confidence", String.class));
+			scrollPane_Confidence.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Confidence.setVisible(false);
+		}
+		
+		// PUBLICATIONS
+		if (!row.getList("Pubid", String.class).isEmpty()) {
+			interactionPanel.add(scrollPane_Publication, "cell 0 "+i+" 3 1,grow");
+			this.setPubId(row.getList("Pubid", String.class));
+			scrollPane_Publication.setVisible(true);
+			i = i + 1;
+		} else {
+			scrollPane_Publication.setVisible(false);
+		}
 
 		this.showInteractionView();
 	}
@@ -653,7 +732,31 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	}
 	
 	/**
-	 * Set source
+	 * Set Type
+	 * 
+	 * @param type
+	 */
+	private void setType(List<String> type) {
+		this.panelType.removeAll();
+		for (String str : type) {
+			this.panelType.add(new JLabel(" •   " + str));
+		}
+	}
+	
+	/**
+	 * Set Detection methods
+	 * 
+	 * @param detmeth
+	 */
+	private void setDetMeth(List<String> detmeth) {
+		this.panelDetMeth.removeAll();
+		for (String str : detmeth) {
+			this.panelDetMeth.add(new JLabel(" •   " + str));
+		}
+	}
+	
+	/**
+	 * Set confidence
 	 */
 	private void setConfidence(List<String> confidence) {
 		this.panelConfidence.removeAll();
