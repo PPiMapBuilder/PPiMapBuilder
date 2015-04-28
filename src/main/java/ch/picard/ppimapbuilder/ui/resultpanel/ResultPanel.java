@@ -22,6 +22,10 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.net.URI;
@@ -189,7 +193,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		/* Build protein view panel */
 		this.setStaticProteinView();
-		proteinPanel.setVisible(false);
+		proteinPanel.setVisible(false);		
 
 		/* Build interaction view panel */
 		this.setStaticInteractionView();
@@ -247,43 +251,43 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * may not be needed).
 	 */
 	private void setStaticProteinView() {
-		proteinPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
+		proteinPanel.setLayout(new MigLayout("hidemode 3", "[][70px:70px:70px]10[]", "[][][][][][][][]"));
 
 		// PROTEIN NAME
 		ptnName = new JLabel("Protein View");
-		ptnName.setBorder(new EmptyBorder(3, 8, 3, 0));
-		ptnName.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		proteinPanel.add(ptnName, "cell 0 0 2 1,grow");
+		//ptnName.setBorder(new EmptyBorder(3, 8, 3, 0));
+		ptnName.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		proteinPanel.add(ptnName, "cell 1 0 2 1,grow");
 		
 		// UNIPROT ID
 		final JLabel lblUniprotId = new JLabel("Uniprot ID:");
-		proteinPanel.add(lblUniprotId, "cell 0 1,alignx left");
+		proteinPanel.add(lblUniprotId, "cell 1 1,alignx left");
 		proteinId = NONE_LABEL();
-		proteinPanel.add(proteinId, "cell 1 1");
+		proteinPanel.add(proteinId, "cell 2 1");
 
 		// EC NUMBER
 		final JLabel lblEcNumber = new JLabel("EC Number:");
-		proteinPanel.add(lblEcNumber, "flowx,cell 0 2,alignx left");
+		proteinPanel.add(lblEcNumber, "flowx,cell 1 2,alignx left");
 		ecNum = NONE_LABEL();
-		proteinPanel.add(ecNum, "cell 1 2");
+		proteinPanel.add(ecNum, "cell 2 2");
 
 		// ORGANISM
 		final JLabel lblNewLabel = new JLabel("Organism:");
-		proteinPanel.add(lblNewLabel, "cell 0 3,alignx left");
+		proteinPanel.add(lblNewLabel, "cell 1 3,alignx left");
 		proteinOrganism = NONE_LABEL();
-		proteinPanel.add(proteinOrganism, "cell 1 3");
+		proteinPanel.add(proteinOrganism, "cell 2 3");
 
 		// GENE NAME
 		final JLabel lblGeneName = new JLabel("Gene name:");
-		proteinPanel.add(lblGeneName, "flowx,cell 0 4,alignx left");
+		proteinPanel.add(lblGeneName, "flowx,cell 1 4,alignx left");
 		geneName = NONE_LABEL();
-		proteinPanel.add(geneName, "cell 1 4");
+		proteinPanel.add(geneName, "cell 2 4");
 		
 		// CLUSTER NAME
 		lblCluster = new JLabel("PMB cluster:");
-		proteinPanel.add(lblCluster, "cell 0 5,alignx left");
+		proteinPanel.add(lblCluster, "cell 1 5,alignx left");
 		goCluster = NONE_LABEL();
-		proteinPanel.add(goCluster, "cell 1 5");
+		proteinPanel.add(goCluster, "cell 2 5");
 
 		// SYNONYMS (position in panel decided case by case)
 		scrollPane_Synonyms = new JScrollPane();
@@ -360,11 +364,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			this.lblExtLinkGenename.setToolTipText("View on NCBI Gene");
 			this.lblExtLinkGenename.makeClickable();
 
-			proteinPanel.add(lblReviewed, "cell 2 0,alignx right,aligny center");
-			proteinPanel.add(lblExtLinkUniprot, "cell 2 1,alignx right,aligny center");
-			proteinPanel.add(lblExtLinkECnum, "cell 2 2,alignx right,aligny center");
-			proteinPanel.add(lblExtLinkOrganism, "cell 2 3,alignx right,aligny center");
-			proteinPanel.add(lblExtLinkGenename, "cell 2 4,alignx right,aligny center");
+			proteinPanel.add(lblReviewed, "cell 0 0,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkUniprot, "cell 0 1,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkECnum, "cell 0 2,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkOrganism, "cell 0 3,alignx right,aligny center");
+			proteinPanel.add(lblExtLinkGenename, "cell 0 4,alignx right,aligny center");
 		}
 
 	}
@@ -649,10 +653,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	public void setPtnName(String ptnName) {
 		if (!ptnName.isEmpty()) {
-			if (ptnName.length() > 20) {
-				this.ptnName.setText(ptnName.substring(0, 17) + "...");
+			if (ptnName.length() > 60) {
+				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", 200, ptnName.substring(0, 57) + "..."));
 			} else {
-				this.ptnName.setText(ptnName);
+				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", 200, ptnName));
 			}
 			this.ptnName.setToolTipText(ptnName);
 
@@ -902,7 +906,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		String text = formatOrganism(name, taxId);
 		if (!text.isEmpty()) {
 			this.proteinOrganism.setFont(STD_FONT);
-			this.proteinOrganism.setText(text);
+			// this.proteinOrganism.setText(text);
+			this.proteinOrganism.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", 120, text));
 			try {
 				this.lblExtLinkOrganism.setUri(new URI("http://www.uniprot.org/taxonomy/" + taxId));
 			} catch (URISyntaxException e) {
@@ -1131,6 +1136,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public void setGOCluster(String c) {
 		this.goCluster.setText(c);
 	}
-	
+
 
 }
