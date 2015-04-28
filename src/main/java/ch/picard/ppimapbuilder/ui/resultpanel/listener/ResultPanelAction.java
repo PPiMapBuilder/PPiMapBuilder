@@ -68,7 +68,8 @@ public class ResultPanelAction implements RowsSetListener {
 		if (nbNodeSelected == 0) {
 			if (nbEdgeSelected == 1) {
 				// System.out.println("edge");
-				pmbResultPanel.setInteractionView(myEdgeRow);
+				pmbResultPanel.setRow(myEdgeRow);
+				pmbResultPanel.setInteractionView(myEdgeRow, null);
 			}
 			else if (nbEdgeSelected > 1) {
 				// System.out.println("several edges");
@@ -81,7 +82,8 @@ public class ResultPanelAction implements RowsSetListener {
 		}
 		else if (nbNodeSelected == 1) {
 			// System.out.println("node");
-			pmbResultPanel.setProteinView(myNodeRow);
+			pmbResultPanel.setRow(myNodeRow);
+			pmbResultPanel.setProteinView(myNodeRow, null);
 		}
 		else {
 			// System.out.println("several nodes");
