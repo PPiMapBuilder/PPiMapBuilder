@@ -18,8 +18,11 @@
  * 
  */    	
     
-package ch.picard.ppimapbuilder;
+package ch.picard.ppimapbuilder.style;
 
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
@@ -30,31 +33,28 @@ import org.cytoscape.work.TaskMonitor;
 import javax.swing.*;
 
 /**
- * PPiMapBuilder app sub menu
+ * PPiMapBuilder task factory for Visual Style
  */
-public class PMBCreditMenuTaskFactory extends AbstractTaskFactory {
+public class PMBVisualStyleTaskFactory extends AbstractTaskFactory {
+	
+	private final VisualMappingManager visualMappingManager;
+	private final VisualMappingFunctionFactory vmfFactoryD;
+	private final VisualMappingFunctionFactory vmfFactoryP;
+	private final VisualStyleFactory visualStyleFactoryServiceRef;
 
-	private final CreditFrame creditWindow;
-
-	public PMBCreditMenuTaskFactory(CreditFrame creditWindow) {
-		this.creditWindow = creditWindow;
+	public PMBVisualStyleTaskFactory(VisualMappingManager visualMappingManager, VisualMappingFunctionFactory vmfFactoryD, VisualMappingFunctionFactory vmfFactoryP, VisualStyleFactory visualStyleFactoryServiceRef) {
+		
+		this.visualMappingManager = visualMappingManager;
+		this.vmfFactoryD = vmfFactoryD;
+		this.vmfFactoryP = vmfFactoryP;
+		this.visualStyleFactoryServiceRef = visualStyleFactoryServiceRef;
+		
 	}
 
 	@Override
 	public TaskIterator createTaskIterator() {
 		return new TaskIterator(
-			new AbstractTask() {
-				@Override
-				public void run(TaskMonitor taskMonitor) throws Exception {
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							creditWindow.setVisible(true);
-						}
-					});
-
-				}
-			}
+			new PMBVisualStyleTask(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef)
 		);
 	}
 

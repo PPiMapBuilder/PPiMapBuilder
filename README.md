@@ -5,7 +5,7 @@
 
   PPiMapBuilder uses PSICQUIC services to retrieve interaction data, InParanoid 8 for protein orthology and UniProt for protein data.
   
-  This project was initiated by Pablo Echeverría from <a href="http://www.picard.ch/"><img src="http://www.picard.ch/Hsp90Int/img/logo.png" alt="picardLab" width="93" height="20" style="margin-top:-10px"/></a> as a bio-informatic master student project.
+  This project was initiated by Pablo Echeverría from <a href="http://www.picard.ch/"><img src="http://www.picard.ch/Hsp90Int/img/logo.png" alt="picardLab" width="93" height="20" align="texttop"/></a> as a bio-informatic master student project.
   
   To get more details about this Cytoscape 3 app, you can check the [wiki](https://github.com/PPiMapBuilder/PPiMapBuilder/wiki).
 

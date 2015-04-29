@@ -1,9 +1,30 @@
+/*   
+ * This file is part of PPiMapBuilder.
+ *
+ * PPiMapBuilder is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PPiMapBuilder is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
+ * 
+ */    	
+    
 package ch.picard.ppimapbuilder;
 
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
+import ch.picard.ppimapbuilder.style.PMBVisualStyleTaskFactory;
 import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
@@ -69,7 +90,7 @@ public class PMBActivator extends AbstractCyActivator {
 	public void start(BundleContext bc) {
 		context = bc;
 		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
-		
+
 		// QueryWindow
 		QueryWindow queryWindow = new QueryWindow();
 		SettingWindow settingWindow = new SettingWindow(openBrowser);
@@ -91,7 +112,7 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
 			CyApplicationManager cyApplicationManager = getService(bc, CyApplicationManager.class);
 
-			// Result panel (protein & interaction s)
+			// Result panel (protein & interaction)
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
 			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
 
@@ -106,9 +127,22 @@ public class PMBActivator extends AbstractCyActivator {
 			ResultPanelAction rpa = new ResultPanelAction(pmbResultPanel, cyApplicationManager);
 			registerService(bc, rpa, RowsSetListener.class, new Properties());
 
+			
 			// View services
 			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
 			CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc, CyNetworkViewManager.class);
+
+
+			// Visual Style services
+			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
+			VisualMappingFunctionFactory vmfFactoryD = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)");
+			VisualMappingFunctionFactory vmfFactoryP = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)");
+			VisualStyleFactory visualStyleFactoryServiceRef = getService(bc, VisualStyleFactory.class);
+
+			// Visual Style task
+			PMBVisualStyleTaskFactory visualStyleFactory = new PMBVisualStyleTaskFactory(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
+			networkBuildTaskManager.execute(visualStyleFactory.createTaskIterator());
+			
 
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
@@ -119,53 +153,6 @@ public class PMBActivator extends AbstractCyActivator {
 				applyCustomLayoutProperties.setProperty("title", "PMB Layout");
 				registerService(bc, applyLayoutTaskFactory, NetworkViewTaskFactory.class, applyCustomLayoutProperties);
 			}
-			
-			
-			// Visual Style services
-			VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
-			VisualMappingFunctionFactory vmfFactoryD = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)");
-			VisualMappingFunctionFactory vmfFactoryP = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)");
-
-			VisualStyleFactory visualStyleFactoryServiceRef = getService(bc, VisualStyleFactory.class);
-
-
-			//VISUAL STYLE
-			// If the style already existed, remove it first
-			for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
-				if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style")) {
-					visualMappingManager.removeVisualStyle(curVS);
-					break;
-				}
-			}
-
-			// Create a new Visual style
-			VisualStyle vs = visualStyleFactoryServiceRef.createVisualStyle("PPiMapBuilder Visual Style");
-
-			//NODE
-			//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, vsDefault.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR));
-			//vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(255, 255, 255)); // Node color
-			vs.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ROUND_RECTANGLE);
-			vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 1.5);
-			vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_PAINT, Color.BLACK);
-			vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, new Color(51, 153, 255));
-			vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 10);
-			vs.setDefaultValue(BasicVisualLexicon.NODE_SELECTED_PAINT, new Color(160, 255, 144));
-			PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction("Gene_name", String.class, BasicVisualLexicon.NODE_LABEL);
-			vs.addVisualMappingFunction(pMapping);
-			DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
-			dMapping.putMapValue("true", new Color(255, 255, 51));
-			dMapping.putMapValue("false", new Color(255, 255, 255));
-			vs.addVisualMappingFunction(dMapping);
-
-			//EDGE
-			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(204, 204, 204));
-			vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_SELECTED_PAINT, new Color(255, 0, 0));
-			dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Interolog", String.class, BasicVisualLexicon.EDGE_LINE_TYPE);
-			dMapping.putMapValue("true", LineTypeVisualProperty.EQUAL_DASH);
-			dMapping.putMapValue("false", LineTypeVisualProperty.SOLID);
-			vs.addVisualMappingFunction(dMapping);
-
-			visualMappingManager.addVisualStyle(vs);
 
 			// Network creation task factory
 			createNetworkfactory = new PMBInteractionNetworkBuildTaskFactory(
