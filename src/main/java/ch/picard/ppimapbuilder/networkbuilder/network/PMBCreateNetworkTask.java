@@ -305,7 +305,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			nodeAttr.set("name", entry.getUniProtId());
 			nodeAttr.set("Uniprot_id", entry.getUniProtId());
 			nodeAttr.set("Accessions", new ArrayList<String>(entry.getAccessions()));
-			nodeAttr.set("Gene_name", entry.getGeneName());
+			// TODO: if gene_name is empty, put "[ptn]proteinName"
+			nodeAttr.set("Gene_name", entry.getGeneName() != null ? entry.getGeneName() : "N/A");
 			nodeAttr.set("Ec_number", entry.getEcNumber());
 			nodeAttr.set("Synonym_gene_names", new ArrayList<String>(entry.getSynonymGeneNames()));
 			nodeAttr.set("Protein_name", entry.getProteinName());
