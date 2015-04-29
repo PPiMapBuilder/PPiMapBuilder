@@ -1,5 +1,7 @@
 package ch.picard.ppimapbuilder.ui.resultpanel;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import com.eclipsesource.json.JsonObject;
@@ -28,9 +30,11 @@ import java.awt.event.ComponentListener;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -721,22 +725,24 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		//System.out.println(pubId);
 
 		for (String str : pubId) {
-
-			JPanel publication = new JPanel();
-			publication.setLayout(new BoxLayout(publication, BoxLayout.LINE_AXIS));
-			
-			publication.add(new JLabel(" •   "+ str));
-			publication.add(Box.createRigidArea(new Dimension(5,0)));
-			JHyperlinkLabel lblExtLinkPubMed;
-			lblExtLinkPubMed = new JHyperlinkLabel(openBrowser);
-			lblExtLinkPubMed.setVisible(false);
-			lblExtLinkPubMed.setIcon(ICN_EXTERNAL_LINK);
-			lblExtLinkPubMed.makeClickable();
-			publication.add(lblExtLinkPubMed);
 			
 			String[] parts = str.split(":");
-			if (parts[0].equals("pubmed")){
+			if (parts[0].equals("pubmed")){ // We keep only Pubmed IDs to remove duplicates (the other IDs links to the same publications but do not allow URL creation) 
 				//System.out.println("pubmed");
+
+				JPanel publication = new JPanel();
+				publication.setLayout(new BoxLayout(publication, BoxLayout.LINE_AXIS));
+				
+				publication.add(new JLabel("• "+ str));
+				publication.add(Box.createRigidArea(new Dimension(5,0)));
+				JHyperlinkLabel lblExtLinkPubMed;
+				lblExtLinkPubMed = new JHyperlinkLabel(openBrowser);
+				lblExtLinkPubMed.setVisible(false);
+				lblExtLinkPubMed.setIcon(ICN_EXTERNAL_LINK);
+				lblExtLinkPubMed.makeClickable();
+				publication.add(lblExtLinkPubMed);
+			
+			
 				
 				try {
 					lblExtLinkPubMed.setVisible(true);
@@ -747,9 +753,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
+				this.panelPubId.add(publication);
+				publication.setAlignmentX(LEFT_ALIGNMENT);
 			}
-			this.panelPubId.add(publication);
-			publication.setAlignmentX(LEFT_ALIGNMENT);
 		}
 	}
 	
@@ -761,8 +767,46 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private void setSource(List<String> source, Integer width) {
 		this.panelSource.removeAll();
+		
+		// Construct a map to get Database URL from name
+		PsicquicRegistry reg = PsicquicRegistry.getInstance();
+		LinkedHashMap<String, String> getDbUrl = new LinkedHashMap<String, String>();
+		try {
+			for (PsicquicService db : reg.getServices()) {
+				getDbUrl.put(db.getName().toLowerCase(), db.getOrganizationUrl());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Construc list and links
 		for (String str : source) {
-			this.panelSource.add(new JLabel(String.format("<html><div style=\"width:%dpx;\"> •   %s</div><html>", width, str)));
+			
+			JPanel database = new JPanel();
+			database.setLayout(new BoxLayout(database, BoxLayout.LINE_AXIS));
+			
+			database.add(new JLabel("• "+ str));
+			database.add(Box.createRigidArea(new Dimension(5,0)));
+			JHyperlinkLabel lblExtLinkDb;
+			lblExtLinkDb = new JHyperlinkLabel(openBrowser);
+			lblExtLinkDb.setVisible(false);
+			lblExtLinkDb.setIcon(ICN_EXTERNAL_LINK);
+			lblExtLinkDb.makeClickable();
+			database.add(lblExtLinkDb);
+			
+			if (getDbUrl.containsKey(str.toLowerCase())){ 
+				try {
+					lblExtLinkDb.setVisible(true);
+
+					lblExtLinkDb.setToolTipText("Visit website");
+					lblExtLinkDb.setUri(new URI(getDbUrl.get(str.toLowerCase())));
+					
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+			this.panelSource.add(database);
+			database.setAlignmentX(LEFT_ALIGNMENT);
 		}
 	}
 	

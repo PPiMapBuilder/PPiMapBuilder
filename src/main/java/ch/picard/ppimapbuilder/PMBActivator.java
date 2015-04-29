@@ -92,7 +92,7 @@ public class PMBActivator extends AbstractCyActivator {
 			CyNetworkManager cyNetworkManagerServiceRef = getService(bc, CyNetworkManager.class);
 			CyApplicationManager cyApplicationManager = getService(bc, CyApplicationManager.class);
 
-			// Result panel (protein & interaction s)
+			// Result panel (protein & interaction)
 			CySwingApplication cytoscapeDesktopService = getService(bc, CySwingApplication.class);
 			cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setState(CytoPanelState.DOCK);
 
