@@ -18,8 +18,13 @@ public abstract class PsicquicResultTranslator {
 				if (elt instanceof Author) {
 					retList.add(((Author) elt).getName());
 
-				} else if (elt instanceof CrossReference) {
-					retList.add(((CrossReference) elt).getDatabase() + ":" + ((CrossReference) elt).getIdentifier());
+				} else if (elt instanceof CrossReference) {				
+					try { // We first try to use human-readable value (for source database e.g.)
+						retList.add(((CrossReference) elt).getText().toString());
+					}
+					catch (Exception e) { // If there is no such value (for publications e.g.), we take the psi-mi ID
+						retList.add(((CrossReference) elt).getDatabase() + ":" + ((CrossReference) elt).getIdentifier());
+					}
 
 				} else if (elt instanceof Alias) {
 					retList.add(((Alias) elt).getDbSource() + ":" + ((Alias) elt).getName());

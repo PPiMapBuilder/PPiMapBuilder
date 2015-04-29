@@ -1,14 +1,20 @@
 package ch.picard.ppimapbuilder.ui.resultpanel.listener;
 
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTableUtil;
+import org.cytoscape.model.events.NetworkAboutToBeDestroyedEvent;
 import org.cytoscape.model.events.RowSetRecord;
 import org.cytoscape.model.events.RowsSetEvent;
 import org.cytoscape.model.events.RowsSetListener;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public class ResultPanelAction implements RowsSetListener {
 
@@ -23,60 +29,73 @@ public class ResultPanelAction implements RowsSetListener {
 
 	@Override
 	public void handleEvent(RowsSetEvent e) {
-		// Node selection
 		
-		if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultNodeTable()) {
-			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
+		CyNetwork network = this.cyApplicationManager.getCurrentNetwork();
 
-			int nbSelected = 0;
-			CyRow myRow = null;
-
-			for (RowSetRecord rowSetRecord : rowsSet) {
-
-				if (rowSetRecord.getRow().get("selected", Boolean.class)) {
-					nbSelected++;
-					if (nbSelected > 1) {
-						myRow = null;
-						pmbResultPanel.showDefaultView();
-						break;
-					}
-					//System.out.println(rowSetRecord.getRow());
-					myRow = rowSetRecord.getRow();
-				}
+		List<CyEdge> selectedEdges = CyTableUtil.getEdgesInState(network, CyNetwork.SELECTED, true);
+		
+		int nbEdgeSelected = 0;
+		CyRow myEdgeRow = null;
+		
+		for (CyEdge edge: selectedEdges) {
+			nbEdgeSelected++;
+			if (nbEdgeSelected > 1) {
+				myEdgeRow = null;
 			}
-
-			if (nbSelected == 1) {
-				pmbResultPanel.setProteinView(myRow);
-			} else {
-				pmbResultPanel.showDefaultView();
-			}	
+			else {
+				myEdgeRow = network.getRow(edge);
+			}
 		}
 		
-		else if (e.getSource() == this.cyApplicationManager.getCurrentNetwork().getDefaultEdgeTable()) {
-			//System.out.println("Edge selected");
-			Collection<RowSetRecord> rowsSet = e.getColumnRecords(CyNetwork.SELECTED);
 
-			int nbSelected = 0;
-			CyRow myRow = null;
-
-			for (RowSetRecord rowSetRecord : rowsSet) {
-				if (rowSetRecord.getRow().get("selected", Boolean.class)) {
-					nbSelected++;
-					if (nbSelected > 1) {
-						myRow = null;
-						pmbResultPanel.showDefaultView();
-						break;
-					}
-					myRow = rowSetRecord.getRow();
-				}
+		List<CyNode> selectedNodes = CyTableUtil.getNodesInState(network, CyNetwork.SELECTED, true);
+		LinkedHashMap<String, Boolean> clusters = new LinkedHashMap<String, Boolean>();
+		
+		int nbNodeSelected = 0;
+		CyRow myNodeRow = null;
+		
+		for (CyNode node: selectedNodes) {
+			nbNodeSelected++;
+			if (nbNodeSelected > 1) {
+				myNodeRow = null;
 			}
-
-			if (nbSelected == 1) {
-				pmbResultPanel.setInteractionView(myRow);
+			else {
+				myNodeRow = network.getRow(node);
+			}
+			clusters.put(network.getRow(node).get("Go_slim_group_term", String.class), true);
+		}
+		
+		if (nbNodeSelected == 0) {
+			if (nbEdgeSelected == 1) {
+				// System.out.println("edge");
+				pmbResultPanel.setRow(myEdgeRow);
+				pmbResultPanel.setInteractionView(myEdgeRow);
+			}
+			else if (nbEdgeSelected > 1) {
+				// System.out.println("several edges");
+				pmbResultPanel.showDefaultView();
+			}
+			else {
+				// System.out.println("nothing");
+				pmbResultPanel.showDefaultView();
+			}
+		}
+		else if (nbNodeSelected == 1) {
+			// System.out.println("node");
+			pmbResultPanel.setRow(myNodeRow);
+			pmbResultPanel.setProteinView(myNodeRow);
+		}
+		else {
+			// System.out.println("several nodes");
+			
+			if (clusters.keySet().size() == 1 && network.getRow(network).get("layout", Boolean.class)) {
+				String cl = clusters.keySet().iterator().next();
+				pmbResultPanel.setClusterView(cl);
 			} else {
 				pmbResultPanel.showDefaultView();
-			}	
+			}
 		}
+
 
 	}
 }
