@@ -270,7 +270,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * may not be needed).
 	 */
 	private void setStaticProteinView() {
-		proteinPanel.setLayout(new MigLayout("hidemode 3", "[][70px:70px:70px,grow,right]10[grow]", "[][][][][][][][]"));
+		proteinPanel.setLayout(new MigLayout("insets 5, hidemode 3", "[][70px:70px:70px,grow,right]10[grow]", "[][][][][][][][]"));
 
 		// PROTEIN NAME
 		ptnName = new JLabel("Protein View");
@@ -473,7 +473,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	}
 
 	private void setStaticInteractionView() {
-		interactionPanel.setLayout(new MigLayout("hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
+		interactionPanel.setLayout(new MigLayout("insets 5, hidemode 3", "[70px:70px:70px,grow,right]10[grow][]", "[][][][][][][][]"));
 
 		// INTERACTOR A
 		intAName = new JLabel("Interaction View");
@@ -609,7 +609,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// PUBLICATIONS
 		if (!row.getList("Pubid", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_Publication, "cell 0 "+i+" 3 1,grow");
-			this.setPubId(row.getList("Pubid", String.class), width*2);
+			this.setPubId(row.getList("Pubid", String.class));
 			scrollPane_Publication.setVisible(true);
 			i = i + 1;
 		} else {
@@ -715,7 +715,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	/**
 	 * Set pubId
 	 */
-	private void setPubId(List<String> pubId, Integer width) {
+	private void setPubId(List<String> pubId) {
 		this.panelPubId.removeAll();
 		
 		//System.out.println(pubId);
@@ -725,7 +725,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			JPanel publication = new JPanel();
 			publication.setLayout(new BoxLayout(publication, BoxLayout.LINE_AXIS));
 			
-			publication.add(new JLabel(String.format("<html><div style=\"width:%dpx;\"> •   %s</div><html>", width, str)));
+			publication.add(new JLabel(" •   "+ str));
 			publication.add(Box.createRigidArea(new Dimension(5,0)));
 			JHyperlinkLabel lblExtLinkPubMed;
 			lblExtLinkPubMed = new JHyperlinkLabel(openBrowser);
