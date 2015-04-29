@@ -197,27 +197,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		/* Build protein view panel */
 		this.setStaticProteinView();
-		proteinPanel.setVisible(false);	
-		proteinPanel.addComponentListener(new ComponentAdapter() {  
-	        public void componentResized(ComponentEvent evt) {
-	        	if (proteinPanel.isVisible()) {
-		            Component c = (Component)evt.getSource();
-		            setProteinView(myRow, c.getWidth());
-	        	}
-	        }
-		});	
+		proteinPanel.setVisible(false);
 
 		/* Build interaction view panel */
 		this.setStaticInteractionView();
 		interactionPanel.setVisible(false);
-		interactionPanel.addComponentListener(new ComponentAdapter() {  
-	        public void componentResized(ComponentEvent evt) {
-	        	if (interactionPanel.isVisible()){
-		            Component c = (Component)evt.getSource();
-		            setInteractionView(myRow, c.getWidth());	        		
-	        	}
-	        }
-		});
 		
 		/* Build cluster view panel */
 		this.setStaticClusterView();
@@ -227,6 +211,17 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		mainPanel.add(proteinPanel);
 		mainPanel.add(interactionPanel);
 		mainPanel.add(clusterPanel);
+		
+		addComponentListener(new ComponentAdapter() {
+	        public void componentResized(ComponentEvent evt) {
+	        	if (proteinPanel.isVisible()) {
+		            setProteinView(myRow);
+	        	}
+	        	if (interactionPanel.isVisible()) {
+	        		setInteractionView(myRow);
+	        	}
+	        }
+		});
 	}
 	
 	public void setRow(CyRow row) {
@@ -279,8 +274,6 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		// PROTEIN NAME
 		ptnName = new JLabel("Protein View");
-		//ptnName.setBorder(new EmptyBorder(3, 8, 3, 0));
-		ptnName.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		proteinPanel.add(ptnName, "cell 1 0 2 1,grow");
 		
 		// UNIPROT ID
@@ -402,35 +395,38 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * 
 	 * @param row
 	 */
-	public void setProteinView(CyRow row, Integer width) {
-		if (width == null) {
-			width = 200;
-		}
+	public void setProteinView(CyRow row) {
+		// In the following code, you will see some calculation with the width variable
+		// We once divide it by three, and then, sometimes we multiply it by two, sometimes not
+		// All these operations are well studied
+		// The interface design is a Science which requires rigor, accuracy and faith in numbers
+		// Don't modify them. Ever.
+		Integer width = getWidth() / 3;
 		
 		// PROTEIN NAME
-		this.setPtnName(row.get("Protein_name", String.class), width*2/3);
+		this.setPtnName(row.get("Protein_name", String.class), width*2);
 		this.setReviewState(row.get("Reviewed", String.class).equalsIgnoreCase("true"));
 		
 		// UNIPROT ID
-		this.setProteinId(row.get("Uniprot_id", String.class), width/2);
+		this.setProteinId(row.get("Uniprot_id", String.class), width);
 		
 		// EC NUMBER
-		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "", width/2);
+		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "", width);
 		
 		// ORGANISM
 		String tax_id = row.get("Tax_id", String.class);
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
-		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id, width/2);
+		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id, width);
 
 		// GENE NAME
-		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id, width/2);
+		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id, width);
 		// TODO: put N/A if gene name begins by [ptn]
 		
 		int i = 5;
 		
 		// CLUSTER NAME
 		if (row.get("Go_slim_group_term", String.class) != null) {
-			this.setGOCluster(row.get("Go_slim_group_term", String.class), width/2);
+			this.setGOCluster(row.get("Go_slim_group_term", String.class), width);
 			lblCluster.setVisible(true);
 			goCluster.setVisible(true);
 			i = i + 1;
@@ -443,7 +439,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		if (!row.getList("Synonym_gene_names", String.class).isEmpty()) {
 			proteinPanel.remove(scrollPane_Synonyms);
 			proteinPanel.add(scrollPane_Synonyms, "cell 0 "+i+" 3 1,grow");
-			this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class), width/2);
+			this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class), width);
 			scrollPane_Synonyms.setVisible(true);
 			i = i + 1;
 		} else {
@@ -453,7 +449,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// ORTHOLOGS
 		if (!row.getList("Orthologs", String.class).isEmpty()) {
 			proteinPanel.add(scrollPane_Orthologs, "cell 0 "+i+" 3 1,grow");
-			this.setOrthologs(row.getList("Orthologs", String.class), width/2);
+			this.setOrthologs(row.getList("Orthologs", String.class), width*2);
 			scrollPane_Orthologs.setVisible(true);
 			i = i + 1;
 		} else {
@@ -466,7 +462,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 				row.getList("Molecular_functions_hidden", String.class).isEmpty())) {
 			proteinPanel.add(scrollPane_GO, "cell 0 "+i+" 3 1,grow");
 			this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
-					row.getList("Molecular_functions_hidden", String.class), width/2);
+					row.getList("Molecular_functions_hidden", String.class), width);
 			scrollPane_GO.setVisible(true);
 			i = i + 1;
 		} else {
@@ -481,14 +477,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 		// INTERACTOR A
 		intAName = new JLabel("Interaction View");
-		intAName.setBorder(new EmptyBorder(3, 8, 3, 0));
-		intAName.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		interactionPanel.add(intAName, "cell 0 0 2 1,grow");
 		
 		// INTERACTOR B
 		intBName = new JLabel();
-		intBName.setBorder(new EmptyBorder(3, 8, 3, 0));
-		intBName.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		interactionPanel.add(intBName, "cell 0 1 2 1,grow");
 		
 		// ORGANISM
@@ -558,28 +550,26 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 
 	}
 
-	public void setInteractionView(CyRow row, Integer width) {
-		if (width == null) {
-			width = 200;
-		}
+	public void setInteractionView(CyRow row) {
+		Integer width = getWidth() / 3;
 		
 		// INTERACTOR A
-		this.setIntAName(row.get("Protein_name_A", String.class), width*2/3);
+		this.setIntAName(row.get("Protein_name_A", String.class), width*2);
 		
 		// INTERACTOR B
-		this.setIntBName(row.get("Protein_name_B", String.class), width*2/3);
+		this.setIntBName(row.get("Protein_name_B", String.class), width*2);
 
 		// ORGANISM
 		String tax_id = row.get("Tax_id", String.class);
 		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
-		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id, width/2);
+		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id, width);
 
 		int i = 3;
 
 		// DATABASES
 		if (!row.getList("Source", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_Source, "cell 0 "+i+" 3 1,grow");
-			this.setSource(row.getList("Source", String.class), width/2);
+			this.setSource(row.getList("Source", String.class), width);
 			scrollPane_Source.setVisible(true);		
 			i = i + 1;
 		} else {
@@ -589,7 +579,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// INTERACTION TYPE
 		if (!row.getList("Type", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_Type, "cell 0 "+i+" 3 1,grow");
-			this.setType(row.getList("Type", String.class), width/2);
+			this.setType(row.getList("Type", String.class), width*2);
 			scrollPane_Type.setVisible(true);
 			i = i + 1;
 		} else {
@@ -599,7 +589,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// DETECTION METHODS
 		if (!row.getList("Detmethod", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_DetMeth, "cell 0 "+i+" 3 1,grow");
-			this.setDetMeth(row.getList("Detmethod", String.class), width/2);
+			this.setDetMeth(row.getList("Detmethod", String.class), width*2);
 			scrollPane_DetMeth.setVisible(true);
 			i = i + 1;
 		} else {
@@ -609,7 +599,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// CONFIDENCE
 		if (!row.getList("Confidence", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_Confidence, "cell 0 "+i+" 3 1,grow");
-			this.setConfidence(row.getList("Confidence", String.class), width/2);
+			this.setConfidence(row.getList("Confidence", String.class), width*2);
 			scrollPane_Confidence.setVisible(true);
 			i = i + 1;
 		} else {
@@ -619,7 +609,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// PUBLICATIONS
 		if (!row.getList("Pubid", String.class).isEmpty()) {
 			interactionPanel.add(scrollPane_Publication, "cell 0 "+i+" 3 1,grow");
-			this.setPubId(row.getList("Pubid", String.class), width/2);
+			this.setPubId(row.getList("Pubid", String.class), width*2);
 			scrollPane_Publication.setVisible(true);
 			i = i + 1;
 		} else {
@@ -687,9 +677,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public void setPtnName(String ptnName, Integer width) {
 		if (!ptnName.isEmpty()) {
 			if (ptnName.length() > 60) {
-				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, ptnName.substring(0, 57) + "..."));
+				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, ptnName.substring(0, 57) + "..."));
 			} else {
-				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, ptnName));
+				this.ptnName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, ptnName));
 			}
 			this.ptnName.setToolTipText(ptnName);
 
@@ -1132,9 +1122,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public void setIntAName(String intAName, Integer width) {
 		if (!intAName.isEmpty()) {
 			if (intAName.length() > 60) {
-				this.intAName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, intAName.substring(0, 57) + "..."));
+				this.intAName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intAName.substring(0, 57) + "..."));
 			} else {
-				this.intAName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, intAName));
+				this.intAName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intAName));
 			}
 			this.intAName.setToolTipText(intAName);
 
@@ -1159,9 +1149,9 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	public void setIntBName(String intBName, Integer width) {
 		if (!intBName.isEmpty()) {
 			if (intBName.length() > 60) {
-				this.intBName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, intBName.substring(0, 57) + "..."));
+				this.intBName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intBName.substring(0, 57) + "..."));
 			} else {
-				this.intBName.setText(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", width, intBName));
+				this.intBName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intBName));
 			}
 			this.intBName.setToolTipText(intBName);
 
