@@ -53,7 +53,8 @@ public final class PMBSettings {
 						"IntAct",
 						"BIND",
 						"UniProt",
-						"MINT"
+						"MINT",
+						"STRING"
 				)) :
 				// Existing database list
 				databaseList;
