@@ -12,8 +12,8 @@ import java.util.Set;
 public class ConcurrentFetcherIteratorTest {
 
 	@Test public void test() throws InterruptedException {
-		Set<String> expected = new HashSet<String>();
-		Set<String> actual = new HashSet<String>();
+		final Set<String> expected = new HashSet<String>();
+		final Set<String> actual = new HashSet<String>();
 
 		ArrayList<IteratorRequest<String>> requests = Lists.newArrayList();
 
@@ -27,7 +27,7 @@ public class ConcurrentFetcherIteratorTest {
 			requests.add(new IteratorRequest<String>() {
 				@Override
 				public Iterator<String> call() throws Exception {
-					Thread.sleep(1000);
+					Thread.sleep(500);
 					return string.iterator();
 				}
 			});

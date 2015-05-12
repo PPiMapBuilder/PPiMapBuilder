@@ -19,7 +19,7 @@ public class ProgressMonitoringInteractionFilter extends InteractionFilter {
 	@Override
 	public boolean isValidInteraction(BinaryInteraction interaction) {
 		double p = Math.floor(++interactionCount / estimatedNumberOfInteraction * 100) / 100;
-		if(p > percent) {
+		if(p > percent && p < 1) {
 			progressMonitor.setProgress(percent = p);
 		}
 		return true;

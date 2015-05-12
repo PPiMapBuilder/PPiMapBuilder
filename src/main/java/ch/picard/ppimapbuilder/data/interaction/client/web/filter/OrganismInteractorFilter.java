@@ -14,11 +14,15 @@ public final class OrganismInteractorFilter extends InteractorFilter {
 
 	@Override
 	public boolean isValidInteractor(Interactor interactor) {
-		return organism.equals(
-				OrganismUtils.findOrganismInMITABTaxId(
-						InParanoidOrganismRepository.getInstance(),
-						interactor.getOrganism().getTaxid()
-				)
-		);
+		try {
+			return organism.equals(
+					OrganismUtils.findOrganismInMITABTaxId(
+							InParanoidOrganismRepository.getInstance(),
+							interactor.getOrganism().getTaxid()
+					)
+			);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }

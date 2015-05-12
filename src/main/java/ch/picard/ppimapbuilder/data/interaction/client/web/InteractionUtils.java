@@ -2,6 +2,8 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 
 import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBuilder;
+import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
@@ -179,4 +181,15 @@ public class InteractionUtils {
 		return clients;
 	}
 
+	@Deprecated
+	public static String generateMiQLQueryIDTaxID(final String id, final Integer taxId) {
+		MiQLExpressionBuilder query = new MiQLExpressionBuilder();
+
+		query.setRoot(true);
+		query.add(new MiQLParameterBuilder("taxidA", taxId));
+		query.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("taxidB", taxId));
+		query.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("id", id));
+
+		return query.toString();
+	}
 }
