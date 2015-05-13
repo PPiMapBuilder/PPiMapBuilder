@@ -1,12 +1,32 @@
+/*   
+ * This file is part of PPiMapBuilder.
+ *
+ * PPiMapBuilder is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PPiMapBuilder is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
+ * 
+ */
+
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
+import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.field.JSearchTextField;
 import ch.picard.ppimapbuilder.ui.util.field.ListDeletableItem;
-import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 
 import javax.swing.*;
@@ -59,7 +79,7 @@ public class OrganismSettingPanel extends JPanel implements TabContent {
 				public void actionPerformed(ActionEvent e) {
 					UserOrganismRepository.getInstance().addOrganism(searchBox.getText());
 					owner.newModificationMade();
-					validate();
+					setActive(true); //Regen UI
 				}
 
 			});
@@ -70,35 +90,29 @@ public class OrganismSettingPanel extends JPanel implements TabContent {
 	}
 
 	@Override
-	public void setVisible(boolean opening) {
-		super.setVisible(opening);
-		if (opening) {
-			validate();
-		}
-	}
-
-	@Override
 	public JComponent getComponent() {
 		return this;
 	}
 
 	@Override
 	public void setActive(boolean active) {
-		if(active) {
+		if (active) {
+			panSourceOrganism.removeAllRow();
 			for (final Organism org : UserOrganismRepository.getInstance().getOrganisms()) {
-				panSourceOrganism.addRow(
-						new ListDeletableItem.ListRow(org.getScientificName(), "Taxonomy ID: " + org.getTaxId())
-								.addDeleteButton(new ActionListener() {
-
-									@Override
-									public void actionPerformed(ActionEvent e) {
-										//System.out.println(org.getScientificName()+" clicked");
-										UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
-										validate();
-										owner.newModificationMade();
-									}
-								})
+				final ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(
+						org.getScientificName(),
+						"Taxonomy ID: " + org.getTaxId()
 				);
+				listRow.addDeleteButton(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						UserOrganismRepository.getInstance().removeOrganismExceptLastOne(org.getScientificName());
+						owner.newModificationMade();
+						setActive(true); //Regen UI
+					}
+				});
+				panSourceOrganism.addRow(listRow);
 			}
 
 			ArrayList<String> data = new ArrayList<String>(InParanoidOrganismRepository.getInstance().getOrganismNames());
@@ -110,8 +124,6 @@ public class OrganismSettingPanel extends JPanel implements TabContent {
 
 			validate();
 			repaint();
-		} else {
-			panSourceOrganism.removeAllRow();
 		}
 	}
 }

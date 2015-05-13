@@ -1,8 +1,29 @@
+/*   
+ * This file is part of PPiMapBuilder.
+ *
+ * PPiMapBuilder is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PPiMapBuilder is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
+ * 
+ */    	
+    
 package ch.picard.ppimapbuilder.networkbuilder.network;
 
 import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.JSONUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
+import ch.picard.ppimapbuilder.data.interaction.client.web.OLSClient;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyCategory;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
@@ -280,8 +301,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 					CyRow rowA = network.getRow(nodeA);
 					CyRow rowB = network.getRow(nodeB);
-
-					CyRow edgeAttr = network.getRow(myEdge);
+					
+				    CyRow edgeAttr = network.getRow(myEdge);
 					edgeAttr.set("Reference_organism_interactor_A", refOrgProtA.getUniProtId());
 					edgeAttr.set("Reference_organism_interactor_B", refOrgProtB.getUniProtId());
 					edgeAttr.set("Interactor_A", nodeAName);
@@ -291,13 +312,14 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
 					edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
 					edgeAttr.set("Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-					edgeAttr.set("Detmethod", PsicquicResultTranslator.convert(interaction.getMethodToPubmed().keySet()));
-					edgeAttr.set("Type", PsicquicResultTranslator.convert(interaction.getTypeToPubmed().keySet()));
+					edgeAttr.set("Detmethod", OLSClient.getInstance().convert(interaction.getMethodToPubmed().keySet()));
+					edgeAttr.set("Type", OLSClient.getInstance().convert(interaction.getTypeToPubmed().keySet()));
 					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
 					edgeAttr.set("Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
 					edgeAttr.set("Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
 					edgeAttr.set("Tax_id", String.valueOf(organism.getTaxId()));
 					edgeAttr.set("Interolog", Boolean.toString(!inRefOrg));
+					
 				} else
 					System.out.println("node not found with : " + nodeAName + (nodeA == null ? "[null]" : "") + " <-> " + nodeBName + (nodeB == null ? "[null]" : ""));
 			}
@@ -333,7 +355,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			nodeAttr.set("name", entry.getUniProtId());
 			nodeAttr.set("Uniprot_id", entry.getUniProtId());
 			nodeAttr.set("Accessions", new ArrayList<String>(entry.getAccessions()));
-			nodeAttr.set("Gene_name", entry.getGeneName());
+			// TODO: if gene_name is empty, put "[ptn]proteinName"
+			nodeAttr.set("Gene_name", entry.getGeneName() != null ? entry.getGeneName() : "N/A");
 			nodeAttr.set("Ec_number", entry.getEcNumber());
 			nodeAttr.set("Synonym_gene_names", new ArrayList<String>(entry.getSynonymGeneNames()));
 			nodeAttr.set("Protein_name", entry.getProteinName());

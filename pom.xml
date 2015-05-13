@@ -5,7 +5,7 @@
 	<!-- Project identifiers -->
 	<groupId>ch.picard</groupId>
 	<artifactId>PPiMapBuilder</artifactId>
-	<version>0.11-SNAPSHOT</version>
+	<version>0.12-SNAPSHOT</version>
 	<name>PPiMapBuilder</name>
 	<description>Cytoscape 3 app for protein-protein interaction network generation and
 		prediction as described by Echeverría et al. (2011).</description>
@@ -24,7 +24,10 @@
 
 	<!-- Licence -->
 	<licenses>
-		<!-- No licence selected for now -->
+		<license>
+			<name>GNU GENERAL PUBLIC LICENSE Version 3</name>
+			<url>http://www.gnu.org/licenses/gpl.txt</url>
+		</license>
 	</licenses>
 
 	<!-- Issue management -->
@@ -489,5 +492,12 @@
             <artifactId>opencsv</artifactId>
             <version>2.0</version>
         </dependency>
+        
+        <dependency>
+	      <groupId>uk.ac.ebi</groupId>
+	      <artifactId>ols</artifactId>
+	      <version>1.14.1</version>
+	    </dependency>
+        
     </dependencies>
 </project>

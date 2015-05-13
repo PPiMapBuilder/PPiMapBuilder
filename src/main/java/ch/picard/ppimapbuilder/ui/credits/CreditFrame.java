@@ -1,12 +1,32 @@
+/*   
+ * This file is part of PPiMapBuilder.
+ *
+ * PPiMapBuilder is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PPiMapBuilder is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
+ * 
+ */    	
+    
 package ch.picard.ppimapbuilder.ui.credits;
 
 import ch.picard.ppimapbuilder.PMBActivator;
-import net.miginfocom.swing.MigLayout;
-import org.cytoscape.util.swing.OpenBrowser;
 import ch.picard.ppimapbuilder.ui.util.EscapeCloseListener;
 import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
 import ch.picard.ppimapbuilder.ui.util.label.LogoIcon;
 import ch.picard.ppimapbuilder.ui.util.label.PicardLabIcon;
+import net.miginfocom.swing.MigLayout;
+import org.cytoscape.util.swing.OpenBrowser;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,23 +51,25 @@ public class CreditFrame extends JFrame {
 		setPreferredSize(size);
 
 		setResizable(false);
+		
+		JPanel container = new JPanel();
 
-		setLayout(new MigLayout("inset 5", "[grow][22px][grow]", "[][][][][][][][][][][][]"));
+		container.setLayout(new MigLayout("inset 5", "[grow][22px][grow]", "[][][][][][][][][][][][]"));
 
 		// PPiMapBuilder Logo
 		JLabel lblLogo = new LogoIcon(openBrowser);
-		getContentPane().add(lblLogo, "cell 0 1 3,alignx center");
+		container.add(lblLogo, "cell 0 1 3,alignx center");
 
 		// PPiMapBuilder Name
 		JLabel lblPpimapbuilder = new JLabel("PPiMapBuilder");
 		lblPpimapbuilder.setFont(new Font("Lucida Grande", Font.BOLD, 14));
-		getContentPane().add(lblPpimapbuilder, "cell 0 2 3,alignx center");
+		container.add(lblPpimapbuilder, "cell 0 2 3,alignx center");
 
 		// PPiMapBuilder Version
 		String version = "Version " + PMBActivator.version;
 		JLabel lblVersion = new JLabel(version);
 		lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 12));
-		getContentPane().add(lblVersion, "cell 0 3 3,alignx center");
+		container.add(lblVersion, "cell 0 3 3,alignx center");
 
 
 		// PPiMapBuilder email
@@ -63,62 +85,83 @@ public class CreditFrame extends JFrame {
 		lblEmail.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		lblEmail.setForeground(Color.GRAY);
 		lblEmail.setFont(new Font("Lucida Grande", Font.PLAIN, 11));
-		getContentPane().add(lblEmail, "cell 0 4 3 1,alignx center");
+		container.add(lblEmail, "cell 0 4 3 1,alignx center");
 
 		// Initiated by
 		JLabel lblInitiatedBy = new JLabel("Initiated by:");
 		lblInitiatedBy.setFont(new Font("Lucida Grande", Font.BOLD, 12));
-		getContentPane().add(lblInitiatedBy, "cell 0 6 3 1,alignx center");
+		container.add(lblInitiatedBy, "cell 0 6 3 1,alignx center");
 
 		// Pablo Echeverría
 		JLabel lblPabloEcheverria = new JLabel("Pablo Echeverría");
-		getContentPane().add(lblPabloEcheverria, "cell 0 7,alignx center");
+		container.add(lblPabloEcheverria, "cell 0 7,alignx center");
 
 		// PicardLab logo
 		JLabel lblPicardLabLogo = new PicardLabIcon(openBrowser);
 		lblPicardLabLogo.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		getContentPane().add(lblPicardLabLogo, "cell 2 7,alignx center");
+		container.add(lblPicardLabLogo, "cell 2 7,alignx center");
 
 		// Developpers
 		JLabel lblAuthors = new JLabel("Developpers:");
 		lblAuthors.setFont(new Font("Lucida Grande", Font.BOLD, 12));
-		getContentPane().add(lblAuthors, "cell 0 9 3 1,alignx center");
-
-		/*// Guillaume Cornut
-		JLabel lblGuillaumeCornutPierre = new JLabel("Guillaume Cornut");
-		lblGuillaumeCornutPierre.setToolTipText("Wonderful Gui");
-		getContentPane().add(lblGuillaumeCornutPierre, "cell 0 9,alignx center");
-
-		// Pierre Cressant
-		JLabel lblPierreCressant = new JLabel("Pierre Cressant");
-		lblPierreCressant.setToolTipText("Amazing Piotr");
-		getContentPane().add(lblPierreCressant, "cell 2 9,alignx center");
-
-		// Pierre Dupuis
-		JLabel lblPierreDupuis = new JLabel("Pierre Dupuis");
-		lblPierreDupuis.setToolTipText("Tremendous Boss");
-		getContentPane().add(lblPierreDupuis, "cell 0 10,alignx center");
-
-		// Kévin Gravouil
-		JLabel lblKvinGravouil = new JLabel("Kévin Gravouil");
-		lblKvinGravouil.setToolTipText("Marvelous Keuv");
-		getContentPane().add(lblKvinGravouil, "cell 2 10,alignx center");*/
+		container.add(lblAuthors, "cell 0 9 3 1,alignx center");
 		
 		// Guillaume Cornut
 		JLabel lblGuillaumeCornut = new JLabel("Guillaume Cornut");
-		getContentPane().add(lblGuillaumeCornut, "cell 0 10,alignx center");
+		container.add(lblGuillaumeCornut, "cell 0 10,alignx center");
 
 		// Pierre Dupuis
 		JLabel lblPierreDupuis = new JLabel("Pierre Dupuis");
-		getContentPane().add(lblPierreDupuis, "cell 2 10,alignx center");
+		container.add(lblPierreDupuis, "cell 2 10,alignx center");
 
 		// Kévin Gravouil
 		JLabel lblKvinGravouil = new JLabel("Kévin Gravouil");
-		getContentPane().add(lblKvinGravouil, "cell 0 11,alignx center");
+		container.add(lblKvinGravouil, "cell 0 11,alignx center");
 		
 		// Armelle Kieffer
 		JLabel lblArmelleKieffer = new JLabel("Armelle Kieffer");
-		getContentPane().add(lblArmelleKieffer, "cell 2 11,alignx center");
+		container.add(lblArmelleKieffer, "cell 2 11,alignx center");
+		
+		// UnivPoitiers logo
+		JHyperlinkLabel lblUnivPoitiersLogo = new JHyperlinkLabel(openBrowser);
+		try {
+			lblUnivPoitiersLogo.setIcon(new ImageIcon(CreditFrame.class.getResource("univ-poitiers.png")));
+		} catch (Exception e) {
+			lblUnivPoitiersLogo.setText("University of Poitiers");
+		}
+		lblUnivPoitiersLogo.setToolTipText("Access to master's degree details [fr]");
+		lblUnivPoitiersLogo.makeClickable();
+		try {
+			lblUnivPoitiersLogo.setUri(new URI("http://sfa.univ-poitiers.fr/biosante/spip.php?rubrique86"));
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		lblUnivPoitiersLogo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		container.add(lblUnivPoitiersLogo, "cell 0 12 3 1,alignx center");
+		
+		// Paper
+		JLabel lblPaperTitle = new JLabel("Original workflow:");
+		lblPaperTitle.setFont(new Font("Lucida Grande", Font.BOLD, 12));
+		container.add(lblPaperTitle, "cell 0 13 3 1,alignx center");
+
+		JLabel lblPaper = new JLabel("Echeverría, P. C. et al. (2011), PLoS ONE 6, e26044");
+		container.add(lblPaper, "cell 0 14 3 1,alignx center");
+		JHyperlinkLabel lblOpenAccess = new JHyperlinkLabel(openBrowser);
+		lblOpenAccess.setText("[Open Access]");
+		lblOpenAccess.setToolTipText("http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0026044");
+		lblOpenAccess.makeClickable();
+		try {
+			lblOpenAccess.setUri(new URI("http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0026044"));
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		lblOpenAccess.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		lblOpenAccess.setForeground(Color.GRAY);
+		lblOpenAccess.setFont(new Font("Lucida Grande", Font.PLAIN, 11));
+		container.add(lblOpenAccess, "cell 0 15 3 1,alignx center");
+		
+		JScrollPane jsp = new JScrollPane(container);
+		getContentPane().add(jsp);
 
 		// The frame is now centered relatively to Cytoscape
 		this.setLocationRelativeTo(null); 

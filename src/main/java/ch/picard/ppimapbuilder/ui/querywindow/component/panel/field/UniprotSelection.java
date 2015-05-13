@@ -1,18 +1,38 @@
+/*
+ * This file is part of PPiMapBuilder.
+ *
+ * PPiMapBuilder is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PPiMapBuilder is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
+ *
+ */
+
 package ch.picard.ppimapbuilder.ui.querywindow.component.panel.field;
 
-import ch.picard.ppimapbuilder.ui.util.label.HelpIcon;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.label.HelpIcon;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class UniprotSelection extends JPanel {
