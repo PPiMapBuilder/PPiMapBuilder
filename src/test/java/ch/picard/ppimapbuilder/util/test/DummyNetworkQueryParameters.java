@@ -31,17 +31,19 @@ public class DummyNetworkQueryParameters implements NetworkQueryParameters {
 	private final List<String> proteinOfInterestUniprotId;
 	private final Organism referenceOrganism;
 	private final List<Organism> otherOrganisms;
+	private final boolean interactomeQuery;
 
 	public DummyNetworkQueryParameters(
 			List<PsicquicService> selectedDatabases,
 			List<String> proteinOfInterestUniprotId,
 			Organism referenceOrganism,
-			List<Organism> otherOrganisms
-	) {
+			List<Organism> otherOrganisms,
+			boolean interactomeQuery) {
 		this.selectedDatabases = selectedDatabases;
 		this.proteinOfInterestUniprotId = proteinOfInterestUniprotId;
 		this.referenceOrganism = referenceOrganism;
 		this.otherOrganisms = otherOrganisms;
+		this.interactomeQuery = interactomeQuery;
 	}
 
 	@Override
@@ -62,5 +64,10 @@ public class DummyNetworkQueryParameters implements NetworkQueryParameters {
 	@Override
 	public List<PsicquicService> getSelectedDatabases() {
 		return selectedDatabases;
+	}
+
+	@Override
+	public boolean isInteractomeQuery() {
+		return interactomeQuery;
 	}
 }

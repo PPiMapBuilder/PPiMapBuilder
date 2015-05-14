@@ -24,19 +24,17 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
 import com.eclipsesource.json.JsonObject;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang.NotImplementedException;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
-import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
-import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.ui.util.JHyperlinkLabel;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -46,10 +44,6 @@ import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -88,7 +82,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private static final ImageIcon ICN_UNREVIEWED = new ImageIcon(ResultPanel.class.getResource("unstar.png"));
 
-	/**
+	/*
 	 * Default font if nothing to show (italic)
 	 */
 	private static final Font NONE_FONT = new Font(null, Font.ITALIC, 11);
@@ -182,7 +176,24 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JScrollPane scrollPane_Confidence;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
-	
+
+	/**
+	 * Background task monitor
+	 */
+	private BackgroundTaskMonitor backgroundTaskPanel = null;
+
+	public void setBackgroundTask(BackgroundTaskMonitor backgroundTaskMonitor) {
+		if(backgroundTaskMonitor == null && this.backgroundTaskPanel != null) {
+			remove(this.backgroundTaskPanel);
+			repaint();
+		} else if (backgroundTaskMonitor != null) {
+			this.backgroundTaskPanel = backgroundTaskMonitor;
+			add(backgroundTaskPanel, BorderLayout.SOUTH);
+			repaint();
+		}
+	}
+
+
 	private JScrollPane scrollPane_Publication;
 	private JPanel panelPubId;
 	private JTree treePubId;
@@ -192,8 +203,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private JPanel clusterPanel = new JPanel();
 	private JLabel cluster;
-	
-	
+
 	/**
 	 * Build a panel containing all the needed elements.
 	 * 

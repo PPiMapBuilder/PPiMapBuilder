@@ -20,7 +20,6 @@
     
 package ch.picard.ppimapbuilder.data.organism;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

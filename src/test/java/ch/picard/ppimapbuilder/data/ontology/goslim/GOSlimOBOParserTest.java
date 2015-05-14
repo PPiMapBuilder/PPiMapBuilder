@@ -20,8 +20,8 @@
     
 package ch.picard.ppimapbuilder.data.ontology.goslim;
 
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import junit.framework.Assert;
 import org.junit.Test;
 

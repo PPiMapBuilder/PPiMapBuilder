@@ -24,13 +24,11 @@ import uk.ac.ebi.ook.web.services.Query;
 import uk.ac.ebi.ook.web.services.QueryService;
 import uk.ac.ebi.ook.web.services.QueryServiceLocator;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 
 public class OLSClient {

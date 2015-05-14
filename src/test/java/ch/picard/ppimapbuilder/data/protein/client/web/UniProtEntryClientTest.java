@@ -20,11 +20,11 @@
     
 package ch.picard.ppimapbuilder.data.protein.client.web;
 
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 
 import java.io.IOException;
 import java.util.Arrays;

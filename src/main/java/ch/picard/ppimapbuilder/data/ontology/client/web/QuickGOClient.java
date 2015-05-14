@@ -24,10 +24,10 @@ import au.com.bytecode.opencsv.CSVReader;
 import ch.picard.ppimapbuilder.data.client.AbstractThreadedClient;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.util.IOUtils;
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -132,10 +132,10 @@ public class QuickGOClient {
 					}
 
 					@Override
-					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> result, Integer index) {
+					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> intermediaryResult, Integer index) {
 						if(progressMonitor != null)
 							progressMonitor.setProgress(((double)++i[0])/((double)URIs.size()));
-						results.putAll(result);
+						results.putAll(intermediaryResult);
 					}
 				}.run();
 

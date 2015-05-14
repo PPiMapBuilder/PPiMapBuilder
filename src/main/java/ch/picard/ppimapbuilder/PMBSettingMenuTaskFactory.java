@@ -20,11 +20,10 @@
     
 package ch.picard.ppimapbuilder;
 
+import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-
-import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import org.cytoscape.work.TaskMonitor;
 
 import javax.swing.*;

@@ -59,6 +59,7 @@ public class ProteinUtilsTest {
 	@Test
 	public void testExtractStrictUniProtID() {
 		List<Pair<String>> beforeAfterExtract = new ArrayList<Pair<String>>();
+		beforeAfterExtract.add(new Pair<String>("P39207.1", "P39207.1"));
 		beforeAfterExtract.add(new Pair<String>("Q62406-PRO_00202300", "Q62406"));
 		beforeAfterExtract.add(new Pair<String>("P04040-1", "P04040"));
 

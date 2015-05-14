@@ -20,17 +20,16 @@
     
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache;
 
-import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
-import junit.framework.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import ch.picard.ppimapbuilder.TestUtils;
+import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import junit.framework.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
