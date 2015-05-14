@@ -38,7 +38,7 @@ public class OrganismUtils {
 		return PairUtils.createCombinations(new HashSet<Organism>(organisms), false, true);
 	}
 
-	public static List<String> organismsToStrings(List<Organism> organisms) {
+	public static List<String> organismsToStrings(Collection<Organism> organisms) {
 		ArrayList<String> out = new ArrayList<String>();
 		for(Organism organism : organisms) {
 			out.add(organism.getScientificName());

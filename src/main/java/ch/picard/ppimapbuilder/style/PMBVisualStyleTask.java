@@ -20,8 +20,6 @@
     
 package ch.picard.ppimapbuilder.style;
 
-import java.awt.Color;
-
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
 import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
@@ -33,6 +31,8 @@ import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
+
+import java.awt.*;
 
 /**
  * Visual Style definition

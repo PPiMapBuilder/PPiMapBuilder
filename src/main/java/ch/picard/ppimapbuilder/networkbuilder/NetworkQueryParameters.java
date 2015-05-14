@@ -35,4 +35,6 @@ public interface NetworkQueryParameters {
 
 	public List<PsicquicService> getSelectedDatabases();
 
+	public boolean isInteractomeQuery();
+
 }

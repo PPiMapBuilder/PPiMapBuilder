@@ -25,11 +25,11 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
 
 /**
  * Decorator for {@link ProteinOrthologClient} which brings new methods with threaded behavior in order
@@ -84,8 +84,8 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 			}
 
 			@Override
-			public void processResult(List<OrthologScoredProtein> result, Integer index) {
-				orthologs.put(organismList.get(index), result);
+			public void processResult(List<OrthologScoredProtein> intermediaryResult, Integer index) {
+				orthologs.put(organismList.get(index), intermediaryResult);
 			}
 		}.run();
 
@@ -121,8 +121,8 @@ public class ThreadedProteinOrthologClientDecorator extends AbstractThreadedClie
 			}
 
 			@Override
-			public void processResult(Map<Organism, List<OrthologScoredProtein>> result, Integer index) {
-				out.put(proteinList.get(index), result);
+			public void processResult(Map<Organism, List<OrthologScoredProtein>> intermediaryResult, Integer index) {
+				out.put(proteinList.get(index), intermediaryResult);
 			}
 		}.run();
 

@@ -16,18 +16,19 @@
  * 
  * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
  * 
- */    	
-    
+ */
+
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlim;
-import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
+import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlim;
 import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimLoaderTaskFactory;
 import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
-import ch.picard.ppimapbuilder.ui.util.ListDeletableItem;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.field.ListDeletableItem;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
@@ -40,7 +41,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
+public class GOSlimSettingPanel extends JPanel implements TabContent {
 
 	private static final long serialVersionUID = 1L;
 
@@ -50,7 +51,8 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 	private final SettingWindow settingWindow;
 
 	public GOSlimSettingPanel(final SettingWindow settingWindow) {
-		super(new BorderLayout(), "GO slim");
+		super(new BorderLayout());
+		setName("GO slim");
 		setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		this.settingWindow = settingWindow;
@@ -81,7 +83,7 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 						public void run() {
 							if (goSlimLoaderTaskFactory.getError() == null) {
 								settingWindow.newModificationMade();
-								resetUI();
+								setActive(true); //Regen UI
 							} else {
 								JOptionPane.showMessageDialog(settingWindow, goSlimLoaderTaskFactory.getError(), "Add OBO GO slim error", JOptionPane.ERROR_MESSAGE);
 							}
@@ -103,80 +105,79 @@ public class GOSlimSettingPanel extends TabPanel.TabContentPanel {
 		}
 	}
 
-	@Override
-	public synchronized void resetUI() {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				switchPanel(null);
-				goSlimListPanel.removeAllRow();
-
-				List<GOSlim> goSlims = GOSlimRepository.getInstance().getGOSlims();
-				Collections.sort(goSlims, new Comparator<GOSlim>() {
-					@Override
-					public int compare(GOSlim o1, GOSlim o2) {
-						return o1.getName().equals(GOSlim.DEFAULT) ?
-								-1 :
-									o2.getName().equals(GOSlim.DEFAULT) ?
-									1 :
-									0;
-					}
-				});
-
-				for (final GOSlim set : goSlims) {
-					ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
-							.addButton(newViewButton(set.getName()));
-
-					if (!set.getName().equals(GOSlim.DEFAULT)) {
-						listRow.addDeleteButton(new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
-								GOSlimRepository.getInstance().remove(set.getName());
-								settingWindow.newModificationMade();
-								resetUI();
-							}
-						});
-					}
-
-					goSlimListPanel.addRow(listRow);
-				}
-				repaint();
-			}
-		});
-	}
-
-	private JButton newViewButton(final String goSlimName) {
-		ImageIcon icon = new ImageIcon(getClass().getResource("view.png"));
-		JButton button = new JButton(icon);
-		Dimension iconDim = new Dimension(icon.getIconWidth() + 2, icon.getIconHeight() + 2);
-		button.setMinimumSize(iconDim);
-		button.setMaximumSize(iconDim);
-		button.setPreferredSize(iconDim);
-		button.setContentAreaFilled(false);
-		button.setBorder(BorderFactory.createEmptyBorder());
-		button.addActionListener(new ActionListener() {
+	private JButton createViewButton(final String goSlimName) {
+		ImageIcon viewIcon = new ImageIcon(getClass().getResource("view.png"));
+		JButton viewButton = new JButton(viewIcon);
+		Dimension iconDim = new Dimension(viewIcon.getIconWidth() + 2, viewIcon.getIconHeight() + 2);
+		viewButton.setMinimumSize(iconDim);
+		viewButton.setMaximumSize(iconDim);
+		viewButton.setPreferredSize(iconDim);
+		viewButton.setContentAreaFilled(false);
+		viewButton.setBorder(BorderFactory.createEmptyBorder());
+		viewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				switchPanel(new GOSlimVisualizer(goSlimName));
 			}
 		});
-		return button;
+		return viewButton;
 	}
 
-	@Override
-	public void setVisible(boolean opening) {
-		super.setVisible(opening);
-		if (opening)
-			resetUI();
-	}
-
-	private void switchPanel(JPanel panel) {
+	private void switchPanel(final JPanel panel) {
 		removeAll();
 		if (panel == null)
 			add(listPanel, BorderLayout.CENTER);
 		else
 			add(panel, BorderLayout.CENTER);
+
+		validate();
 		repaint();
+	}
+
+	@Override
+	public JComponent getComponent() {
+		return this;
+	}
+
+	@Override
+	public void setActive(boolean active) {
+		if (active) {
+			switchPanel(null);
+			goSlimListPanel.removeAllRow();
+
+			List<GOSlim> goSlims = GOSlimRepository.getInstance().getGOSlims();
+			Collections.sort(goSlims, new Comparator<GOSlim>() {
+				@Override
+				public int compare(GOSlim o1, GOSlim o2) {
+					return o1.getName().equals(GOSlim.DEFAULT) ?
+							-1 :
+							o2.getName().equals(GOSlim.DEFAULT) ?
+									1 :
+									0;
+				}
+			});
+
+			for (final GOSlim set : goSlims) {
+				ListDeletableItem.ListRow listRow = new ListDeletableItem.ListRow(set.getName())
+						.addButton(createViewButton(set.getName()));
+
+				if (!set.getName().equals(GOSlim.DEFAULT)) {
+					listRow.addDeleteButton(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							GOSlimRepository.getInstance().remove(set.getName());
+							settingWindow.newModificationMade();
+							setActive(true); //Regen UI
+						}
+					});
+				}
+
+				goSlimListPanel.addRow(listRow);
+			}
+
+			validate();
+			repaint();
+		}
 	}
 
 	private class GOSlimVisualizer extends JPanel {

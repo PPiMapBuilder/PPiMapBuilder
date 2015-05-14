@@ -20,19 +20,12 @@
     
 package ch.picard.ppimapbuilder.ui.resultpanel.listener;
 
+import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyTableUtil;
-import org.cytoscape.model.events.NetworkAboutToBeDestroyedEvent;
-import org.cytoscape.model.events.RowSetRecord;
+import org.cytoscape.model.*;
 import org.cytoscape.model.events.RowsSetEvent;
 import org.cytoscape.model.events.RowsSetListener;
-import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 

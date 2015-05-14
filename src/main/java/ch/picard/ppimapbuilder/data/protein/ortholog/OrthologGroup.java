@@ -20,7 +20,6 @@
     
 package ch.picard.ppimapbuilder.data.protein.ortholog;
 
-import ch.picard.ppimapbuilder.data.Pair;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 

@@ -23,14 +23,8 @@ package ch.picard.ppimapbuilder.style;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
-import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-
-import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
-import org.cytoscape.work.TaskMonitor;
-
-import javax.swing.*;
 
 /**
  * PPiMapBuilder task factory for Visual Style

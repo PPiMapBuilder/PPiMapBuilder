@@ -20,7 +20,7 @@
     
 package ch.picard.ppimapbuilder;
 
-import ch.picard.ppimapbuilder.util.FileUtil;
+import ch.picard.ppimapbuilder.util.io.FileUtil;
 
 import java.io.File;
 

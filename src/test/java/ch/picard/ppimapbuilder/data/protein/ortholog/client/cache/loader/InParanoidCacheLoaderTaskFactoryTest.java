@@ -20,12 +20,12 @@
     
 package ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.loader;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
 import ch.picard.ppimapbuilder.TestUtils;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
