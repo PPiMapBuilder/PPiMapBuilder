@@ -71,19 +71,23 @@ public class PMBVisualStyleTask extends AbstractTask {
 		VisualStyle vs = visualStyleFactoryServiceRef.createVisualStyle("PPiMapBuilder Visual Style");
 
 		//NODE
-		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(235, 235, 235)); // Node color
+		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(0, 102, 204)); // Node color
 		vs.setDefaultValue(BasicVisualLexicon.NODE_SHAPE, NodeShapeVisualProperty.ROUND_RECTANGLE);
-		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 1.5);
+		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_WIDTH, 2.0);
 		vs.setDefaultValue(BasicVisualLexicon.NODE_BORDER_PAINT, Color.BLACK);
-		vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, new Color(51, 153, 255));
+		vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_COLOR, new Color(0, 0, 0));
 		vs.setDefaultValue(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 10);
 		vs.setDefaultValue(BasicVisualLexicon.NODE_SELECTED_PAINT, new Color(160, 255, 144));
 		PassthroughMapping pMapping = (PassthroughMapping) vmfFactoryP.createVisualMappingFunction("Gene_name", String.class, BasicVisualLexicon.NODE_LABEL);
 		vs.addVisualMappingFunction(pMapping);
 		DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
 		dMapping.putMapValue("true", new Color(255, 255, 51));
-		dMapping.putMapValue("false", new Color(235, 235, 235));
+		dMapping.putMapValue("false", new Color(0, 102, 204));
 		vs.addVisualMappingFunction(dMapping);
+		DiscreteMapping dMapping2 = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_LABEL_COLOR);
+		dMapping2.putMapValue("true", new Color(51, 153, 255));
+		dMapping2.putMapValue("false", new Color(255, 255, 255));
+		vs.addVisualMappingFunction(dMapping2);
 
 		//EDGE
 		vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(204, 204, 204));
