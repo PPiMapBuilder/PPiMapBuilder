@@ -148,7 +148,7 @@ public class PMBActivator extends AbstractCyActivator {
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
 			{
-				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef);
+				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef, visualMappingManager);
 				Properties applyCustomLayoutProperties = new Properties();
 				applyCustomLayoutProperties.setProperty("preferredMenu", "Layout");
 				applyCustomLayoutProperties.setProperty("title", "PMB Layout");

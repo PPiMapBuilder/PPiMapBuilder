@@ -73,10 +73,13 @@ public class QuickGOClient {
 			final HashMap<Protein, Set<GeneOntologyTerm>> results = new HashMap<Protein, Set<GeneOntologyTerm>>();
 
 			try {
+				System.out.println("#2.1");
 				final List<URI> URIs = generateRequests(
 						new ArrayList<GeneOntologyTerm>(GOSlimTerms),
 						new ArrayList<Protein>(proteinSet)
 				);
+				System.out.println(URIs);
+				System.out.println("#2.2");
 				final int[] i = new int[]{0};
 				new ConcurrentExecutor<HashMap<Protein, Set<GeneOntologyTerm>>>(getExecutorServiceManager(), URIs.size()) {
 					@Override
@@ -101,6 +104,8 @@ public class QuickGOClient {
 												break;
 
 											final GeneOntologyTerm GOTerm = new GeneOntologyTerm(line[1], line[2], line[3].charAt(0));
+											System.out.println(GOTerm);
+											System.out.println("#2.3");
 
 											for (Protein protein : proteinSet) {
 												if (protein.getUniProtId().equals(line[0])) {
@@ -113,6 +118,7 @@ public class QuickGOClient {
 													break;
 												}
 											}
+											System.out.println("#2.4");
 										}
 									}
 								};
@@ -126,6 +132,8 @@ public class QuickGOClient {
 										5,
 										100
 								);
+								System.out.println(result);
+								System.out.println("#2.5");
 								return result;
 							}
 						};

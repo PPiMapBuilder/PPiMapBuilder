@@ -33,6 +33,8 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
@@ -46,6 +48,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 	private final CyNetwork network;
 	private final CyNetworkView view;
 	private final CyLayoutAlgorithmManager layoutManager;
+	private final VisualMappingManager visualMappingManager;
 
 	private ListSingleSelection<String> goSlim;
 
@@ -58,10 +61,11 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		this.goSlim = goSlim;
 	}
 
-	public PMBGOSlimLayoutTask(CyNetwork network, CyNetworkView view, CyLayoutAlgorithmManager layoutManager) {
+	public PMBGOSlimLayoutTask(CyNetwork network, CyNetworkView view, CyLayoutAlgorithmManager layoutManager, VisualMappingManager visualMappingManager) {
 		this.network = network;
 		this.view = view;
 		this.layoutManager = layoutManager;
+		this.visualMappingManager = visualMappingManager;
 		this.goSlim = new ListSingleSelection<String>(GOSlimRepository.getInstance().getGOSlimNames());
 	}
 
@@ -70,6 +74,8 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 
 	@Override
 	public void run(final TaskMonitor monitor) throws Exception {
+		System.out.println("## FETCH LAYOUT");
+		System.out.println("#1");
 		monitor.setTitle("Fetching slimmed Gene Ontology");
 		monitor.setProgress(0.1);
 
@@ -89,6 +95,8 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 						)
 				);
 			}
+			System.out.println(networkProteins);
+			System.out.println("#2");
 
 			proteinGoSlim.putAll(
 					goSlimClient.searchProteinGOSlim(
@@ -102,9 +110,14 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 							}
 					)
 			);
+
+			System.out.println(proteinGoSlim);
+			System.out.println("#3");
 		}
 
+		ArrayList<String> usedGo = new ArrayList<String>();
 		{
+			monitor.setTitle("Clustering using Gene Ontology");
 			ArrayList<String> fullListOfGOs = new ArrayList<String>();
 			ConcurrentHashMap<String, String> mapGoTerm = new ConcurrentHashMap<String, String>();
 
@@ -151,17 +164,51 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 			if (nodeTable.getColumn("Go_slim_group_term") == null) { // Create node attribute to store the cluster assignement
 				nodeTable.createColumn("Go_slim_group_term", String.class, false);
 			}
+			LinkedHashMap<String, CyNode> legendAsNode = new LinkedHashMap<String, CyNode>();
 			for (CyNode n : network.getNodeList()) {
 				List<String> tempGOList = network.getRow(n).getList("Go_slim", String.class);
 				if(tempGOList == null) {
 					network.getRow(n).set("Go_slim_group_term", "Outside any cluster");
+					if (!usedGo.contains("Outside any cluster")) {
+						usedGo.add("Outside any cluster");
+					}
 				}
 				else {
 					for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
 						if (tempGOList.contains(key)) { // If this GO is one of those assigned to the current node
 							//System.out.print(key);
 							network.getRow(n).set("Go_slim_group", key); // We consider this GO as the major to cluster this node
-							network.getRow(n).set("Go_slim_group_term", mapGoTerm.get(key));
+							
+							String legend = mapGoTerm.get(key);
+							network.getRow(n).set("Go_slim_group_term", legend);
+							
+							if (!usedGo.contains(mapGoTerm.get(key))) {
+								usedGo.add(mapGoTerm.get(key));
+							}
+							
+//							// Add legend as node
+//							CyNode legendNode;
+//							if (legendAsNode.keySet().contains(legend)) {
+//								legendNode = legendAsNode.get(legend);
+//							}
+//							else {
+//								System.out.println(legend);
+//								legendNode = network.addNode();
+//								CyRow nodeAttr = network.getRow(legendNode);
+//								nodeAttr.set("name", legend);
+//								nodeAttr.set("Gene_name", legend); // TODO: add a "label" column containing either the gene name either the legend label
+//								nodeAttr.set("Go_slim_group_term", legend);
+//								
+//								nodeAttr.set("Uniprot_id", legend);
+//								nodeAttr.set("Ec_number", legend);
+//								nodeAttr.set("Protein_name", legend);
+//								nodeAttr.set("Tax_id", legend);
+//								legendAsNode.put(legend, legendNode);
+//							}
+//							// Link legend to node
+//							network.addEdge(n, legendNode, true);
+							
+							
 							break;
 						}
 					}
@@ -169,12 +216,41 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 				
 			}
 		}
+		
+		{
+			monitor.setTitle("Create legend as nodes");
+			
+			for (String legendElement: usedGo) {
+				System.out.println(network.getNodeList());
+				if (!network.getNodeList().contains(legendElement)) {
+					System.out.println(legendElement);
+					CyNode node = network.addNode();
+					CyRow nodeAttr = network.getRow(node);
+					nodeAttr.set("name", legendElement);
+					nodeAttr.set("Gene_name", legendElement); // TODO: add a "label" column containing either the gene name either the legend label
+					nodeAttr.set("Go_slim_group_term", legendElement);
+				}
+			}
+		}
+		
+		{
+			monitor.setTitle("Update view");
+			for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
+				if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style")) {
+					curVS.apply(view);
+					visualMappingManager.setCurrentVisualStyle(curVS);
+					break;
+				}
+			}
+			view.updateView();
+		}
 
 		{
+			monitor.setTitle("Creating layout based on clusters");
 			// Call attribute layout
 			CyLayoutAlgorithm layout = layoutManager.getLayout("attributes-layout");
 			Object context = layout.createLayoutContext();
-			String layoutAttribute = "Go_slim_group";
+			String layoutAttribute = "Go_slim_group_term";
 			insertTasksAfterCurrentTask(layout.createTaskIterator(view, context, CyLayoutAlgorithm.ALL_NODE_VIEWS, layoutAttribute));
 		}
 		
