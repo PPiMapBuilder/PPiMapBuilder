@@ -32,10 +32,13 @@ import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTerm;
+import ch.picard.ppimapbuilder.data.ontology.GeneOntologyTermSet;
 import ch.picard.ppimapbuilder.data.ontology.goslim.GOSlimRepository;
 
 import java.awt.*;
 import java.util.LinkedHashMap;
+import java.util.Random;
 
 /**
  * Visual Style definition
@@ -73,7 +76,7 @@ public class PMBVisualStylesDefinition {
 		return this;
 	}
 	
-	public void addVisualStyle(String name, boolean clustered) {
+	public VisualStyle addVisualStyle(String name, String goSlimName) {
 		// If the style already existed, remove it first
 		for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
 			if (curVS.getTitle().equalsIgnoreCase(name)) {
@@ -90,11 +93,13 @@ public class PMBVisualStylesDefinition {
 		defs.put(name, vs);
 		
 		initVisualStyleCore(vs);
-		if (clustered) {
-			initVisualStyleClusterColor(vs);
+		if (goSlimName != null) {
+			initVisualStyleClusterColor(vs, GOSlimRepository.getInstance().getGOSlim(goSlimName));
 		}
 		
 		this.visualMappingManager.addVisualStyle(vs);
+		
+		return vs;
 	}
 	
 	
@@ -113,10 +118,10 @@ public class PMBVisualStylesDefinition {
 		dMapping.putMapValue("true", new Color(255, 255, 51));
 		dMapping.putMapValue("false", new Color(0, 102, 204));
 		vs.addVisualMappingFunction(dMapping);
-		DiscreteMapping dMapping2 = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_LABEL_COLOR);
-		dMapping2.putMapValue("true", new Color(51, 153, 255));
-		dMapping2.putMapValue("false", new Color(255, 255, 255));
-		vs.addVisualMappingFunction(dMapping2);
+//		DiscreteMapping dMapping2 = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Queried", String.class, BasicVisualLexicon.NODE_LABEL_COLOR);
+//		dMapping2.putMapValue("true", new Color(51, 153, 255));
+//		dMapping2.putMapValue("false", new Color(255, 255, 255));
+//		vs.addVisualMappingFunction(dMapping2);
 
 		//EDGE
 		vs.setDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(204, 204, 204));
@@ -128,8 +133,24 @@ public class PMBVisualStylesDefinition {
 	}
 	
 
-	private void initVisualStyleClusterColor(VisualStyle vs) {
-		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(0, 0, 0)); // Node color
+	private void initVisualStyleClusterColor(VisualStyle vs, GeneOntologyTermSet geneOntologyTermSet) {
+		
+		vs.setDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR, new Color(255, 255, 255)); // Node color
+		DiscreteMapping dMapping = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Go_slim_group", String.class, BasicVisualLexicon.NODE_FILL_COLOR);
+		float interval = 360 / (geneOntologyTermSet.size());
+		float x = 0;
+		for (GeneOntologyTerm go : geneOntologyTermSet) {
+			Color c = Color.getHSBColor(x / 360, 1, 1);
+			dMapping.putMapValue(go.getIdentifier(), c);
+			x += interval;
+		}
+		
+		DiscreteMapping dMapping2 = (DiscreteMapping) vmfFactoryD.createVisualMappingFunction("Legend", String.class, BasicVisualLexicon.NODE_SIZE);
+		dMapping2.putMapValue("true", 100);
+		dMapping2.putMapValue("false", 50);
+		vs.addVisualMappingFunction(dMapping2);
+		
+		vs.addVisualMappingFunction(dMapping);
 	}
 	
 	

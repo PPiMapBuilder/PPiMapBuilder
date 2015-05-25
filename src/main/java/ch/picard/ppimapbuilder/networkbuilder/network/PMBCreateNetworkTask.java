@@ -258,6 +258,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("Molecular_functions", String.class, false);
 		nodeTable.createColumn("Queried", String.class, false);
 		nodeTable.createListColumn("Orthologs", String.class, false);
+		nodeTable.createColumn("Legend", String.class, false);
 	}
 
 	private void createEdges(CyNetwork network) {
@@ -382,6 +383,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				queried = proteinOfInterestPool.contains(entry);
 			}
 			nodeAttr.set("Queried", String.valueOf(queried));
+			nodeAttr.set("Legend", "false");
 		}
 
 		return node;

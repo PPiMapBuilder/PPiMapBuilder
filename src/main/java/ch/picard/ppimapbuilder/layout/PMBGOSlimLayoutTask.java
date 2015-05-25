@@ -117,6 +117,7 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 		}
 
 		ConcurrentHashMap<String, String> mapGoTerm = new ConcurrentHashMap<String, String>();
+		mapGoTerm.put("Outside any cluster", "Outside any cluster");
 		ArrayList<String> usedGo = new ArrayList<String>();
 		{
 			monitor.setTitle("Clustering using Gene Ontology");
@@ -170,6 +171,10 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 				List<String> tempGOList = network.getRow(n).getList("Go_slim", String.class);
 				if(tempGOList == null) {
 					network.getRow(n).set("Go_slim_group_term", "Outside any cluster");
+					
+					if (!usedGo.contains("Outside any cluster")) {
+						usedGo.add("Outside any cluster");
+					}
 				}
 				else {
 					for (String key : sortedGoOccurrences.keySet()) { // For each GO beginning by the most frequent
@@ -202,28 +207,19 @@ public class PMBGOSlimLayoutTask extends AbstractTask {
 					CyNode node = network.addNode();
 					CyRow nodeAttr = network.getRow(node);
 					nodeAttr.set("name", legendGo);
-					nodeAttr.set("Gene_name", legendGo); // TODO: add a "label" column containing either the gene name either the legend label
+					nodeAttr.set("Gene_name", mapGoTerm.get(legendGo)); // TODO: add a "label" column containing either the gene name either the legend label
 					nodeAttr.set("Go_slim_group", legendGo);
 					nodeAttr.set("Go_slim_group_term", mapGoTerm.get(legendGo));
+					nodeAttr.set("Legend", "true");
 				}
 			}
-			CyNode node = network.addNode();
-			CyRow nodeAttr = network.getRow(node);
-			nodeAttr.set("name", "Outside any cluster");
-			nodeAttr.set("Gene_name", "Outside any cluster");
-			nodeAttr.set("Go_slim_group_term", mapGoTerm.get("Outside any cluster"));
 		}
 		
 		{
 			monitor.setTitle("Update view");
-			PMBVisualStylesDefinition.getInstance().addVisualStyle("PMB_test", true);
-//			for (VisualStyle curVS : visualMappingManager.getAllVisualStyles()) {
-//				if (curVS.getTitle().equalsIgnoreCase("PPiMapBuilder Visual Style")) {
-//					curVS.apply(view);
-//					visualMappingManager.setCurrentVisualStyle(curVS);
-//					break;
-//				}
-//			}
+			VisualStyle vs = PMBVisualStylesDefinition.getInstance().addVisualStyle("PMB_"+goSlim.getSelectedValue().replace(" ", "_"), goSlim.getSelectedValue());
+			vs.apply(view);
+			visualMappingManager.setCurrentVisualStyle(vs);
 			view.updateView();
 		}
 
