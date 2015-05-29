@@ -29,6 +29,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
 import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
@@ -38,7 +39,7 @@ import org.cytoscape.work.TaskMonitor;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-public class DifferedFetchUniProtEntryTask extends AbstractTask {
+public class DeferredFetchUniProtEntryTask extends AbstractTask {
 
 	private final ExecutorServiceManager executorServiceManager;
 	private final Set<? extends Protein> interactorPool;
@@ -47,7 +48,7 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 
 	private final CyNetwork network;
 
-	public DifferedFetchUniProtEntryTask(
+	public DeferredFetchUniProtEntryTask(
 			ExecutorServiceManager executorServiceManager,
 			Set<? extends Protein> interactorPool,
 			CyNetwork network
@@ -109,7 +110,6 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 		for (String uniProtId : entries.keySet()) {
 			final CyNode node = nodes.get(uniProtId);
 			final UniProtEntry entry = entries.get(uniProtId);
-
 			if(node != null && entry != null) {
 				final CyRow row = network.getRow(node);
 				final GeneOntologyTermSet geneOntologyTerms = entry.getGeneOntologyTerms();
@@ -142,6 +142,18 @@ public class DifferedFetchUniProtEntryTask extends AbstractTask {
 						JSONUtils.jsonListToStringList(molecularFunction)
 				);
 				row.set("Molecular_functions", molecularFunction.asStringList());
+
+				for (CyEdge cyEdge : network.getAdjacentEdgeList(node, CyEdge.Type.ANY)) {
+					final CyRow edgeRow = network.getRow(cyEdge);
+					if(cyEdge.getSource().equals(node)) {
+						edgeRow.set("Protein_name_A", entry.getProteinName());
+						edgeRow.set("Gene_name_A", entry.getGeneName());
+					}
+					else if(cyEdge.getTarget().equals(node)) {
+						edgeRow.set("Protein_name_B", entry.getProteinName());
+						edgeRow.set("Gene_name_B", entry.getGeneName());
+					}
+				}
 			}
 		}
 

@@ -33,7 +33,7 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DifferedFetchUniProtEntryTask;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DeferredFetchUniProtEntryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
@@ -135,22 +135,27 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				createEdges(network);
 				monitor.setProgress(0.75);
 
+				if(cancelled) return;
 				if(!networkQueryParameters.isInteractomeQuery()) {
 					removeNodeNotConnectedToPOIs(network);
 				}
 			}
+
+			if(cancelled) return;
 
 			CyNetworkView view;
 			{ // Create view and apply layout and style
 				view = applyView(network);
 
 				// Layout
-				applyLayout(view);
+				applyLayout(view, network.getNodeCount());
 
 				// Visual Style
 				applyVisualStyle(view);
 				monitor.setProgress(0.90);
 			}
+
+			if(cancelled) return;
 
 			// Add network build time
 			network.getRow(network).set(
@@ -158,12 +163,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					(((int) (System.currentTimeMillis() - startTime)) / 1000)
 			);
 
-			if(networkQueryParameters.isInteractomeQuery()) {
+			if(networkQueryParameters.isInteractomeQuery() && !cancelled) {
 				// For interactome => search uniprot entries in the background
 				PMBActivator
 						.getPMBBackgroundTaskManager()
 						.launchTask(
-								new DifferedFetchUniProtEntryTask(
+								new DeferredFetchUniProtEntryTask(
 										executorServiceManager,
 										interactorPool,
 										network
@@ -356,7 +361,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			nodeAttr.set("Uniprot_id", entry.getUniProtId());
 			nodeAttr.set("Accessions", new ArrayList<String>(entry.getAccessions()));
 			// TODO: if gene_name is empty, put "[ptn]proteinName"
-			nodeAttr.set("Gene_name", entry.getGeneName() != null ? entry.getGeneName() : "N/A");
+			nodeAttr.set("Gene_name", entry.getGeneName());
 			nodeAttr.set("Ec_number", entry.getEcNumber());
 			nodeAttr.set("Synonym_gene_names", new ArrayList<String>(entry.getSynonymGeneNames()));
 			nodeAttr.set("Protein_name", entry.getProteinName());
@@ -410,8 +415,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		return view;
 	}
 
-	private void applyLayout(CyNetworkView view) {
-		CyLayoutAlgorithm layout = layoutAlgorithmManager.getLayout("force-directed");
+	private void applyLayout(CyNetworkView view, int numberOfNodes) {
+		CyLayoutAlgorithm layout = null;
+		if(numberOfNodes <= 2000) {
+			layout = layoutAlgorithmManager.getLayout("force-directed");
+		} else {
+			layout = layoutAlgorithmManager.getLayout("grid");
+		}
 		Object context = layout.createLayoutContext();
 		String layoutAttribute = null;
 		insertTasksAfterCurrentTask(

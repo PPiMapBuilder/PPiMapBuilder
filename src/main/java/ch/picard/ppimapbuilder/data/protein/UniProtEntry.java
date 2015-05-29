@@ -130,7 +130,7 @@ public class UniProtEntry extends Protein {
 		private String uniprotId = null;
 		private LinkedHashSet<String> accessions = null;
 		private Organism organism = null;
-		private String geneName = null;
+		private String geneName = "N/A";
 		private Set<String> synonymGeneNames = null;
 		private String proteinName = null;
 		private String ecNumber = null;
