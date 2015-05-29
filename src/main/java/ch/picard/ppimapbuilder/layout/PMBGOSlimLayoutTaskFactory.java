@@ -25,13 +25,16 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.TaskIterator;
 
 public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 	private CyLayoutAlgorithmManager layoutManager;
+	private VisualMappingManager visualMappingManager;
 
-	public PMBGOSlimLayoutTaskFactory(CyLayoutAlgorithmManager layoutManager) {
+	public PMBGOSlimLayoutTaskFactory(CyLayoutAlgorithmManager layoutManager, VisualMappingManager visualMappingManager) {
 		this.layoutManager = layoutManager;
+		this.visualMappingManager = visualMappingManager;
 	}
 
 	public TaskIterator createTaskIterator(CyNetworkView view) {
@@ -46,7 +49,7 @@ public class PMBGOSlimLayoutTaskFactory implements NetworkViewTaskFactory {
 		}
 
 		return new TaskIterator(
-			new PMBGOSlimLayoutTask(network, view, layoutManager)
+			new PMBGOSlimLayoutTask(network, view, layoutManager, visualMappingManager)
 		);
 	}
 

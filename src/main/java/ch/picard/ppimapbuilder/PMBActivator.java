@@ -25,6 +25,7 @@ import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import ch.picard.ppimapbuilder.style.PMBVisualStyleTaskFactory;
+import ch.picard.ppimapbuilder.style.PMBVisualStylesDefinition;
 import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
@@ -141,6 +142,7 @@ public class PMBActivator extends AbstractCyActivator {
 			VisualStyleFactory visualStyleFactoryServiceRef = getService(bc, VisualStyleFactory.class);
 
 			// Visual Style task
+			PMBVisualStylesDefinition vsDef = PMBVisualStylesDefinition.getInstance().setFactories(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			PMBVisualStyleTaskFactory visualStyleFactory = new PMBVisualStyleTaskFactory(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			networkBuildTaskManager.execute(visualStyleFactory.createTaskIterator());
 			
@@ -148,7 +150,7 @@ public class PMBActivator extends AbstractCyActivator {
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
 			{
-				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef);
+				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef, visualMappingManager);
 				Properties applyCustomLayoutProperties = new Properties();
 				applyCustomLayoutProperties.setProperty("preferredMenu", "Layout");
 				applyCustomLayoutProperties.setProperty("title", "PMB Layout");

@@ -71,12 +71,19 @@ public class QuickGOClient {
 				final ProgressMonitor progressMonitor
 		) {
 			final HashMap<Protein, Set<GeneOntologyTerm>> results = new HashMap<Protein, Set<GeneOntologyTerm>>();
-
+			final Set<String> GOSlimStrings = new HashSet<String>();
+			for (GeneOntologyTerm g: GOSlimTerms) {
+				GOSlimStrings.add(g.getIdentifier());
+			}
+			
 			try {
+				System.out.println("#2.1");
 				final List<URI> URIs = generateRequests(
 						new ArrayList<GeneOntologyTerm>(GOSlimTerms),
 						new ArrayList<Protein>(proteinSet)
 				);
+				System.out.println(URIs);
+				System.out.println("#2.2");
 				final int[] i = new int[]{0};
 				new ConcurrentExecutor<HashMap<Protein, Set<GeneOntologyTerm>>>(getExecutorServiceManager(), URIs.size()) {
 					@Override
@@ -95,24 +102,38 @@ public class QuickGOClient {
 
 										String[] line;
 
+										System.out.println(GOSlimStrings);
 										// Parse TSV response and create the HashMap output
 										while ((line = reader.readNext()) != null) {
-											if (line[0].isEmpty())
+											System.out.print("GO SLIM");
+											System.out.print(line[0]);
+											System.out.print(line[1]);
+											System.out.print(line[2]);
+											if (line[0].isEmpty()) {
 												break;
-
-											final GeneOntologyTerm GOTerm = new GeneOntologyTerm(line[1], line[2], line[3].charAt(0));
-
-											for (Protein protein : proteinSet) {
-												if (protein.getUniProtId().equals(line[0])) {
-													Set<GeneOntologyTerm> ontologyTerms = result.get(protein);
-													if (ontologyTerms == null) {
-														ontologyTerms = new HashSet<GeneOntologyTerm>();
-														result.put(protein, ontologyTerms);
-													}
-													ontologyTerms.add(GOTerm);
-													break;
-												}
 											}
+											
+											if (GOSlimStrings.contains(line[1])) {
+												System.out.println("contain");
+												final GeneOntologyTerm GOTerm = new GeneOntologyTerm(line[1], line[2], line[3].charAt(0));
+												System.out.println(GOTerm);
+												System.out.println("#2.3");
+
+												for (Protein protein : proteinSet) {
+													if (protein.getUniProtId().equals(line[0])) {
+														Set<GeneOntologyTerm> ontologyTerms = result.get(protein);
+														if (ontologyTerms == null) {
+															ontologyTerms = new HashSet<GeneOntologyTerm>();
+															result.put(protein, ontologyTerms);
+														}
+														ontologyTerms.add(GOTerm);
+														break;
+													}
+												}
+												System.out.println("#2.4");
+											}
+
+											
 										}
 									}
 								};
@@ -126,6 +147,8 @@ public class QuickGOClient {
 										5,
 										100
 								);
+								System.out.println(result);
+								System.out.println("#2.5");
 								return result;
 							}
 						};
