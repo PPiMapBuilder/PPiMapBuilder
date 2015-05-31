@@ -24,14 +24,12 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
-import ch.picard.ppimapbuilder.ui.querywindow.component.ChangingColorComponentUpdater;
-import ch.picard.ppimapbuilder.ui.querywindow.component.ChangingColorPanel;
-import ch.picard.ppimapbuilder.ui.querywindow.component.CustomSplitPane;
-import ch.picard.ppimapbuilder.ui.querywindow.component.panel.DatabaseSelectionPanel;
-import ch.picard.ppimapbuilder.ui.querywindow.component.panel.OtherOrganismSelectionPanel;
-import ch.picard.ppimapbuilder.ui.querywindow.component.panel.ReferenceOrganismSelectionPanel;
-import ch.picard.ppimapbuilder.ui.querywindow.component.panel.UniprotSelection;
+import ch.picard.ppimapbuilder.ui.querywindow.component.panel.InteractomeNetworkQueryPanel;
+import ch.picard.ppimapbuilder.ui.querywindow.component.panel.NetworkQueryPanel;
+import ch.picard.ppimapbuilder.ui.querywindow.component.panel.ProteinNetworkQueryPanel;
+import ch.picard.ppimapbuilder.ui.util.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
+import ch.picard.ppimapbuilder.ui.util.tabpanel.TabPanel;
 import net.miginfocom.swing.MigLayout;
 import org.cytoscape.work.TaskManager;
 
@@ -43,7 +41,7 @@ import java.util.List;
 /**
  * PPiMapBuilder interaction query window
  */
-public class QueryWindow extends JFrame implements NetworkQueryParameters {
+public class QueryWindow extends JFrame implements NetworkQueryParameters, FocusListener {
 
 	/**
 	 * Instance of the PPiMapBuilder frame to prevent several instances
@@ -54,65 +52,64 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters {
 	private PMBInteractionNetworkBuildTaskFactory createNetworkFactory;
 	private TaskManager taskManager;
 
-	// The create network window
-	//private JFrame window;
+	// Network query panels
+	private final TabPanel<NetworkQueryPanel> networkQueryPanels;
 
-	// Databases and organism panels containing all checkbox
-	private UniprotSelection uus;
-	private DatabaseSelectionPanel dsp;
-	private OtherOrganismSelectionPanel ogs;
-	private ReferenceOrganismSelectionPanel org;
-
-	// Fancy design element
-	private final ChangingColorComponentUpdater changingColorComponentUpdater;
-	private final Color blurDarkPanelColor;
-	private final Color focusDarkerPanelColor;
-
-	private JButton startQuery;
-	private JButton cancel;
+	// Bottom panel
+	private final JPanel bottomPanel;
+	private JButton submitButton;
+	private JButton cancelButton;
 
 	/**
 	 * Create the network creation frame
 	 */
 	public QueryWindow() {
-		//window = new JFrame("PPiMapBuilder - Create a network");
 		super("PPiMapBuilder - Create a network");
 
-		// Slightly darker color than window background color
-		Color defaultPanelColor = UIManager.getColor("Panel.background");
-		float hsbVals[] = Color.RGBtoHSB(defaultPanelColor.getRed(), defaultPanelColor.getGreen(), defaultPanelColor.getBlue(), null);
-		blurDarkPanelColor = Color.getHSBColor(hsbVals[0], hsbVals[1], 0.97f * hsbVals[2]);
-		focusDarkerPanelColor = Color.getHSBColor(hsbVals[0], hsbVals[1], 0.9f * hsbVals[2]);
+		// Focus / Blur listener for component color change
+		FocusPropagator focusPropagator = new FocusPropagator(this);
+		focusPropagator.add(this);
+		this.addWindowFocusListener(focusPropagator);
 
-		addWindowFocusListener(changingColorComponentUpdater = new ChangingColorComponentUpdater());
+		{ // Init components
+			this.setLayout(new BorderLayout());
 
-		// Create all component in the window
-		initialize();
-	}
+			// Protein network panel
+			ProteinNetworkQueryPanel proteinNetworkQueryPanel =
+					new ProteinNetworkQueryPanel();
+			focusPropagator.add(proteinNetworkQueryPanel);
 
-	/**
-	 * Initialize the contents of the frame
-	 */
-	private void initialize() {
-		// Split panel
-		CustomSplitPane splitPane = new CustomSplitPane(changingColorComponentUpdater, focusDarkerPanelColor, blurDarkPanelColor);
-		this.getContentPane().add(splitPane, BorderLayout.CENTER);
+			// Interactome network panel
+			InteractomeNetworkQueryPanel interactomeNetworkQueryPanel =
+					new InteractomeNetworkQueryPanel();
+			focusPropagator.add(interactomeNetworkQueryPanel);
 
-		// Left part
-		splitPane.setLeftComponent(
-				uus = new UniprotSelection()
-		);
+			// Tab panel with protein and interactome network query panels
+			networkQueryPanels = new TabPanel<NetworkQueryPanel>(
+					proteinNetworkQueryPanel,
+					interactomeNetworkQueryPanel
+			);
+			focusPropagator.add(networkQueryPanels);
+			this.add(networkQueryPanels, BorderLayout.CENTER);
 
-		// Right part
-		splitPane.setRightComponent(
-				initMainFormPanel()
-		);
+			// Bottom panel
+			bottomPanel = new JPanel();
+			{
+				bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
+				bottomPanel.setLayout(new MigLayout("inset 5", "[grow][][]", "[29px]"));
+				bottomPanel.setPreferredSize(new Dimension(0, 42));
 
-		// Bottom part
-		JPanel panBottomForm = initBottomPanel();
-		this.getContentPane().add(panBottomForm, BorderLayout.SOUTH);
+				//Cancel Button
+				cancelButton = new JButton("Cancel");
+				cancelButton.setMnemonic(KeyEvent.VK_CANCEL);
+				bottomPanel.add(cancelButton, "skip, alignx center, aligny center");
 
-		initListeners();
+				//Submit Button
+				submitButton = new JButton("Submit");
+				bottomPanel.add(submitButton, "alignx center, aligny center");
+			}
+			this.add(bottomPanel, BorderLayout.SOUTH);
+		}
 
 		// Resize window
 		this.setMinimumSize(new Dimension(630, 400));
@@ -120,79 +117,12 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters {
 
 		// Center window
 		this.setLocationRelativeTo(null);
-	}
 
-	/**
-	 * Creating the main form panel containing the organism selector and the
-	 * source database selector
-	 *
-	 * @return the generated JPanel
-	 */
-	private JPanel initMainFormPanel() {
-		// Main form panel
-		JPanel panMainForm = new JPanel();
-		panMainForm.setBorder(PMBUIStyle.fancyPanelBorderWithPadding);
-		panMainForm.setMinimumSize(new Dimension(440, 10));
-
-		panMainForm.setLayout(new MigLayout("inset 10", "[49.00,grow][14px:14px:14px,right]", "[][][][grow][][45%]"));
-
-		org = new ReferenceOrganismSelectionPanel(this, panMainForm);
-
-		ogs = new OtherOrganismSelectionPanel(panMainForm, PMBUIStyle.fancyPanelBorder);
-
-		dsp = new DatabaseSelectionPanel(panMainForm, PMBUIStyle.fancyPanelBorder);
-
-		return panMainForm;
-	}
-
-	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
-		dsp.updateList(databases);
-		ogs.updateList(organisms);
-		org.updateList(organisms);
-	}
-
-	/**
-	 * Creating bottom panel with cancel and submit button
-	 *
-	 * @return the generated JPanel
-	 */
-	private JPanel initBottomPanel() {
-		//Bottom Panel
-		JPanel panBottomForm = new ChangingColorPanel(
-				changingColorComponentUpdater,
-				focusDarkerPanelColor,
-				blurDarkPanelColor,
-				PMBUIStyle.emptyBorder,
-				null
-		);
-		panBottomForm.setLayout(new MigLayout("inset 5", "[grow][100px][][100px]", "[29px]"));
-		panBottomForm.setPreferredSize(new Dimension(0, 42));
-
-		//Cancel Button
-		cancel = new JButton("Cancel");
-		cancel.setMnemonic(KeyEvent.VK_CANCEL);
-		//Add cancel to panel
-		panBottomForm.add(cancel, "cell 1 0,alignx center,aligny center");
-
-		//Submit Button
-		startQuery = new JButton("Submit");
-		//Add submit to panel
-		panBottomForm.add(startQuery, "cell 3 0,alignx center,aligny center");
-
-		return panBottomForm;
+		initListeners();
 	}
 
 	private void initListeners() {
-		startQuery.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				QueryWindow.this.setVisible(false);
-
-				taskManager.execute(createNetworkFactory.createTaskIterator());
-			}
-
-		});
-		cancel.addActionListener(new ActionListener() {
+		cancelButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -200,26 +130,45 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters {
 			}
 
 		});
+
+		submitButton.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				QueryWindow.this.setVisible(false);
+				taskManager.execute(createNetworkFactory.createTaskIterator());
+			}
+
+		});
+	}
+
+	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
+		for (NetworkQueryPanel networkQueryPanel : networkQueryPanels.getTabPanels())
+			networkQueryPanel.updateLists(databases, organisms);
 	}
 
 	@Override
 	public List<PsicquicService> getSelectedDatabases() {
-		return dsp.getSelectedDatabases();
+		return networkQueryPanels.getActivePanel().getSelectedDatabases();
+	}
+
+	@Override
+	public boolean isInteractomeQuery() {
+		return networkQueryPanels.getActivePanel().isInteractomeQuery();
 	}
 
 	@Override
 	public Organism getReferenceOrganism() {
-		return org.getSelectedOrganism();
+		return networkQueryPanels.getActivePanel().getReferenceOrganism();
 	}
 
 	@Override
 	public List<String> getProteinOfInterestUniprotId() {
-		return uus.getIdentifiers();
+		return networkQueryPanels.getActivePanel().getProteinOfInterestUniprotId();
 	}
 
 	@Override
 	public List<Organism> getOtherOrganisms() {
-		return ogs.getSelectedOrganisms();
+		return networkQueryPanels.getActivePanel().getOtherOrganisms();
 	}
 
 	public void setCreateNetworkFactory(PMBInteractionNetworkBuildTaskFactory createNetworkFactory) {
@@ -230,18 +179,23 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters {
 		this.taskManager = taskManager;
 	}
 
-	public OtherOrganismSelectionPanel getOtherOrganismSelectionPanel() {
-		return ogs;
-	}
-
 	@Override
-	public void setVisible(boolean b) {
-		super.setVisible(b);
-		if (b) {
-			startQuery.grabFocus();
-			this.getRootPane().setDefaultButton(startQuery);
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			submitButton.grabFocus();
+			getRootPane().setDefaultButton(submitButton);
 			repaint();
 		}
 	}
 
+	@Override
+	public void focusGained(FocusEvent e) {
+		bottomPanel.setBackground(PMBUIStyle.focusActiveTabColor);
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		bottomPanel.setBackground(PMBUIStyle.blurActiveTabColor);
+	}
 }

@@ -20,7 +20,10 @@
     
 package ch.picard.ppimapbuilder.data.ontology;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 public class GeneOntologyTermSet extends HashSet<GeneOntologyTerm> {
 

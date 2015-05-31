@@ -45,7 +45,7 @@ public class MiQLExpressionBuilderTest {
 
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
 		expr.add("test");
-		expr.addCondition(MiQLExpressionBuilder.Operator.OR, "test");
+		expr.add(MiQLExpressionBuilder.Operator.OR, "test");
 		String actual = expr.toString();
 
 		Assert.assertEquals(expected, actual);
@@ -57,7 +57,7 @@ public class MiQLExpressionBuilderTest {
 
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
 		expr.add("test");
-		expr.addCondition(MiQLExpressionBuilder.Operator.OR, "test");
+		expr.add(MiQLExpressionBuilder.Operator.OR, "test");
 		expr.setRoot(true);
 		String actual = expr.toString();
 
@@ -70,7 +70,7 @@ public class MiQLExpressionBuilderTest {
 
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
 		expr.add("test");
-		expr.addCondition(MiQLExpressionBuilder.Operator.OR, "te st");
+		expr.add(MiQLExpressionBuilder.Operator.OR, "te st");
 		String actual = expr.toString();
 
 		Assert.assertEquals(expected, actual);
@@ -83,8 +83,8 @@ public class MiQLExpressionBuilderTest {
 		List<String> elems = Arrays.asList("test", "te st");
 		
 		MiQLExpressionBuilder expr = new MiQLExpressionBuilder();
-		expr.addAllCondition(MiQLExpressionBuilder.Operator.OR, elems);
-		expr.addCondition(MiQLExpressionBuilder.Operator.AND, "3123");
+		expr.addAll(MiQLExpressionBuilder.Operator.OR, elems);
+		expr.add(MiQLExpressionBuilder.Operator.AND, "3123");
 		String actual = expr.toString();
 
 		Assert.assertEquals(expected, actual);

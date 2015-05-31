@@ -21,15 +21,13 @@
 package ch.picard.ppimapbuilder.data.protein.ortholog;
 
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
-import ch.picard.ppimapbuilder.data.protein.Protein;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;

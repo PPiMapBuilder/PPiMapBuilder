@@ -36,7 +36,6 @@ public class UniProtEntry extends Protein {
 	private final String ecNumber;
 	private final boolean reviewed;
 	private final GeneOntologyTermSet geneOntologyTerms;
-	//private final Map<Organism, Set<Protein>> orthologs;
 
 	private UniProtEntry(
 			String uniprotId,
@@ -47,8 +46,7 @@ public class UniProtEntry extends Protein {
 			String proteinName,
 			boolean reviewed,
 			Set<String> synonymGeneNames,
-			GeneOntologyTermSet geneOntologyTerms//,
-			//Set<Protein> orthologs
+			GeneOntologyTermSet geneOntologyTerms
 	) {
 		super(uniprotId, organism);
 		this.accessions = accessions;
@@ -58,39 +56,7 @@ public class UniProtEntry extends Protein {
 		this.reviewed = reviewed;
 		this.synonymGeneNames = synonymGeneNames;
 		this.geneOntologyTerms = geneOntologyTerms;
-		//this.orthologs = new HashMap<Organism, Set<Protein>>();
-		//for (Protein ortholog : orthologs) {
-		//	addOrtholog(ortholog);
-		//}
 	}
-
-	/*public Set<Protein> getOrthologs(Organism organism) {
-		Set<Protein> proteins = orthologs.get(organism);
-		if(proteins == null) {
-			proteins = new HashSet<Protein>();
-			orthologs.put(organism, proteins);
-		}
-		return proteins;
-	}
-
-	public Set<Protein> getOrthologs() {
-		Set<Protein> orthologs = new HashSet<Protein>();
-		for (Set<Protein> proteins : this.orthologs.values()) {
-			orthologs.addAll(proteins);
-		}
-		return orthologs;
-	}
-
-	public void addOrthologs(Collection<? extends Protein> orthologs) {
-		for (Protein ortholog : orthologs)
-			addOrtholog(ortholog);
-	}
-
-	public void addOrtholog(Protein ortholog) {
-		if(ortholog != null) {
-			getOrthologs(ortholog.getOrganism()).add(ortholog);
-		}
-	}*/
 
 	public GeneOntologyTermSet getGeneOntologyTerms() {
 		return geneOntologyTerms;
@@ -123,7 +89,6 @@ public class UniProtEntry extends Protein {
 	public boolean isIdentical(UniProtEntry entry) {
 		return accessions.equals(entry.accessions)
 				&& organism.equals(entry.organism)
-				//&& orthologs.equals(entry.orthologs)
 				&& synonymGeneNames.equals(entry.synonymGeneNames)
 				&& geneOntologyTerms.equals(entry.geneOntologyTerms)
 				&& geneName.equals(entry.geneName)
@@ -165,33 +130,37 @@ public class UniProtEntry extends Protein {
 		private String uniprotId = null;
 		private LinkedHashSet<String> accessions = null;
 		private Organism organism = null;
-		private String geneName = null;
+		private String geneName = "N/A";
 		private Set<String> synonymGeneNames = null;
 		private String proteinName = null;
 		private String ecNumber = null;
-		private Boolean reviewed = null;
+		private Boolean reviewed = false;
 		private GeneOntologyTermSet geneOntologyTerms = null;
-		//private HashSet<Protein> orthologs = null;
 
 		public Builder() {
 			this((UniProtEntry) null);
+		}
+
+		public Builder(Protein protein) {
+			if(protein != null) {
+				uniprotId = protein.uniProtId;
+				organism = protein.organism;
+			}
 		}
 
 		/**
 		 * Constructs a UniProtEntry.Builder using an existing UniProtEntry as a template.
 		 */
 		public Builder(UniProtEntry entry) {
+			this((Protein) entry);
 			if(entry != null) {
-				uniprotId = entry.uniProtId;
 				accessions = new LinkedHashSet<String>(entry.accessions);
-				organism = entry.organism;
 				geneName = entry.geneName;
 				synonymGeneNames = new HashSet<String>(entry.synonymGeneNames);
 				proteinName = entry.proteinName;
 				ecNumber = entry.ecNumber;
 				reviewed = entry.reviewed;
 				geneOntologyTerms = new GeneOntologyTermSet(entry.geneOntologyTerms);
-				//orthologs = new HashSet<Protein>(entry.getOrthologs());
 			}
 		}
 
@@ -209,7 +178,6 @@ public class UniProtEntry extends Protein {
 				addAccessions(entry.accessions);
 				addSynonymGeneNames(entry.synonymGeneNames);
 				addGeneOntologyTerms(entry.geneOntologyTerms);
-				//addOrthologs(entry.getOrthologs());
 			}
 		}
 
@@ -292,23 +260,6 @@ public class UniProtEntry extends Protein {
 			return this;
 		}
 
-		/*private HashSet<Protein> getOrCreateOrthologs() {
-			if(orthologs != null) return orthologs;
-			return orthologs = new HashSet<Protein>();
-		}
-
-		public Builder addOrthologs(Collection<? extends Protein> orthologs) {
-			for (Protein ortholog : orthologs)
-				getOrCreateOrthologs().add(ortholog);
-			return this;
-		}
-
-		public Builder addOrtholog(Protein ortholog) {
-			if(ortholog != null)
-				getOrCreateOrthologs().add(ortholog);
-			return this;
-		}*/
-
 		public UniProtEntry build() {
 			return new UniProtEntry(
 					uniprotId,
@@ -320,7 +271,6 @@ public class UniProtEntry extends Protein {
 					reviewed,
 					getOrCreateSynonymGeneNames(),
 					getOrCreateGeneOntologyTerms()//,
-					//getOrCreateOrthologs()
 			);
 		}
 

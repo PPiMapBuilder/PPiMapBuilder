@@ -22,9 +22,16 @@ package ch.picard.ppimapbuilder.data.protein;
 
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A custom Set containing UniProtEntry without duplicate using the primary UniProt identifier as a unique identifier.
@@ -39,9 +46,9 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 
 	public UniProtEntrySet(Organism organism) {
 		this.organism = organism;
-		uniProtEntries = new HashSet<UniProtEntry>();
-		uniprotEntriesIndexed = new HashMap<Organism, Map<String, UniProtEntry>>();
-		uniprotEntriesIndexed.put(organism, new HashMap<String, UniProtEntry>());
+		uniProtEntries = Sets.newHashSet();
+		uniprotEntriesIndexed = Maps.newHashMap();
+		uniprotEntriesIndexed.put(organism, Maps.<String, UniProtEntry>newHashMap());
 	}
 
 	public UniProtEntry findByPrimaryAccession(String uniprotId) {
@@ -55,12 +62,17 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 	private boolean addEntry(UniProtEntry uniProtEntry) {
 		if (uniProtEntry != null) {
 			UniProtEntry correctedEntry = ProteinUtils.correctEntryOrganism(uniProtEntry, this.organism);
-			uniProtEntries.add(correctedEntry);
-			uniprotEntriesIndexed.get(organism).put(uniProtEntry.getUniProtId(), uniProtEntry);
-
 			String strictId = ProteinUtils.UniProtId.extractStrictUniProtId(uniProtEntry.getUniProtId());
-			if(!strictId.equals(uniProtEntry.getUniProtId())) {
-				uniprotEntriesIndexed.get(organism).put(strictId, uniProtEntry);
+
+			uniProtEntries.add(correctedEntry);
+
+			final Map<String, UniProtEntry> inOrgUniProtEntry = uniprotEntriesIndexed.get(organism);
+			Set<String> identifiers = Sets.newHashSet();
+			identifiers.add(uniProtEntry.getUniProtId());
+			identifiers.add(strictId);
+			identifiers.addAll(uniProtEntry.getAccessions());
+			for (String identifier : identifiers) {
+				inOrgUniProtEntry.put(identifier, uniProtEntry);
 			}
 			return true;
 		}
@@ -84,16 +96,11 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 		);
 	}
 
-	public void addAll(UniProtEntrySet uniProtEntrySet) {
-		addAll((Collection<? extends UniProtEntry>) uniProtEntrySet);
-		uniprotEntriesIndexed.putAll(uniProtEntrySet.uniprotEntriesIndexed);
-	}
-
 	@Override
 	public boolean addAll(Collection<? extends UniProtEntry> uniProtEntries) {
 		boolean atLeastOneAdditionMade = false;
 
-		Map<UniProtEntry, List<UniProtEntry>> duplicates = new HashMap<UniProtEntry, List<UniProtEntry>>();
+		Map<UniProtEntry, List<UniProtEntry>> duplicates = Maps.newHashMap();
 
 		for (UniProtEntry uniProtEntry : uniProtEntries) {
 			UniProtEntry existingEntry = findByPrimaryAccession(uniProtEntry.getUniProtId());
@@ -107,7 +114,7 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 			else {
 				List<UniProtEntry> entries = duplicates.get(existingEntry);
 				if (entries == null)
-					duplicates.put(existingEntry, entries = new ArrayList<UniProtEntry>());
+					duplicates.put(existingEntry, entries = Lists.newArrayList());
 				entries.add(uniProtEntry);
 			}
 		}
@@ -140,7 +147,7 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 		for (Protein ortholog : orthologs) {
 			Map<String, UniProtEntry> entries = uniprotEntriesIndexed.get(ortholog.getOrganism());
 			if (entries == null) {
-				entries = new HashMap<String, UniProtEntry>();
+				entries = Maps.newHashMap();
 				uniprotEntriesIndexed.put(ortholog.getOrganism(), entries);
 			}
 			entries.put(ortholog.getUniProtId(), uniProtEntry);
@@ -160,15 +167,23 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 		}
 	}
 
+	public boolean hasOrganism(Organism organism) {
+		return uniprotEntriesIndexed.containsKey(organism);
+	}
+
 	public Map<String, UniProtEntry> identifiersInOrganism(Organism organism) {
 		return uniprotEntriesIndexed.get(organism);
 	}
 
 	public Set<String> identifiersInOrganism(Collection<UniProtEntry> entries, Organism organism) {
-		Set<String> identifiers = new HashSet<String>();
-		for(Map.Entry<String, UniProtEntry> entry : uniprotEntriesIndexed.get(organism).entrySet()) {
-			if(entries.contains(entry.getValue()))
-				identifiers.add(entry.getKey());
+		Set<String> identifiers = Sets.newHashSet();
+		final Map<String, UniProtEntry> inOrgEntries = uniprotEntriesIndexed.get(organism);
+		if(inOrgEntries != null) {
+			for(Map.Entry<String, UniProtEntry> entry : inOrgEntries.entrySet()) {
+				if(entries.contains(entry.getValue())) {
+					identifiers.add(entry.getKey());
+				}
+			}
 		}
 		return identifiers;
 	}
@@ -252,7 +267,7 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 	}
 
 	public List<Protein> getOrthologs(UniProtEntry entry) {
-		ArrayList<Protein> orthologs = new ArrayList<Protein>();
+		List<Protein> orthologs = Lists.newArrayList();
 		for(Organism organism : uniprotEntriesIndexed.keySet()) {
 			if(!organism.equals(this.organism)) {
 				for(String id : uniprotEntriesIndexed.get(organism).keySet()) {

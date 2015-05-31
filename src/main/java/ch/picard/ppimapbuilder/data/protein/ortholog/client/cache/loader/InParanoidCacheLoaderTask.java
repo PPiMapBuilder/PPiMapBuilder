@@ -27,24 +27,23 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrth
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.SpeciesPairProteinOrthologCache;
 import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import ch.picard.ppimapbuilder.util.SteppedTaskMonitor;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
 import com.ctc.wstx.stax.WstxInputFactory;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.execchain.RequestAbortedException;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskMonitor;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class InParanoidCacheLoaderTask extends AbstractTask {
 
@@ -104,12 +103,12 @@ class InParanoidCacheLoaderTask extends AbstractTask {
 			}
 
 			@Override
-			public void processResult(CacheLoadRequest result, Integer index) {
+			public void processResult(CacheLoadRequest intermediaryResult, Integer index) {
 				monitor.setStep(
 						"Loaded: " +
-								result.organismA.getSimpleScientificName() +
+								intermediaryResult.organismA.getSimpleScientificName() +
 								" - " +
-								result.organismB.getSimpleScientificName()
+								intermediaryResult.organismB.getSimpleScientificName()
 				);
 				i[0]++;
 			}

@@ -22,7 +22,6 @@ package ch.picard.ppimapbuilder.networkbuilder.network;
 
 import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.JSONUtils;
-import ch.picard.ppimapbuilder.data.JSONable;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.OLSClient;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicResultTranslator;
@@ -34,7 +33,15 @@ import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
-import org.cytoscape.model.*;
+import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DeferredFetchUniProtEntryTask;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNetworkFactory;
+import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -47,7 +54,12 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -66,12 +78,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	// For the visual style
 	private final VisualMappingManager visualMappingManager;
 
+	private final ExecutorServiceManager executorServiceManager;
 
 	private final NetworkQueryParameters networkQueryParameters;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
 	private final UniProtEntrySet interactorPool;
-	private final Set<UniProtEntry> proteinOfInterestPool;
 
+	private final Set<UniProtEntry> proteinOfInterestPool;
 	//Network data
 	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
 	private final long startTime;
@@ -88,7 +101,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			final UniProtEntrySet interactorPool,
 			final Set<UniProtEntry> proteinOfInterestPool,
 			final NetworkQueryParameters networkQueryParameters,
-			long startTime
+			final ExecutorServiceManager executorServiceManager, long startTime
 	) {
 
 		// For the network
@@ -111,6 +124,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.proteinOfInterestPool = proteinOfInterestPool;
 
 		this.networkQueryParameters = networkQueryParameters;
+		this.executorServiceManager = executorServiceManager;
 
 		this.nodeNameMap = new HashMap<UniProtEntry, CyNode>();
 
@@ -132,26 +146,46 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				createEdges(network);
 				monitor.setProgress(0.75);
 
-				removeNodeNotConnectedToPOIs(network);
+				if(cancelled) return;
+				if(!networkQueryParameters.isInteractomeQuery()) {
+					removeNodeNotConnectedToPOIs(network);
+				}
 			}
+
+			if(cancelled) return;
 
 			CyNetworkView view;
 			{ // Create view and apply layout and style
 				view = applyView(network);
 
 				// Layout
-				applyLayout(view);
+				applyLayout(view, network.getNodeCount());
 
 				// Visual Style
 				applyVisualStyle(view);
 				monitor.setProgress(0.90);
 			}
 
+			if(cancelled) return;
+
 			// Add network build time
 			network.getRow(network).set(
 					"build time (seconds)",
 					(((int) (System.currentTimeMillis() - startTime)) / 1000)
 			);
+
+			if(networkQueryParameters.isInteractomeQuery() && !cancelled) {
+				// For interactome => search uniprot entries in the background
+				PMBActivator
+						.getPMBBackgroundTaskManager()
+						.launchTask(
+								new DeferredFetchUniProtEntryTask(
+										executorServiceManager,
+										interactorPool,
+										network
+								)
+						);
+			}
 		}
 		monitor.setProgress(1.0);
 	}
@@ -186,26 +220,38 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		CyNetwork network = networkFactory.createNetwork();
 		network.getRow(network).set(CyNetwork.NAME, networkNaming.getSuggestedNetworkTitle("PPiMapBuilder network"));
 
-		// Create columns
-		CyTable networkTable = network.getDefaultNetworkTable();
-		networkTable.createColumn("created by", String.class, true);
-		networkTable.createListColumn("proteins of interest", String.class, true);
-		networkTable.createColumn("reference organism", String.class, true);
-		networkTable.createListColumn("other organisms", String.class, true);
-		networkTable.createListColumn("source databases", String.class, true);
-		networkTable.createColumn("build time (seconds)", Integer.class, true);
 
-		// Fill columns
-		network.getRow(network).set(
-				"created by",
-				"PPiMapBuilder v"
-						+ PMBActivator.version
-						+ (PMBActivator.isSnapshot ? " " + PMBActivator.buildTimestamp : "") //display PMB build timestamp in snapshots
-		);
-		network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
-		network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
-		network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
-		network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
+		CyTable networkTable = network.getDefaultNetworkTable();
+		{ // Create columns
+			networkTable.createColumn("created by", String.class, true);
+			networkTable.createColumn("reference organism", String.class, true);
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				networkTable.createListColumn("proteins of interest", String.class, true);
+				networkTable.createListColumn("other organisms", String.class, true);
+			}
+			networkTable.createListColumn("source databases", String.class, true);
+			networkTable.createColumn("build time (seconds)", Integer.class, true);
+		}
+
+		{ // Fill columns
+			network.getRow(network).set(
+					"created by",
+					"PPiMapBuilder v"
+							+ PMBActivator.version
+							+ " " +
+							(
+									PMBActivator.isSnapshot ?
+											PMBActivator.buildTimestamp :
+											""
+							) //display PMB build timestamp in snapshots
+			);
+			network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
+				network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
+			}
+			network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
+		}
 		return network;
 	}
 
@@ -223,11 +269,12 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		nodeTable.createListColumn("Cellular_components_hidden", String.class, false);
 		nodeTable.createListColumn("Biological_processes_hidden", String.class, false);
 		nodeTable.createListColumn("Molecular_functions_hidden", String.class, false);
-		nodeTable.createListColumn("Orthologs", String.class, false);
 		nodeTable.createListColumn("Cellular_components", String.class, false);
 		nodeTable.createListColumn("Biological_processes", String.class, false);
 		nodeTable.createListColumn("Molecular_functions", String.class, false);
 		nodeTable.createColumn("Queried", String.class, false);
+		nodeTable.createListColumn("Orthologs", String.class, false);
+		nodeTable.createColumn("Legend", String.class, false);
 	}
 
 	private void createEdges(CyNetwork network) {
@@ -298,8 +345,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
 	private UniProtEntry getEntryByIdentifier(Map<String, UniProtEntry> entries, String identifier) {
 		final UniProtEntry entry = entries.get(identifier);
-		if(entry == null)
+		if(entry == null) {
 			return entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
+		}
 		return entry;
 	}
 
@@ -326,7 +374,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			nodeAttr.set("Uniprot_id", entry.getUniProtId());
 			nodeAttr.set("Accessions", new ArrayList<String>(entry.getAccessions()));
 			// TODO: if gene_name is empty, put "[ptn]proteinName"
-			nodeAttr.set("Gene_name", entry.getGeneName() != null ? entry.getGeneName() : "N/A");
+			nodeAttr.set("Gene_name", entry.getGeneName());
 			nodeAttr.set("Ec_number", entry.getEcNumber());
 			nodeAttr.set("Synonym_gene_names", new ArrayList<String>(entry.getSynonymGeneNames()));
 			nodeAttr.set("Protein_name", entry.getProteinName());
@@ -344,10 +392,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 					JSONUtils.jsonListToStringList(molecularFunction)
 			);
 			nodeAttr.set("Molecular_functions", molecularFunction.asStringList());
-			nodeAttr.set("Orthologs",
-					JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
-			);
-			nodeAttr.set("Queried", String.valueOf(proteinOfInterestPool.contains(entry)));
+			boolean queried = false;
+			if(!networkQueryParameters.isInteractomeQuery()) {
+				nodeAttr.set("Orthologs",
+						JSONUtils.jsonListToStringList(interactorPool.getOrthologs(entry))
+				);
+				queried = proteinOfInterestPool.contains(entry);
+			}
+			nodeAttr.set("Queried", String.valueOf(queried));
+			nodeAttr.set("Legend", "false");
 		}
 
 		return node;
@@ -376,8 +429,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		return view;
 	}
 
-	private void applyLayout(CyNetworkView view) {
-		CyLayoutAlgorithm layout = layoutAlgorithmManager.getLayout("force-directed");
+	private void applyLayout(CyNetworkView view, int numberOfNodes) {
+		CyLayoutAlgorithm layout = null;
+		if(numberOfNodes <= 2000) {
+			layout = layoutAlgorithmManager.getLayout("force-directed");
+		} else {
+			layout = layoutAlgorithmManager.getLayout("grid");
+		}
 		Object context = layout.createLayoutContext();
 		String layoutAttribute = null;
 		insertTasksAfterCurrentTask(

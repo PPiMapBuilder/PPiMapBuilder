@@ -25,6 +25,7 @@ import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.layout.PMBGOSlimLayoutTaskFactory;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
 import ch.picard.ppimapbuilder.style.PMBVisualStyleTaskFactory;
+import ch.picard.ppimapbuilder.style.PMBVisualStylesDefinition;
 import ch.picard.ppimapbuilder.ui.credits.CreditFrame;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
@@ -37,31 +38,24 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.events.RowsSetListener;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.task.NetworkViewTaskFactory;
-import org.cytoscape.task.edit.MapTableToNetworkTablesTaskFactory;
 import org.cytoscape.util.swing.OpenBrowser;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
-import org.cytoscape.view.presentation.property.BasicVisualLexicon;
-import org.cytoscape.view.presentation.property.LineTypeVisualProperty;
-import org.cytoscape.view.presentation.property.NodeShapeVisualProperty;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
-import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
-import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
-import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 
-import java.awt.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,6 +73,12 @@ public class PMBActivator extends AbstractCyActivator {
 
 	public PMBActivator() {
 		super();
+	}
+
+	private static PMBBackgroundTaskManager pmbBackgroundTaskManager;
+
+	public static PMBBackgroundTaskManager getPMBBackgroundTaskManager() {
+		return pmbBackgroundTaskManager;
 	}
 
 	/**
@@ -119,6 +119,8 @@ public class PMBActivator extends AbstractCyActivator {
 			ResultPanel pmbResultPanel = new ResultPanel(openBrowser);
 			registerService(bc, pmbResultPanel, CytoPanelComponent.class, new Properties());
 
+			pmbBackgroundTaskManager = new PMBBackgroundTaskManager(pmbResultPanel);
+
 			int index = cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).indexOfComponent(pmbResultPanel);
 			if (index > 0)
 				cytoscapeDesktopService.getCytoPanel(CytoPanelName.EAST).setSelectedIndex(index);
@@ -140,6 +142,7 @@ public class PMBActivator extends AbstractCyActivator {
 			VisualStyleFactory visualStyleFactoryServiceRef = getService(bc, VisualStyleFactory.class);
 
 			// Visual Style task
+			PMBVisualStylesDefinition vsDef = PMBVisualStylesDefinition.getInstance().setFactories(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			PMBVisualStyleTaskFactory visualStyleFactory = new PMBVisualStyleTaskFactory(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			networkBuildTaskManager.execute(visualStyleFactory.createTaskIterator());
 			
@@ -147,7 +150,7 @@ public class PMBActivator extends AbstractCyActivator {
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
 			{
-				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef);
+				PMBGOSlimLayoutTaskFactory applyLayoutTaskFactory = new PMBGOSlimLayoutTaskFactory(layoutManagerServiceRef, visualMappingManager);
 				Properties applyCustomLayoutProperties = new Properties();
 				applyCustomLayoutProperties.setProperty("preferredMenu", "Layout");
 				applyCustomLayoutProperties.setProperty("title", "PMB Layout");

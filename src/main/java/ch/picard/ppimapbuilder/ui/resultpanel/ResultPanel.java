@@ -24,19 +24,17 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
 import com.eclipsesource.json.JsonObject;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang.NotImplementedException;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
-import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
-import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.ui.util.JHyperlinkLabel;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -46,10 +44,6 @@ import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -88,7 +82,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private static final ImageIcon ICN_UNREVIEWED = new ImageIcon(ResultPanel.class.getResource("unstar.png"));
 
-	/**
+	/*
 	 * Default font if nothing to show (italic)
 	 */
 	private static final Font NONE_FONT = new Font(null, Font.ITALIC, 11);
@@ -182,7 +176,24 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	private JScrollPane scrollPane_Confidence;
 	private JPanel panelConfidence;
 	private JTree treeConfidence;
-	
+
+	/**
+	 * Background task monitor
+	 */
+	private BackgroundTaskMonitor backgroundTaskPanel = null;
+
+	public void setBackgroundTask(BackgroundTaskMonitor backgroundTaskMonitor) {
+		if(backgroundTaskMonitor == null && this.backgroundTaskPanel != null) {
+			remove(this.backgroundTaskPanel);
+			repaint();
+		} else if (backgroundTaskMonitor != null) {
+			this.backgroundTaskPanel = backgroundTaskMonitor;
+			add(backgroundTaskPanel, BorderLayout.SOUTH);
+			repaint();
+		}
+	}
+
+
 	private JScrollPane scrollPane_Publication;
 	private JPanel panelPubId;
 	private JTree treePubId;
@@ -192,8 +203,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 */
 	private JPanel clusterPanel = new JPanel();
 	private JLabel cluster;
-	
-	
+
 	/**
 	 * Build a panel containing all the needed elements.
 	 * 
@@ -226,11 +236,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		/* Build interaction view panel */
 		this.setStaticInteractionView();
 		interactionPanel.setVisible(false);
-		
+
 		/* Build cluster view panel */
 		this.setStaticClusterView();
 		clusterPanel.setVisible(false);
-		
+
 		mainPanel.add(voidPanel);
 		mainPanel.add(proteinPanel);
 		mainPanel.add(interactionPanel);
@@ -435,22 +445,24 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setProteinId(row.get("Uniprot_id", String.class), width);
 		
 		// EC NUMBER
-		this.setEcNumber(row.get("Ec_number", String.class) != null ? row.get("Ec_number", String.class) : "", width);
+		final String ecNumber = row.get("Ec_number", String.class);
+		this.setEcNumber(ecNumber != null ? ecNumber : "", width);
 		
 		// ORGANISM
-		String tax_id = row.get("Tax_id", String.class);
-		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
-		this.setProteinOrganism(org != null ? org.getScientificName() : null, tax_id, width);
+		final String taxId = row.get("Tax_id", String.class);
+		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(taxId));
+		this.setProteinOrganism(org != null ? org.getScientificName() : null, taxId, width);
 
 		// GENE NAME
-		this.setGeneName(row.get("Gene_name", String.class) != null ? row.get("Gene_name", String.class) : "", tax_id, width);
-		// TODO: put N/A if gene name begins by [ptn]
-		
+		final String geneName = row.get("Gene_name", String.class);
+		this.setGeneName(geneName != null ? geneName : "", taxId, width);
+
 		int i = 5;
 		
 		// CLUSTER NAME
-		if (row.get("Go_slim_group_term", String.class) != null) {
-			this.setGOCluster(row.get("Go_slim_group_term", String.class), width);
+		final String goSlimGroupTerm = row.get("Go_slim_group_term", String.class);
+		if (goSlimGroupTerm != null) {
+			this.setGOCluster(goSlimGroupTerm, width);
 			lblCluster.setVisible(true);
 			goCluster.setVisible(true);
 			i = i + 1;
@@ -460,10 +472,11 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 		
 		// SYNONYMS
-		if (!row.getList("Synonym_gene_names", String.class).isEmpty()) {
+		final List<String> synonymGeneNames = row.getList("Synonym_gene_names", String.class);
+		if (synonymGeneNames !=  null && !synonymGeneNames.isEmpty()) {
 			proteinPanel.remove(scrollPane_Synonyms);
 			proteinPanel.add(scrollPane_Synonyms, "cell 0 "+i+" 3 1,grow");
-			this.setGeneNameSynonyms(row.getList("Synonym_gene_names", String.class), width);
+			this.setGeneNameSynonyms(synonymGeneNames, width);
 			scrollPane_Synonyms.setVisible(true);
 			i = i + 1;
 		} else {
@@ -471,9 +484,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 
 		// ORTHOLOGS
-		if (!row.getList("Orthologs", String.class).isEmpty()) {
+		final List<String> orthologs = row.getList("Orthologs", String.class);
+		if (orthologs != null && !orthologs.isEmpty()) {
 			proteinPanel.add(scrollPane_Orthologs, "cell 0 "+i+" 3 1,grow");
-			this.setOrthologs(row.getList("Orthologs", String.class), width*2);
+			this.setOrthologs(orthologs, width*2);
 			scrollPane_Orthologs.setVisible(true);
 			i = i + 1;
 		} else {
@@ -481,12 +495,15 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}	
 		
 		// GENE ONTOLOGY
-		if (!(row.getList("Biological_processes_hidden", String.class).isEmpty() &&
-				row.getList("Cellular_components_hidden", String.class).isEmpty() &&
-				row.getList("Molecular_functions_hidden", String.class).isEmpty())) {
+		final List<String> biologicalProcesses = row.getList("Biological_processes_hidden", String.class);
+		final List<String> cellularComponents = row.getList("Cellular_components_hidden", String.class);
+		final List<String> molecularFunctions = row.getList("Molecular_functions_hidden", String.class);
+		if (!(biologicalProcesses != null && biologicalProcesses.isEmpty() &&
+				cellularComponents != null && cellularComponents.isEmpty() &&
+				molecularFunctions != null && molecularFunctions.isEmpty())) {
 			proteinPanel.add(scrollPane_GO, "cell 0 "+i+" 3 1,grow");
-			this.setOntology(row.getList("Biological_processes_hidden", String.class), row.getList("Cellular_components_hidden", String.class),
-					row.getList("Molecular_functions_hidden", String.class), width);
+			this.setOntology(biologicalProcesses, cellularComponents,
+					molecularFunctions, width);
 			scrollPane_GO.setVisible(true);
 			i = i + 1;
 		} else {
@@ -584,16 +601,19 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.setIntBName(row.get("Protein_name_B", String.class), width*2);
 
 		// ORGANISM
-		String tax_id = row.get("Tax_id", String.class);
-		Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(tax_id));
-		this.setInteractionOrganism(org != null ? org.getScientificName(): null, tax_id, width);
+		String taxId = row.get("Tax_id", String.class);
+		if(taxId != null) {
+			Organism org = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(Integer.parseInt(taxId));
+			this.setInteractionOrganism(org != null ? org.getScientificName(): null, taxId, width);
+		}
 
 		int i = 3;
 
 		// DATABASES
-		if (!row.getList("Source", String.class).isEmpty()) {
+		final List<String> source = row.getList("Source", String.class);
+		if (source != null && !source.isEmpty()) {
 			interactionPanel.add(scrollPane_Source, "cell 0 "+i+" 3 1,grow");
-			this.setSource(row.getList("Source", String.class), width);
+			this.setSource(source, width);
 			scrollPane_Source.setVisible(true);		
 			i = i + 1;
 		} else {
@@ -601,9 +621,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 		
 		// INTERACTION TYPE
-		if (!row.getList("Type", String.class).isEmpty()) {
+		final List<String> type = row.getList("Type", String.class);
+		if (type != null && !type.isEmpty()) {
 			interactionPanel.add(scrollPane_Type, "cell 0 "+i+" 3 1,grow");
-			this.setType(row.getList("Type", String.class), width*2);
+			this.setType(type, width*2);
 			scrollPane_Type.setVisible(true);
 			i = i + 1;
 		} else {
@@ -611,9 +632,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 		
 		// DETECTION METHODS
-		if (!row.getList("Detmethod", String.class).isEmpty()) {
+		final List<String> detmethod = row.getList("Detmethod", String.class);
+		if (detmethod != null && !detmethod.isEmpty()) {
 			interactionPanel.add(scrollPane_DetMeth, "cell 0 "+i+" 3 1,grow");
-			this.setDetMeth(row.getList("Detmethod", String.class), width*2);
+			this.setDetMeth(detmethod, width*2);
 			scrollPane_DetMeth.setVisible(true);
 			i = i + 1;
 		} else {
@@ -621,9 +643,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 				
 		// CONFIDENCE
-		if (!row.getList("Confidence", String.class).isEmpty()) {
+		final List<String> confidence = row.getList("Confidence", String.class);
+		if (confidence != null && !confidence.isEmpty()) {
 			interactionPanel.add(scrollPane_Confidence, "cell 0 "+i+" 3 1,grow");
-			this.setConfidence(row.getList("Confidence", String.class), width*2);
+			this.setConfidence(confidence, width*2);
 			scrollPane_Confidence.setVisible(true);
 			i = i + 1;
 		} else {
@@ -631,9 +654,10 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		}
 		
 		// PUBLICATIONS
-		if (!row.getList("Pubid", String.class).isEmpty()) {
+		final List<String> pubid = row.getList("Pubid", String.class);
+		if (pubid != null && !pubid.isEmpty()) {
 			interactionPanel.add(scrollPane_Publication, "cell 0 "+i+" 3 1,grow");
-			this.setPubId(row.getList("Pubid", String.class));
+			this.setPubId(pubid);
 			scrollPane_Publication.setVisible(true);
 			i = i + 1;
 		} else {
@@ -1184,7 +1208,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * Set the protein name label
 	 */
 	public void setIntAName(String intAName, Integer width) {
-		if (!intAName.isEmpty()) {
+		if (intAName != null &&
+				!intAName.isEmpty()) {
 			if (intAName.length() > 60) {
 				this.intAName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intAName.substring(0, 57) + "..."));
 			} else {
@@ -1211,7 +1236,8 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 	 * Set the protein name label
 	 */
 	public void setIntBName(String intBName, Integer width) {
-		if (!intBName.isEmpty()) {
+		if (intBName != null &&
+				!intBName.isEmpty()) {
 			if (intBName.length() > 60) {
 				this.intBName.setText(String.format("<html><div style=\"width:%dpx;font-size:18px;\">%s</div><html>", width, intBName.substring(0, 57) + "..."));
 			} else {

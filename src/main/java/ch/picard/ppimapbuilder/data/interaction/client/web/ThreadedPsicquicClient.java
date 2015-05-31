@@ -25,8 +25,10 @@ import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLExpressionBu
 import ch.picard.ppimapbuilder.data.interaction.client.web.miql.MiQLParameterBuilder;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
-import ch.picard.ppimapbuilder.util.concurrency.ConcurrentExecutor;
-import ch.picard.ppimapbuilder.util.concurrency.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.ProgressMonitor;
+import ch.picard.ppimapbuilder.util.SteppedProgressMonitorFactory;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import com.google.common.collect.Lists;
 import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import psidev.psi.mi.tab.PsimiTabException;
@@ -39,12 +41,16 @@ import java.net.SocketTimeoutException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 /**
+ * /!\ ThreadedPsicquicClient will be replaced by PsicquicRequestBuilder
+ *
  * A PSICQUIC client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
+//@Deprecated
 public class ThreadedPsicquicClient extends AbstractThreadedClient {
 
 	// Clients for each services
@@ -59,37 +65,74 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 	 *
 	 * @param services list of PSICQUIC services that will be use during query
 	 */
-	public ThreadedPsicquicClient(List<PsicquicService> services, ExecutorServiceManager executorServiceManager) {
+	public ThreadedPsicquicClient(Collection<PsicquicService> services, ExecutorServiceManager executorServiceManager) {
 		super(executorServiceManager);
 
-		this.services = services;
+		this.services = new ArrayList<PsicquicService>(services);
 		this.clients = new HashMap<PsicquicService, PsicquicSimpleClient>(services.size());
 		for (PsicquicService service : services) {
 			clients.put(service, new PsicquicSimpleClient(service.getRestUrl()));
 		}
 	}
 
-	protected List<BinaryInteraction> getByQuerySimple(PsicquicService service, String query) throws IOException, PsimiTabException {
+	/**
+	 * Fetches interactions from query on a PsicquicService. If the request result size is over a thousand,
+	 * the request is spliced and the requests are executed concurrently.
+	 */
+	protected List<BinaryInteraction> getByQuerySimple(final PsicquicService service, final String query, final ProgressMonitor progressMonitor) throws IOException, PsimiTabException {
 		final int MAX_TRY = 2;
 		int i = 0;
-		Exception error = null;
+		final Throwable[] error = new Throwable[1];
 		while (++i <= MAX_TRY) {
-			try {
-				return (List<BinaryInteraction>) mitabReader.read(
-						clients
-								.get(service)
-								.getByQuery(
-										query,
-										PsicquicSimpleClient.MITAB25
-								)
-				);
-			} catch (Exception e) {
-				error = e;
-			}
+			final PsicquicSimpleClient psicquicSimpleClient = clients.get(service);
+
+			long count = psicquicSimpleClient.countByQuery(query);
+			final int maxResults = 1000;
+			final int numberPages = (int) Math.ceil((double) count / (double) maxResults);
+
+			final List<BinaryInteraction> interactions = new ArrayList<BinaryInteraction>();
+			final double[] nbDone = new double[]{0d};
+			new ConcurrentExecutor<Collection<BinaryInteraction>>(getExecutorServiceManager(), numberPages) {
+				@Override
+				public Callable<Collection<BinaryInteraction>> submitRequests(final int index) {
+					final int firstResult = index * maxResults;
+					return new Callable<Collection<BinaryInteraction>>() {
+						@Override
+						public Collection<BinaryInteraction> call() throws Exception {
+							return mitabReader.read(
+									psicquicSimpleClient
+											.getByQuery(
+													query,
+													PsicquicSimpleClient.MITAB25,
+													firstResult,
+													maxResults
+											)
+							);
+						}
+					};
+				}
+
+				@Override
+				public void processResult(Collection<BinaryInteraction> intermediaryResult, Integer index) {
+					if (progressMonitor != null) {
+						progressMonitor.setProgress(++nbDone[0] / numberPages);
+					}
+					interactions.addAll(intermediaryResult);
+				}
+
+				@Override
+				public boolean processExecutionException(ExecutionException e, Integer index) {
+					error[0] = e.getCause();
+					return true;
+				}
+			}.run();
+
+			if (error[0] == null)
+				return interactions;
 		}
-		if (error != null) {
-			if (error instanceof IOException) throw (IOException) error;
-			else throw (PsimiTabException) error;
+		if (error[0] != null) {
+			if (error[0] instanceof IOException) throw (IOException) error[0];
+			else if (error[0] instanceof PsimiTabException) throw (PsimiTabException) error[0];
 		}
 		return null;
 	}
@@ -105,8 +148,10 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 		);
 	}
 
-
-	public List<BinaryInteraction> getProteinInteractor(final Protein protein) throws Exception {
+	/**
+	 * Same as PsicquicSimpleClient.getByInteractor but with threaded requests over multiple PSICQUIC services
+	 */
+	public List<BinaryInteraction> getByInteractor(final Protein protein) throws Exception {
 		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), services.size()) {
 			@Override
@@ -120,8 +165,8 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
 			}
 
 			@Override
@@ -148,9 +193,50 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 	}
 
 	/**
-	 * Same as PsicquicSimpleClient.getByQuery but with threaded request over multiple PSICQUIC services
+	 * Fetches cumulative list of interactions for a given list on interactors.
+	 */
+	public List<BinaryInteraction> getByInteractors(final Collection<Protein> proteins) {
+		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
+		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
+
+		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), proteinList.size()) {
+			@Override
+			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
+				return new Callable<List<BinaryInteraction>>() {
+					@Override
+					public List<BinaryInteraction> call() throws Exception {
+						return getByInteractor(proteinList.get(index));
+					}
+				};
+			}
+
+			@Override
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
+			}
+
+		}.run();
+
+		return results;
+	}
+
+	/**
+	 * Same as PsicquicSimpleClient.getByQuery but with threaded requests over multiple PSICQUIC services
 	 */
 	public List<BinaryInteraction> getByQuery(final String query) throws Exception {
+		return getByQuery(query, null);
+	}
+
+	/**
+	 * Same as PsicquicSimpleClient.getByQuery but with threaded requests over multiple PSICQUIC services and with a
+	 * ProgressMonitor
+	 */
+	public List<BinaryInteraction> getByQuery(final String query, final ProgressMonitor progressMonitor) throws Exception {
+		final SteppedProgressMonitorFactory monitorFactory =
+				progressMonitor != null ?
+						new SteppedProgressMonitorFactory(progressMonitor, services.size()):
+						null;
+
 		final ArrayList<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), services.size()) {
 			@Override
@@ -158,14 +244,20 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 				return new Callable<List<BinaryInteraction>>() {
 					@Override
 					public List<BinaryInteraction> call() throws Exception {
-						return getByQuerySimple(services.get(index), query);
+						return getByQuerySimple(
+								services.get(index),
+								query,
+								monitorFactory != null ?
+										monitorFactory.createStepProgressMonitor(index) :
+										null
+						);
 					}
 				};
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				results.addAll(intermediaryResult);
 			}
 
 			@Override
@@ -196,6 +288,13 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 	 * Gets cumulative list of interaction from a list of MiQL query
 	 */
 	public List<BinaryInteraction> getByQueries(final Collection<String> queries) throws Exception {
+		return getByQueries(queries, null);
+	}
+
+	/**
+	 * Gets cumulative list of interaction from a list of MiQL query with a progress indicator
+	 */
+	public List<BinaryInteraction> getByQueries(final Collection<String> queries, final ProgressMonitor progressMonitor) throws Exception {
 		final List<String> queryList = new ArrayList<String>(queries);
 		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
 
@@ -211,33 +310,9 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 			}
 
 			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
-			}
-
-		}.run();
-
-		return results;
-	}
-
-	public List<BinaryInteraction> getProteinsInteractor(final Collection<Protein> proteins) {
-		final List<Protein> proteinList = new ArrayList<Protein>(proteins);
-		final List<BinaryInteraction> results = new ArrayList<BinaryInteraction>();
-
-		new ConcurrentExecutor<List<BinaryInteraction>>(getExecutorServiceManager(), proteinList.size()) {
-			@Override
-			public Callable<List<BinaryInteraction>> submitRequests(final int index) {
-				return new Callable<List<BinaryInteraction>>() {
-					@Override
-					public List<BinaryInteraction> call() throws Exception {
-						return getProteinInteractor(proteinList.get(index));
-					}
-				};
-			}
-
-			@Override
-			public void processResult(List<BinaryInteraction> result, Integer index) {
-				results.addAll(result);
+			public void processResult(List<BinaryInteraction> intermediaryResult, Integer index) {
+				if (progressMonitor != null) progressMonitor.setProgress(index / queryList.size());
+				results.addAll(intermediaryResult);
 			}
 
 		}.run();
@@ -256,7 +331,7 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 		List<String> sourceProteins = Lists.newArrayList(proteins);
 		MiQLExpressionBuilder baseQuery = new MiQLExpressionBuilder();
 		baseQuery.setRoot(true);
-		baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
+		baseQuery.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("species", sourceOrganism.getTaxId()));
 
 		// baseInteractionQuery.addParam(new MiQLParameterBuilder("type", "association"));
 
@@ -320,15 +395,15 @@ public class ThreadedPsicquicClient extends AbstractThreadedClient {
 					for (int j = i; j < protsExprs.size(); j++) {
 						protsIdB = protsExprs.get(j);
 						MiQLExpressionBuilder q = new MiQLExpressionBuilder(baseQuery);
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
-						q.addCondition(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
+						q.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idA", protsIdA));
+						q.add(MiQLExpressionBuilder.Operator.AND, new MiQLParameterBuilder("idB", protsIdB));
 						queries.add(q.toString());
 						//System.out.println(q);
 					}
 				}
 			} else {
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idA);
-				baseQuery.addCondition(MiQLExpressionBuilder.Operator.AND, idB);
+				baseQuery.add(MiQLExpressionBuilder.Operator.AND, idA);
+				baseQuery.add(MiQLExpressionBuilder.Operator.AND, idB);
 				queries.add(baseQuery.toString());
 			}
 			System.gc();
