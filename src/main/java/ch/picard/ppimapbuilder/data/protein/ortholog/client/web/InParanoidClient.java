@@ -22,7 +22,6 @@ package ch.picard.ppimapbuilder.data.protein.ortholog.client.web;
 
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
-import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
 import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
@@ -75,7 +74,7 @@ public class InParanoidClient extends AbstractProteinOrthologClient {
 			Organism otherOrganism = null;
 			for (Element proteinElement : speciesPair.select("protein")) {
 				Organism proteinOrg = InParanoidOrganismRepository.getInstance().getOrganismBySimpleName(proteinElement.attr("speclong"));
-				if (proteinOrg == null || !UserOrganismRepository.getInstance().getOrganisms().contains(proteinOrg))
+				if (proteinOrg == null)
 					continue;
 				else if (otherOrganism == null) {
 					otherOrganism = !proteinOrg.equals(protein.getOrganism()) ? proteinOrg : null;
