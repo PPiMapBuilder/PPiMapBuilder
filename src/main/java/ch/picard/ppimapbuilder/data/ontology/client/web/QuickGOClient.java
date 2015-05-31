@@ -120,15 +120,23 @@ public class QuickGOClient {
 												System.out.println("#2.3");
 
 												for (Protein protein : proteinSet) {
+													System.out.print("#2.3.1");
 													if (protein.getUniProtId().equals(line[0])) {
+														System.out.print("#2.3.2");
 														Set<GeneOntologyTerm> ontologyTerms = result.get(protein);
+														System.out.print("#2.3.3");
 														if (ontologyTerms == null) {
+															System.out.print("#2.3.4");
 															ontologyTerms = new HashSet<GeneOntologyTerm>();
+															System.out.print("#2.3.5");
 															result.put(protein, ontologyTerms);
+															System.out.print("#2.3.6");
 														}
 														ontologyTerms.add(GOTerm);
+														System.out.print("#2.3.7");
 														break;
 													}
+													System.out.print("#2.3.8");
 												}
 												System.out.println("#2.4");
 											}
@@ -156,9 +164,14 @@ public class QuickGOClient {
 
 					@Override
 					public void processResult(HashMap<Protein, Set<GeneOntologyTerm>> intermediaryResult, Integer index) {
-						if(progressMonitor != null)
+						System.out.println("#2.6");
+						if(progressMonitor != null) {
+							System.out.println("#2.7");
 							progressMonitor.setProgress(((double)++i[0])/((double)URIs.size()));
+						}
+						System.out.println("#2.8");
 						results.putAll(intermediaryResult);
+						System.out.println("#2.9");
 					}
 				}.run();
 

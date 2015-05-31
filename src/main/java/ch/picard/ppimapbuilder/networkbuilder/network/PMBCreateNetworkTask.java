@@ -296,9 +296,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				String nodeAName = interaction.getInteractorA("uniprotkb");
 				String nodeBName = interaction.getInteractorB("uniprotkb");
 
+				System.out.print("#0 ");
+				System.out.print(interactorInOrganism);
+				System.out.print(nodeAName);
 				final UniProtEntry refOrgProtA = getEntryByIdentifier(interactorInOrganism, nodeAName);
+				System.out.println(refOrgProtA);
 				final UniProtEntry refOrgProtB = getEntryByIdentifier(interactorInOrganism, nodeBName);
 
+				System.out.print("#1 ");
+				System.out.println(PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
 				CyNode nodeA = getOrCreateNode(network, refOrgProtA);
 				CyNode nodeB = getOrCreateNode(network, refOrgProtB);
 
@@ -333,9 +339,16 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private UniProtEntry getEntryByIdentifier(Map<String, UniProtEntry> entries, String identifier) {
+		System.out.print("#0.1 ");
+		System.out.print(identifier);
 		final UniProtEntry entry = entries.get(identifier);
-		if(entry == null)
+		System.out.print(entry);
+		if(entry == null) {
+			System.out.print("#0.2 ");
+			System.out.print(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
+			System.out.print(entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier)));
 			return entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
+		}
 		return entry;
 	}
 
@@ -349,7 +362,10 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			node = network.addNode();
 			nodeNameMap.put(entry, node);
 
+			System.out.print("#2 ");
+			System.out.println(entry);
 			final GeneOntologyTermSet geneOntologyTerms = entry.getGeneOntologyTerms();
+			System.out.println("#3");
 			final GeneOntologyTermSet cellularComponent =
 					geneOntologyTerms.getByCategory(GeneOntologyCategory.CELLULAR_COMPONENT);
 			final GeneOntologyTermSet biologicalProcess =
