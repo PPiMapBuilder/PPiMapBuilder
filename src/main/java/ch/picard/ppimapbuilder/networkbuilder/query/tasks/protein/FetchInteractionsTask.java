@@ -36,6 +36,7 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -83,6 +84,9 @@ class FetchInteractionsTask extends AbstractThreadedTask {
 					@Override
 					public Collection<EncoreInteraction> call() throws Exception {
 						final Organism organism = allOrganisms.get(index);
+
+						if(!interactorPool.hasOrganism(organism))
+							return Collections.emptyList();
 
 						//Get proteins in the current organism
 						final Set<String> proteins = interactorPool.identifiersInOrganism(organism).keySet();

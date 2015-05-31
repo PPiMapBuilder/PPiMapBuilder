@@ -35,7 +35,13 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DeferredFetchUniProtEntryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
-import org.cytoscape.model.*;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNetworkFactory;
+import org.cytoscape.model.CyNetworkManager;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -48,7 +54,12 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PMBCreateNetworkTask extends AbstractTask {
 
@@ -296,15 +307,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				String nodeAName = interaction.getInteractorA("uniprotkb");
 				String nodeBName = interaction.getInteractorB("uniprotkb");
 
-				System.out.print("#0 ");
-				System.out.print(interactorInOrganism);
-				System.out.print(nodeAName);
 				final UniProtEntry refOrgProtA = getEntryByIdentifier(interactorInOrganism, nodeAName);
-				System.out.println(refOrgProtA);
 				final UniProtEntry refOrgProtB = getEntryByIdentifier(interactorInOrganism, nodeBName);
 
-				System.out.print("#1 ");
-				System.out.println(PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
 				CyNode nodeA = getOrCreateNode(network, refOrgProtA);
 				CyNode nodeB = getOrCreateNode(network, refOrgProtB);
 
@@ -339,14 +344,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	}
 
 	private UniProtEntry getEntryByIdentifier(Map<String, UniProtEntry> entries, String identifier) {
-		System.out.print("#0.1 ");
-		System.out.print(identifier);
 		final UniProtEntry entry = entries.get(identifier);
-		System.out.print(entry);
 		if(entry == null) {
-			System.out.print("#0.2 ");
-			System.out.print(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
-			System.out.print(entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier)));
 			return entries.get(ProteinUtils.UniProtId.extractStrictUniProtId(identifier));
 		}
 		return entry;
@@ -362,10 +361,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			node = network.addNode();
 			nodeNameMap.put(entry, node);
 
-			System.out.print("#2 ");
-			System.out.println(entry);
 			final GeneOntologyTermSet geneOntologyTerms = entry.getGeneOntologyTerms();
-			System.out.println("#3");
 			final GeneOntologyTermSet cellularComponent =
 					geneOntologyTerms.getByCategory(GeneOntologyCategory.CELLULAR_COMPONENT);
 			final GeneOntologyTermSet biologicalProcess =
