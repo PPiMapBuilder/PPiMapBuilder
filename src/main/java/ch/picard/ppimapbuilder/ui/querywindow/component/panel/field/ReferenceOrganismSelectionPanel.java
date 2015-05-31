@@ -25,20 +25,23 @@ import ch.picard.ppimapbuilder.ui.util.label.HelpIcon;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.List;
 
 public class ReferenceOrganismSelectionPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	private final JComboBox<Organism> refOrgCb;
+	private final OtherOrganismSelectionPanel otherOrganismSelectionPanel;
+	private ItemListener itemListener = null;
 
 	public ReferenceOrganismSelectionPanel() {
 		this(null);
 	}
 
-	public ReferenceOrganismSelectionPanel(
-			OtherOrganismSelectionPanel otherOrganismSelectionPanel
-	) {
+	public ReferenceOrganismSelectionPanel(OtherOrganismSelectionPanel otherOrganismSelectionPanel) {
+		this.otherOrganismSelectionPanel = otherOrganismSelectionPanel;
 		setLayout(new MigLayout("ins 0", "[grow][]", "[][grow]"));
 		setOpaque(false);
 
@@ -53,8 +56,6 @@ public class ReferenceOrganismSelectionPanel extends JPanel {
 
 		// Reference organism combobox
 		refOrgCb = new JComboBox<Organism>();
-		if(otherOrganismSelectionPanel != null)
-			refOrgCb.addActionListener(new ReferenceOrganismListener(otherOrganismSelectionPanel, this));
 		refreshToolTip();
 		add(refOrgCb, "newline, growx, spanx 2");
 	}
@@ -64,14 +65,36 @@ public class ReferenceOrganismSelectionPanel extends JPanel {
 	 */
 	public void updateList(List<Organism> organisms) {
 		refOrgCb.removeAllItems();
-		for (Organism organism : organisms)
+		for (Organism organism : organisms) {
 			refOrgCb.addItem(organism);
+		}
+		initItemListener();
+	}
+
+	private void initItemListener() {
+		if (otherOrganismSelectionPanel != null) {
+			otherOrganismSelectionPanel.setDisabledOrganism(getSelectedOrganism());
+
+			if (itemListener == null) {
+				itemListener = new ItemListener() {
+					@Override
+					public void itemStateChanged(ItemEvent e) {
+						if (e.getStateChange() == ItemEvent.SELECTED) {
+							final Organism disabledOrganism = (Organism) e.getItem();
+							otherOrganismSelectionPanel.setDisabledOrganism(disabledOrganism);
+						}
+					}
+				};
+				refOrgCb.addItemListener(itemListener);
+			}
+		}
 	}
 
 	public void refreshToolTip() {
 		Object item = refOrgCb.getSelectedItem();
-		if(item != null)
-			refOrgCb.setToolTipText("Taxonomy ID: "+((Organism)item).getTaxId());
+		if (item != null) {
+			refOrgCb.setToolTipText("Taxonomy ID: " + ((Organism) item).getTaxId());
+		}
 	}
 
 	/**

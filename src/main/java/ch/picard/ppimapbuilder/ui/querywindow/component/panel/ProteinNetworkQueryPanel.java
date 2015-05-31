@@ -6,14 +6,12 @@ import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.DatabaseSele
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.OtherOrganismSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.ReferenceOrganismSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.UniprotSelection;
-import ch.picard.ppimapbuilder.ui.util.FocusPropagator;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.Set;
 
 public class ProteinNetworkQueryPanel extends CustomSplitPane implements NetworkQueryPanel {
 
@@ -34,6 +32,7 @@ public class ProteinNetworkQueryPanel extends CustomSplitPane implements Network
 		{// Right panel
 			otherOrganismSelectionPanel = new OtherOrganismSelectionPanel();
 			referenceOrganismSelectionPanel = new ReferenceOrganismSelectionPanel(otherOrganismSelectionPanel);
+
 			databaseSelectionPanel = new DatabaseSelectionPanel();
 
 			setRightComponent(initRightPanel());
@@ -80,8 +79,8 @@ public class ProteinNetworkQueryPanel extends CustomSplitPane implements Network
 
 	@Override
 	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
-		referenceOrganismSelectionPanel.updateList(organisms);
 		otherOrganismSelectionPanel.updateList(organisms);
+		referenceOrganismSelectionPanel.updateList(organisms);
 		databaseSelectionPanel.updateList(databases);
 	}
 

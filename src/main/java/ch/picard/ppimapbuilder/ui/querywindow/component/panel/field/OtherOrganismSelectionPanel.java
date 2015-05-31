@@ -23,19 +23,24 @@ package ch.picard.ppimapbuilder.ui.querywindow.component.panel.field;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.label.HelpIcon;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class OtherOrganismSelectionPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private final LinkedHashMap<Organism, JCheckBox> organisms;
+	private final LinkedHashMap<Organism, JCheckBox> organismsCb;
 	private final JPanel panSourceOtherOrganisms;
+	private Organism disabledOrganism = null;
 
 	public OtherOrganismSelectionPanel() {
 		setLayout(new MigLayout("ins 0", "[grow][]", "[][grow]"));
@@ -63,7 +68,7 @@ public class OtherOrganismSelectionPanel extends JPanel {
 		scrollPaneOtherOrganisms.setViewportView(panSourceOtherOrganisms);
 		panSourceOtherOrganisms.setLayout(new BoxLayout(panSourceOtherOrganisms,BoxLayout.Y_AXIS));
 
-		organisms = new LinkedHashMap<Organism, JCheckBox>();
+		organismsCb = Maps.newLinkedHashMap();
 	}
 
 	/**
@@ -72,13 +77,13 @@ public class OtherOrganismSelectionPanel extends JPanel {
 	 */
 	public void updateList(List<Organism> organisms) {
 		// Creation of the database list
-		this.organisms.clear();
+		this.organismsCb.clear();
 		panSourceOtherOrganisms.removeAll();
 		for (Organism organism : organisms) {
 			JCheckBox checkBox = new JCheckBox(organism.getScientificName(), true);
 			checkBox.setToolTipText("Taxonomy ID: " + organism.getTaxId());
 			checkBox.setBackground(Color.white);
-			this.organisms.put(organism, checkBox);
+			this.organismsCb.put(organism, checkBox);
 
 			panSourceOtherOrganisms.add(checkBox);
 		}
@@ -88,20 +93,24 @@ public class OtherOrganismSelectionPanel extends JPanel {
 	 * Get the list of selected databases
 	 */
 	public List<Organism> getSelectedOrganisms() {
-		Set<Organism> organismList = new LinkedHashSet<Organism>();
+		Set<Organism> organismList = Sets.newLinkedHashSet();
 
 		// For each entry of the database linkedHashmap
-		for (Entry<Organism, JCheckBox> entry : organisms.entrySet()) {
-			if (entry.getValue().isSelected()) // If the checkbox is selected
-			{
+		for (Entry<Organism, JCheckBox> entry : organismsCb.entrySet()) {
+			if (entry.getValue().isSelected()) { // If the checkbox is selected
 				organismList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
 		}
-		return new ArrayList<Organism>(organismList);
+		return ImmutableList.copyOf(organismList);
 	}
 
-	public LinkedHashMap<Organism, JCheckBox> getOrganisms() {
-		return organisms;
+	public void setDisabledOrganism(Organism disabledOrganism) {
+		JCheckBox jCheckBox = organismsCb.get(this.disabledOrganism);
+		if(this.disabledOrganism != null && jCheckBox != null) {
+			jCheckBox.setEnabled(true);
+		}
+		jCheckBox = organismsCb.get(this.disabledOrganism = disabledOrganism);
+		jCheckBox.setEnabled(false);
 	}
 
 }
