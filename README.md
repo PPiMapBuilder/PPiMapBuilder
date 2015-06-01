@@ -42,8 +42,8 @@
   <table>
     <tr>
       <td valign="middle">
-        <a href="https://code.google.com/p/psicquic/">
-          <img src="https://code.google.com/p/psicquic/logo" alt="UniProt" width="73" height="73"/>
+        <a href="https://github.com/micommunity/psicquic">
+          <img src="http://apps.cytoscape.org/media/psicquicuniversalclient/psicquic_logo.png" alt="Psicquic" width="73" height="73"/>
           PSICQUIC
         </a>
       </td>
@@ -54,12 +54,12 @@
       </td>
       <td>
         <a href="http://inparanoid.sbc.su.se/">
-          <img src="http://inparanoid.sbc.su.se/images/inp8_txt_logo.png" alt="UniProt" width="269" height="73"/>
+          <img src="http://inparanoid.sbc.su.se/images/inp8_txt_logo.png" alt="Inparanoid" width="269" height="73"/>
         </a>
       </td>
       <td>
         <a href="http://www.ebi.ac.uk/QuickGO/">
-          <img src="http://www.ebi.ac.uk/QuickGO/image/mb/logo.png" alt="UniProt" width="105" height="51"/>
+          <img src="http://www.ebi.ac.uk/QuickGO/image/mb/logo.png" alt="QuickGO" width="105" height="51"/>
         </a>
       </td>
     </tr>
