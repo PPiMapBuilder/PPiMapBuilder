@@ -43,23 +43,23 @@
     <tr>
       <td valign="middle">
         <a href="https://github.com/micommunity/psicquic">
-          <img src="http://apps.cytoscape.org/media/psicquicuniversalclient/psicquic_logo.png" alt="Psicquic" width="73" height="73"/>
+          <img src="https://raw.githubusercontent.com/wiki/PPiMapBuilder/PPiMapBuilder/images/logo/psicquic.png" alt="Psicquic" width="73" height="73"/>
           PSICQUIC
         </a>
       </td>
       <td>
         <a href="http://www.uniprot.org/">
-          <img src="http://www.uniprot.org/images/logo.gif" alt="UniProt" width="160" height="73"/>
+          <img src="https://raw.githubusercontent.com/wiki/PPiMapBuilder/PPiMapBuilder/images/logo/uniprot.png" alt="UniProt" width="160" height="73"/>
         </a>
       </td>
       <td>
         <a href="http://inparanoid.sbc.su.se/">
-          <img src="http://inparanoid.sbc.su.se/images/inp8_txt_logo.png" alt="Inparanoid" width="269" height="73"/>
+          <img src="https://raw.githubusercontent.com/wiki/PPiMapBuilder/PPiMapBuilder/images/logo/inparanoid.png" alt="Inparanoid" width="269" height="73"/>
         </a>
       </td>
       <td>
         <a href="http://www.ebi.ac.uk/QuickGO/">
-          <img src="http://www.ebi.ac.uk/QuickGO/image/mb/logo.png" alt="QuickGO" width="105" height="51"/>
+          <img src="https://raw.githubusercontent.com/wiki/PPiMapBuilder/PPiMapBuilder/images/logo/quickgo.png" alt="QuickGO" width="105" height="51"/>
         </a>
       </td>
     </tr>
