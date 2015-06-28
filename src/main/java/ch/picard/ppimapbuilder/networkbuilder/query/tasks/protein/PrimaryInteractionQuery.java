@@ -93,6 +93,7 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 					executorServiceManager
 			);
 		}
+		// TODO: remove it I guess...
 		this.uniProtClient = new UniProtEntryClient(executorServiceManager);
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
@@ -166,7 +167,10 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 							// Find on UniProt
 							if (entry == null) {
 								try {
+									// TODO: replace it by ConcurrentFetcherIterator call with UniprotEntryRequest
 									entry = uniProtClient.retrieveProteinData(uniProtId);
+									System.out.print("#3 ");
+									System.out.println(entry);
 
 									if (entry != null) synchronized (interactorPool) {
 										interactorPool.add(entry);

@@ -68,6 +68,7 @@ class PrepareProteinOfInterestTask extends AbstractThreadedTask {
 		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.interactorPool = interactorPool;
 
+		// TODO: remove it I guess...
 		uniProtEntryClient = new UniProtEntryClient(executorServiceManager);
 
 		{
@@ -91,7 +92,10 @@ class PrepareProteinOfInterestTask extends AbstractThreadedTask {
 
 		taskMonitor.setStatusMessage("Fetch UniProt data for input proteins...");
 
+		// TODO: replace it by ConcurrentFetcherIterator call with UniprotSearchRequest
 		HashMap<String, UniProtEntry> uniProtEntries = uniProtEntryClient.retrieveProteinsData(inputProteinIDs);
+		System.out.print("#1 ");
+		System.out.println(uniProtEntries);
 		for (double i = 0, size = inputProteinIDs.size(); i < size; taskMonitor.setProgress(++i / size)) {
 			String proteinID = inputProteinIDs.get((int) i);
 			UniProtEntry entry = uniProtEntries.get(proteinID);
@@ -103,7 +107,10 @@ class PrepareProteinOfInterestTask extends AbstractThreadedTask {
 					List<? extends Protein> orthologs = proteinOrthologClient.getOrtholog(entry, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE);
 					if (!orthologs.isEmpty()) {
 						for (Protein ortholog : orthologs) {
+							// TODO: replace it by ConcurrentFetcherIterator call with UniprotEntryRequest
 							entry = uniProtEntryClient.retrieveProteinData(ortholog.getUniProtId());
+							System.out.print("#2 ");
+							System.out.println(entry);
 							interactorPool.addOrtholog(entry, Collections.singletonList(ortholog));
 						}
 					} else entry = null;
