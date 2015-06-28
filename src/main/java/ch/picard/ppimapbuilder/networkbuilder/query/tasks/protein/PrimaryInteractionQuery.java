@@ -31,11 +31,13 @@ import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.data.protein.client.web.UniProtEntryClient;
+import ch.picard.ppimapbuilder.data.protein.client.web.UniprotEntryRequest;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentFetcherIterator;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
@@ -60,7 +62,8 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 	private final UniProtEntrySet interactorPool;
 
 	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
-	private final UniProtEntryClient uniProtClient;
+	// private final UniProtEntryClient uniProtClient;
+	private ConcurrentFetcherIterator<UniProtEntry> uniprotEntryIterator = null;
 
 	// Ouput
 	private final Collection<BinaryInteraction> newInteractions;
@@ -94,7 +97,7 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 			);
 		}
 		// TODO: remove it I guess...
-		this.uniProtClient = new UniProtEntryClient(executorServiceManager);
+		// this.uniProtClient = new UniProtEntryClient(executorServiceManager);
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
@@ -166,16 +169,21 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 							// Find on UniProt
 							if (entry == null) {
-								try {
-									// TODO: replace it by ConcurrentFetcherIterator call with UniprotEntryRequest
-									entry = uniProtClient.retrieveProteinData(uniProtId);
-									System.out.print("#3 ");
-									System.out.println(entry);
+								// TODO: replace it by ConcurrentFetcherIterator call with UniprotEntryRequest
+								// entry = uniProtClient.retrieveProteinData(uniProtId);
+								ArrayList<UniprotEntryRequest> requests = new ArrayList<UniprotEntryRequest>();
+								requests.add(new UniprotEntryRequest(uniProtId));
+								uniprotEntryIterator =
+										new ConcurrentFetcherIterator<UniProtEntry>(
+												requests,
+												executorServiceManager
+										);
+								entry = uniprotEntryIterator.next();
+								System.out.print("#3 ");
+								System.out.println(entry);
 
-									if (entry != null) synchronized (interactorPool) {
-										interactorPool.add(entry);
-									}
-								} catch (IOException ignored) {
+								if (entry != null) synchronized (interactorPool) {
+									interactorPool.add(entry);
 								}
 							}
 
