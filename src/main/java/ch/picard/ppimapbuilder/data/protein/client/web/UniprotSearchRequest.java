@@ -18,13 +18,19 @@
  *
  */
 
-package ch.picard.ppimapbuilder.util.concurrent;
+package ch.picard.ppimapbuilder.data.protein.client.web;
 
 import java.util.Iterator;
-import java.util.concurrent.Callable;
 
-/**
- * Alias to Callable<Iterator<T>>
- * @param <T>
- */
-public interface IteratorRequest<T> extends Callable<Iterator<T>> {}
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.util.concurrent.IteratorRequest;
+
+public class UniprotSearchRequest implements IteratorRequest<UniProtEntry> {
+
+	@Override
+	public Iterator<UniProtEntry> call() throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}
