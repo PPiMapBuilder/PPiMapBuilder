@@ -21,6 +21,8 @@
 package ch.picard.ppimapbuilder.data.interaction.client.web.filter;
 
 import ch.picard.ppimapbuilder.util.ProgressMonitor;
+import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
+import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 public class ProgressMonitoringInteractionFilter extends InteractionFilter {
@@ -28,6 +30,10 @@ public class ProgressMonitoringInteractionFilter extends InteractionFilter {
 	private final ProgressMonitor progressMonitor;
 	private double interactionCount;
 	private double percent;
+
+	public ProgressMonitoringInteractionFilter(int estimatedNumberOfInteraction, TaskMonitor taskMonitor) {
+		this(estimatedNumberOfInteraction, (ProgressMonitor) new ProgressTaskMonitor(taskMonitor));
+	}
 
 	public ProgressMonitoringInteractionFilter(int estimatedNumberOfInteraction, ProgressMonitor progressMonitor) {
 		this.estimatedNumberOfInteraction = estimatedNumberOfInteraction;

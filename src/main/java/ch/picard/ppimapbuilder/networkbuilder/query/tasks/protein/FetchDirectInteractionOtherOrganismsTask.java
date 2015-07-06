@@ -20,19 +20,27 @@
 
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
+import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.OrganismInteractorFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.ProgressMonitoringInteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.UniProtInteractorFilter;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
-import ch.picard.ppimapbuilder.util.concurrent.ConcurrentExecutor;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentFetcherIterator;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.IteratorRequest;
 import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 class FetchDirectInteractionOtherOrganismsTask extends AbstractThreadedTask {
 
@@ -44,15 +52,17 @@ class FetchDirectInteractionOtherOrganismsTask extends AbstractThreadedTask {
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
 	private final Set<UniProtEntry> proteinOfInterestPool;
+
 	// Output
 	private final UniProtEntrySet interactorPool;
-	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
+	private final List<BinaryInteraction> directInteractions;
 
 	public FetchDirectInteractionOtherOrganismsTask(
 			ExecutorServiceManager executorServiceManager,
-			Collection<PsicquicService> psicquicServices, List<Organism> otherOrganisms, Organism referenceOrganism, Double minimum_orthology_score, Set<UniProtEntry> proteinOfInterestPool,
+			Collection<PsicquicService> psicquicServices, List<Organism> otherOrganisms, Organism referenceOrganism,
+			Double minimum_orthology_score, Set<UniProtEntry> proteinOfInterestPool,
 			UniProtEntrySet interactorPool,
-			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg
+			List<BinaryInteraction> directInteractions
 	) {
 		super(executorServiceManager);
 		this.psicquicServices = psicquicServices;
@@ -61,58 +71,41 @@ class FetchDirectInteractionOtherOrganismsTask extends AbstractThreadedTask {
 		this.MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.interactorPool = interactorPool;
-		this.directInteractionsByOrg = directInteractionsByOrg;
+		this.directInteractions = directInteractions;
 	}
 
 	@Override
 	public void run(final TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetch direct interaction of input proteins orthologs in other organisms...");
 
-		// Progress indicators
-		final Map<Organism, Double> progressByOrganism = new HashMap<Organism, Double>();
-		final Double[] progressPercent = new Double[]{0d};
-		taskMonitor.setProgress(progressPercent[0] = 0d);
+		final List<IteratorRequest<BinaryInteraction>> requests = Lists.newArrayList();
+		int estimatedInteractionCount = 0;
+		for (Organism organism : otherOrganisms) {
+			final PrimaryInteractionQuery primaryInteractionRequest = new PrimaryInteractionQuery(
+					executorServiceManager, psicquicServices, referenceOrganism, organism,
+					proteinOfInterestPool, interactorPool, MINIMUM_ORTHOLOGY_SCORE, null
+			);
+			requests.add(primaryInteractionRequest);
+			estimatedInteractionCount += primaryInteractionRequest.getEstimatedInteractionCount();
+		}
 
-		final double size = otherOrganisms.size();
-		new ConcurrentExecutor<PrimaryInteractionQuery>(executorServiceManager, otherOrganisms.size()) {
+		InteractionFilter filter = InteractionUtils.combineFilters(
+				new ProgressMonitoringInteractionFilter(estimatedInteractionCount, taskMonitor),
+				new UniProtInteractorFilter(),
+				new OrganismInteractorFilter(otherOrganisms)
+		);
 
-			@Override
-			public Callable<PrimaryInteractionQuery> submitRequests(final int index) {
-				final Organism organism = otherOrganisms.get(index);
-				return new PrimaryInteractionQuery(
-						executorServiceManager, psicquicServices, referenceOrganism, organism, proteinOfInterestPool, interactorPool,
-						MINIMUM_ORTHOLOGY_SCORE,
-
-						new ProgressTaskMonitor() {
-							@Override
-							public void setProgress(double currentProgress) {
-								synchronized (progressPercent[0]) {
-									final Double previousProgress = progressByOrganism.get(organism);
-									progressByOrganism.put(organism, currentProgress);
-
-									if (previousProgress != null && currentProgress - previousProgress > 1d / size) {
-										double sum = 0d;
-										for (Double progress : progressByOrganism.values())
-											sum += progress;
-										double percent = Math.floor(sum / size * 100) / 100;
-										if (percent > progressPercent[0]) {
-											taskMonitor.setProgress(progressPercent[0] = percent);
-										}
-									}
-								}
-							}
-						}
-				);
-			}
-
-			@Override
-			public void processResult(PrimaryInteractionQuery intermediaryResult, Integer index) {
-				directInteractionsByOrg.put(otherOrganisms.get(index), intermediaryResult.getNewInteractions());
-			}
-
-		}.run();
-
-		if (progressPercent[0] < 1.0) taskMonitor.setProgress(1.0);
+		Iterators.addAll(
+				directInteractions,
+				Iterators.filter(
+						new ConcurrentFetcherIterator<BinaryInteraction>(
+								requests,
+								executorServiceManager
+						),
+						filter
+				)
+		);
+		taskMonitor.setProgress(1.0);
 	}
 
 }

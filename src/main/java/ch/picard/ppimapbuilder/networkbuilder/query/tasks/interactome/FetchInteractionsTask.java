@@ -23,12 +23,15 @@ package ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRequestBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
-import ch.picard.ppimapbuilder.data.interaction.client.web.filter.*;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractorFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.OrganismInteractorFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.ProgressMonitoringInteractionFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.UniProtInteractorFilter;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
-import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
 import ch.picard.ppimapbuilder.util.concurrent.ConcurrentFetcherIterator;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
@@ -75,7 +78,7 @@ public class FetchInteractionsTask extends AbstractThreadedTask {
 		final InteractionFilter filter = InteractionUtils.combineFilters(
 				new ProgressMonitoringInteractionFilter(
 						builder.getEstimatedInteractionsCount(),
-						new ProgressTaskMonitor(taskMonitor)
+						taskMonitor
 				),
 
 				// Iteractors only in specific organism
@@ -114,7 +117,7 @@ public class FetchInteractionsTask extends AbstractThreadedTask {
 			// Fetch interaction iterator
 			interactionIterator =
 					new ConcurrentFetcherIterator<BinaryInteraction>(
-							builder.getPsicquicRequests(),
+							builder.getRequests(),
 							executorServiceManager//,
 							//new ProgressTaskMonitor(taskMonitor)
 					);

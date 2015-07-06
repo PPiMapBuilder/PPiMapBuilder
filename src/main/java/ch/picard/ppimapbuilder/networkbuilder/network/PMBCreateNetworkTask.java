@@ -35,6 +35,7 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DeferredFetchUniProtEntryTask;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import com.google.common.collect.Maps;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
@@ -58,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,6 +89,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 	private final Set<UniProtEntry> proteinOfInterestPool;
 	//Network data
 	private final HashMap<UniProtEntry, CyNode> nodeNameMap;
+	private final HashMap<Organism, Map<Integer, CyEdge>> edgeMap;
 	private final long startTime;
 
 	public PMBCreateNetworkTask(
@@ -126,7 +129,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
 		this.networkQueryParameters = networkQueryParameters;
 		this.executorServiceManager = executorServiceManager;
 
-		this.nodeNameMap = new HashMap<UniProtEntry, CyNode>();
+		this.nodeNameMap = Maps.newHashMap();
+		this.edgeMap = Maps.newHashMap();
 
 		this.startTime = startTime;
 	}
@@ -304,6 +308,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 			boolean inRefOrg = organism.equals(networkQueryParameters.getReferenceOrganism());
 
 			for (EncoreInteraction interaction : interactionsByOrg.get(organism)) {
+				//BinaryInteraction interaction = null;
 				String nodeAName = interaction.getInteractorA("uniprotkb");
 				String nodeBName = interaction.getInteractorB("uniprotkb");
 
@@ -314,33 +319,75 @@ public class PMBCreateNetworkTask extends AbstractTask {
 				CyNode nodeB = getOrCreateNode(network, refOrgProtB);
 
 				if (nodeA != null && nodeB != null) {
-					CyEdge myEdge = network.addEdge(nodeA, nodeB, true);
+					CyEdge myEdge = getOrCreateEdge(network, organism, nodeA, nodeB);
 
 					CyRow rowA = network.getRow(nodeA);
 					CyRow rowB = network.getRow(nodeB);
-					
+
 				    CyRow edgeAttr = network.getRow(myEdge);
-					edgeAttr.set("Reference_organism_interactor_A", refOrgProtA.getUniProtId());
-					edgeAttr.set("Reference_organism_interactor_B", refOrgProtB.getUniProtId());
-					edgeAttr.set("Interactor_A", nodeAName);
-					edgeAttr.set("Interactor_B", nodeBName);
-					edgeAttr.set("Gene_name_A", rowA.get("gene_name", String.class));
-					edgeAttr.set("Gene_name_B", rowB.get("gene_name", String.class));
-					edgeAttr.set("Protein_name_A", rowA.get("protein_name", String.class));
-					edgeAttr.set("Protein_name_B", rowB.get("protein_name", String.class));
-					edgeAttr.set("Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
-					edgeAttr.set("Detmethod", OLSClient.getInstance().convert(interaction.getMethodToPubmed().keySet()));
-					edgeAttr.set("Type", OLSClient.getInstance().convert(interaction.getTypeToPubmed().keySet()));
-					//edgeAttr.set("interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
-					edgeAttr.set("Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
-					edgeAttr.set("Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
-					edgeAttr.set("Tax_id", String.valueOf(organism.getTaxId()));
-					edgeAttr.set("Interolog", Boolean.toString(!inRefOrg));
-					
-				} else
+					setEdgeAttribute(edgeAttr, "Reference_organism_interactor_A", refOrgProtA.getUniProtId());
+					setEdgeAttribute(edgeAttr, "Reference_organism_interactor_B", refOrgProtA.getUniProtId());
+
+					setEdgeAttribute(edgeAttr, "Reference_organism_interactor_A", refOrgProtA.getUniProtId());
+					setEdgeAttribute(edgeAttr, "Reference_organism_interactor_B", refOrgProtB.getUniProtId());
+					setEdgeAttribute(edgeAttr, "Interactor_A", nodeAName);
+					setEdgeAttribute(edgeAttr, "Interactor_B", nodeBName);
+					setEdgeAttribute(edgeAttr, "Gene_name_A", rowA.get("gene_name", String.class));
+					setEdgeAttribute(edgeAttr, "Gene_name_B", rowB.get("gene_name", String.class));
+					setEdgeAttribute(edgeAttr, "Protein_name_A", rowA.get("protein_name", String.class));
+					setEdgeAttribute(edgeAttr, "Protein_name_B", rowB.get("protein_name", String.class));
+					setEdgeAttribute(edgeAttr, "Source", PsicquicResultTranslator.convert(interaction.getSourceDatabases()));
+					setEdgeAttribute(edgeAttr, "Detmethod", OLSClient.getInstance().convert(interaction.getMethodToPubmed().keySet()));
+					setEdgeAttribute(edgeAttr, "Type", OLSClient.getInstance().convert(interaction.getTypeToPubmed().keySet()));
+					//setEdgeAttribute(edgeAttr, "interaction_id", PsicquicResultTranslator.convert(interaction.getId()));
+					setEdgeAttribute(edgeAttr, "Pubid", PsicquicResultTranslator.convert(interaction.getPublicationIds()));
+					setEdgeAttribute(edgeAttr, "Confidence", PsicquicResultTranslator.convert(interaction.getConfidenceValues()));
+					setEdgeAttribute(edgeAttr, "Tax_id", String.valueOf(organism.getTaxId()));
+					setEdgeAttribute(edgeAttr, "Interolog", Boolean.toString(!inRefOrg));
+				} else {
 					System.out.println("node not found with : " + nodeAName + (nodeA == null ? "[null]" : "") + " <-> " + nodeBName + (nodeB == null ? "[null]" : ""));
+				}
 			}
 		}
+	}
+
+	private <R, T extends List<R>> void setEdgeAttribute(CyRow edgeAttr, String attributeName, T attributeValue) {
+		if(attributeValue != null && !attributeValue.isEmpty()) {
+			final List oldAttributeValue = edgeAttr.getList(attributeName, attributeValue.get(0).getClass());
+			if(oldAttributeValue != null) {
+				for (R value : attributeValue) {
+					if(!oldAttributeValue.contains(value)) {
+						oldAttributeValue.add(value);
+					}
+				}
+			} else {
+				edgeAttr.set(attributeName, attributeValue);
+			}
+		}
+	}
+
+	private <T> void setEdgeAttribute(CyRow edgeAttr, String attributeName, T attributeValue) {
+		if(attributeValue != null) {
+			final Object oldAttributeValue = edgeAttr.get(attributeName, attributeValue.getClass());
+			if(oldAttributeValue == null) {
+				edgeAttr.set(attributeName, attributeValue);
+			}
+		}
+	}
+
+	private CyEdge getOrCreateEdge(CyNetwork network, Organism organism, CyNode nodeA, CyNode nodeB) {
+		Map<Integer, CyEdge> pairCyEdgeMap = edgeMap.get(organism);
+		if(pairCyEdgeMap == null) {
+			pairCyEdgeMap = Maps.newHashMap();
+			edgeMap.put(organism, pairCyEdgeMap);
+		}
+		final int nodesHashCode = nodeA.hashCode() + nodeB.hashCode();
+		CyEdge cyEdge = pairCyEdgeMap.get(nodesHashCode);
+		if(cyEdge == null) {
+			cyEdge = network.addEdge(nodeA, nodeB, true);
+			pairCyEdgeMap.put(nodesHashCode, cyEdge);
+		}
+		return cyEdge;
 	}
 
 	private UniProtEntry getEntryByIdentifier(Map<String, UniProtEntry> entries, String identifier) {

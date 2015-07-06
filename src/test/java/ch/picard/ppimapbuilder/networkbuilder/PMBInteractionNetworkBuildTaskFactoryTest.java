@@ -23,6 +23,7 @@ package ch.picard.ppimapbuilder.networkbuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.util.test.DummyCyLayoutAlgorithmManager;
 import ch.picard.ppimapbuilder.util.test.DummyCyNetwork;
 import ch.picard.ppimapbuilder.util.test.DummyCyNetworkFactory;
@@ -36,7 +37,6 @@ import ch.picard.ppimapbuilder.util.test.DummyTaskMonitor;
 import ch.picard.ppimapbuilder.util.test.DummyVisualMappingManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
@@ -45,6 +45,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -54,14 +55,14 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 	static Organism human = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(9606);
 	static Organism elegans;
 	static List<Organism> otherOrganisms = ImmutableList.of(
-			InParanoidOrganismRepository.getInstance().getOrganismByTaxId(7227),
-			InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090),
-			InParanoidOrganismRepository.getInstance().getOrganismByTaxId(559292),
-			elegans = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(6239)
+			InParanoidOrganismRepository.getInstance().getOrganismByTaxId(7227)//,
+			//InParanoidOrganismRepository.getInstance().getOrganismByTaxId(10090),
+			//InParanoidOrganismRepository.getInstance().getOrganismByTaxId(559292),
+			//elegans = InParanoidOrganismRepository.getInstance().getOrganismByTaxId(6239)
 	);
 	static List<PsicquicService> services = ImmutableList.of(
-			new PsicquicService("SPIKE", null, "http://spike.cs.tau.ac.il/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Lists.newArrayList(""))
-			//new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
+			//new PsicquicService("SPIKE", null, "http://spike.cs.tau.ac.il/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Lists.newArrayList(""))
+			new PsicquicService("IntAct", null, "http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			//new PsicquicService("BioGrid", null, "http://tyersrest.tyerslab.com:8805/psicquic/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			//, new PsicquicService("BIND", null, "http://webservice.baderlab.org:8480/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
 			//, new PsicquicService("DIP", null, "http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/", "true", "1", "", "", "true", Arrays.asList(""))
@@ -71,8 +72,8 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 	NetworkQueryParameters proteinNetworkParameters = new DummyNetworkQueryParameters(
 			services,
 			ImmutableList.of(
-					"P08238"//,
-					//"P04040"//,
+					//"P08238"//,
+					"P04040"//,
 					//"Q8VI75",
 					//"B2RQC6",
 					//"O75153"
@@ -152,31 +153,40 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 
 	private void runNetworkQueryTask(PMBInteractionNetworkBuildTaskFactory networkBuild) throws Exception {
 		TaskIterator taskIterator = networkBuild.createTaskIterator();
-		final DummyTaskMonitor taskMonitor = new DummyTaskMonitor();
+		final DummyTaskMonitor taskMonitor = new DummyTaskMonitor(false);
 		while (taskIterator.hasNext()) {
 			taskIterator.next().run(taskMonitor);
 		}
 	}
 
-	private static final void assertNodesConnectedToPOIs(DummyCyNetworkFactory networkFactory, PMBInteractionNetworkBuildTaskFactory networkBuild) {
+	private static void assertNodesConnectedToPOIs(DummyCyNetworkFactory networkFactory, PMBInteractionNetworkBuildTaskFactory networkBuild) {
 		DummyCyNetwork network = networkFactory.getNetworks().get(0);
 		List<CyEdge> edges = network.getEdgeList();
 		Set<CyNode> nodes = ImmutableSet.copyOf(network.getNodeList());
 		Set<CyNode> POIsNodes = Sets.newHashSet();
 
 		for (CyNode node : nodes) {
-			if (networkBuild.getProteinOfInterestPool().contains(((DummyCyNode) node).getName()))
-				POIsNodes.add(node);
+			final String name = ((DummyCyNode) node).getName();
+			for (UniProtEntry entry : networkBuild.getProteinOfInterestPool()) {
+				if (entry.getAccessions().contains(name)) {
+					POIsNodes.add(node);
+					break;
+				}
+			}
 		}
 
 		Set<CyNode> nodesLinkedToPOIs = Sets.newHashSet();
 		nodesLinkedToPOIs.addAll(POIsNodes);
-		for (CyEdge edge : edges)
-			if (edge.getSource() != edge.getTarget())
-				if (POIsNodes.contains(edge.getSource()))
-					nodesLinkedToPOIs.add(edge.getTarget());
-				else if (POIsNodes.contains(edge.getTarget()))
-					nodesLinkedToPOIs.add(edge.getSource());
+		for (CyEdge edge : edges) {
+			final DummyCyNode target = (DummyCyNode) edge.getTarget();
+			final DummyCyNode source = (DummyCyNode) edge.getSource();
+			if (source != target) {
+				if (POIsNodes.contains(source))
+					nodesLinkedToPOIs.add(target);
+				else if (POIsNodes.contains(target))
+					nodesLinkedToPOIs.add(source);
+			}
+		}
 
 		System.out.println();
 		System.out.println("Edges: " + edges.size());
@@ -188,6 +198,8 @@ public class PMBInteractionNetworkBuildTaskFactoryTest {
 		unlinkedNodes.removeAll(nodesLinkedToPOIs);
 		System.out.print("Unlinked nodes: ");
 		System.out.println(unlinkedNodes);
+		System.out.print("POI nodes: ");
+		System.out.println(POIsNodes);
 
 		// Assert network contains no unliked nodes
 		Assert.assertEquals(0, unlinkedNodes.size());

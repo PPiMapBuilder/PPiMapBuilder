@@ -26,11 +26,12 @@ import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import ch.picard.ppimapbuilder.util.task.AbstractThreadedTask;
+import com.google.common.collect.Iterators;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 class FetchDirectInteractionReferenceOrganismTask extends AbstractThreadedTask {
@@ -42,7 +43,7 @@ class FetchDirectInteractionReferenceOrganismTask extends AbstractThreadedTask {
 
 	// Output
 	private final UniProtEntrySet interactorPool;
-	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
+	private final List<BinaryInteraction> directInteractions;
 	private final Collection<PsicquicService> psicquicServices;
 
 	public FetchDirectInteractionReferenceOrganismTask(
@@ -50,7 +51,7 @@ class FetchDirectInteractionReferenceOrganismTask extends AbstractThreadedTask {
 			Collection<PsicquicService> psicquicServices,
 			Organism referenceOrganism, Set<UniProtEntry> proteinOfInterestPool, Double minimum_orthology_score,
 			UniProtEntrySet interactorPool,
-			HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg) {
+			List<BinaryInteraction> directInteractions) {
 		super(webServiceClientFactory);
 		this.psicquicServices = psicquicServices;
 
@@ -58,18 +59,20 @@ class FetchDirectInteractionReferenceOrganismTask extends AbstractThreadedTask {
 		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 		this.interactorPool = interactorPool;
-		this.directInteractionsByOrg = directInteractionsByOrg;
+		this.directInteractions = directInteractions;
 	}
 
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
 		taskMonitor.setStatusMessage("Fetch direct interactions of input proteins in reference organism...");
-		final PrimaryInteractionQuery query = new PrimaryInteractionQuery(
-				executorServiceManager, psicquicServices, referenceOrganism, referenceOrganism, proteinOfInterestPool, interactorPool,
-				MINIMUM_ORTHOLOGY_SCORE,
-				taskMonitor
-		).call();
-		directInteractionsByOrg.put(referenceOrganism, query.getNewInteractions());
+		Iterators.addAll(
+				directInteractions,
+				new PrimaryInteractionQuery(
+						executorServiceManager, psicquicServices, referenceOrganism, referenceOrganism, proteinOfInterestPool, interactorPool,
+						MINIMUM_ORTHOLOGY_SCORE,
+						taskMonitor
+				).call()
+		);
 	}
 
 }

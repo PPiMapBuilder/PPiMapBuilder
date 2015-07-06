@@ -1,4 +1,4 @@
-/*   
+/*
  * This file is part of PPiMapBuilder.
  *
  * PPiMapBuilder is free software: you can redistribute it and/or modify
@@ -13,42 +13,38 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
- * 
- */    	
-    
-package ch.picard.ppimapbuilder.util.test;
+ *
+ */
 
-import ch.picard.ppimapbuilder.util.ProgressMonitor;
-import org.cytoscape.work.TaskMonitor;
+package ch.picard.ppimapbuilder.data.interaction.client.web;
 
-public class DummyTaskMonitor implements TaskMonitor, ProgressMonitor {
+import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 
-	private final boolean showProgress;
+public class PsicquicClientWrapper {
 
-	public DummyTaskMonitor(boolean showProgress) {
-		this.showProgress = showProgress;
+	private final PsicquicService service;
+	private final PsicquicSimpleClient client;
+
+	public PsicquicClientWrapper(PsicquicSimpleClient client) {
+		this(null, client);
 	}
 
-	public DummyTaskMonitor() {
-		this(true);
+	public PsicquicClientWrapper(PsicquicService service) {
+		this(service, new PsicquicSimpleClient(service.getRestUrl()));
 	}
 
-	@Override
-	public void setTitle(String s) {
-		System.out.println("[TITLE]\t\t" + s);
+	private PsicquicClientWrapper(PsicquicService service, PsicquicSimpleClient client) {
+		this.service = service;
+		this.client = client;
 	}
 
-	@Override
-	public void setProgress(double v) {
-		if(showProgress)
-			System.out.println("[PROGRESS]\t" + (int) (v * 100.0) + "%");
+	public PsicquicService getService() {
+		return service;
 	}
 
-	@Override
-	public void setStatusMessage(String s) {
-		System.out.println("[STATUS]\t" + s);
+	public PsicquicSimpleClient getClient() {
+		return client;
 	}
-
 }

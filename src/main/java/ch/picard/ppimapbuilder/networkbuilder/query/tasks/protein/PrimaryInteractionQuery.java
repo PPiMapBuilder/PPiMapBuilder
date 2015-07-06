@@ -21,10 +21,13 @@
 package ch.picard.ppimapbuilder.networkbuilder.query.tasks.protein;
 
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRequest;
+import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRequestBuilder;
 import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
-import ch.picard.ppimapbuilder.data.interaction.client.web.ThreadedPsicquicClient;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractionFilter;
 import ch.picard.ppimapbuilder.data.interaction.client.web.filter.InteractorFilter;
 import ch.picard.ppimapbuilder.data.interaction.client.web.filter.OrganismInteractorFilter;
+import ch.picard.ppimapbuilder.data.interaction.client.web.filter.ProgressMonitoringInteractionFilter;
 import ch.picard.ppimapbuilder.data.interaction.client.web.filter.UniProtInteractorFilter;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
@@ -35,48 +38,51 @@ import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCa
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
-import ch.picard.ppimapbuilder.util.ProgressTaskMonitor;
+import ch.picard.ppimapbuilder.util.concurrent.ConcurrentFetcherIterator;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.util.concurrent.IteratorRequest;
+import com.google.common.collect.Iterators;
 import org.cytoscape.work.TaskMonitor;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.Interactor;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
+class PrimaryInteractionQuery implements IteratorRequest<BinaryInteraction> {
 
 	private final Double MINIMUM_ORTHOLOGY_SCORE;
 
 	private final ExecutorServiceManager executorServiceManager;
 	private final TaskMonitor taskMonitor;
 
-	private final Collection<PsicquicService> psicquicServices;
 	private final Organism referenceOrganism;
 	private final Organism organism;
 	private final boolean inReferenceOrgansim;
-	private final Set<UniProtEntry> proteinOfInterestPool;
 	private final UniProtEntrySet interactorPool;
 
 	private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
 	private final UniProtEntryClient uniProtClient;
 
-	// Ouput
-	private final Collection<BinaryInteraction> newInteractions;
+	private List<PsicquicRequest> interactionRequests;
+	private int estimatedInteractionCount = 0;
 
 	public PrimaryInteractionQuery(
 			ExecutorServiceManager executorServiceManager, Collection<PsicquicService> psicquicServices,
-			Organism referenceOrganism, Organism organism, Set<UniProtEntry> proteinOfInterestPool, UniProtEntrySet interactorPool,
+			Organism referenceOrganism, Organism organism,
+			Set<UniProtEntry> proteinOfInterestPool, UniProtEntrySet interactorPool,
 			Double minimum_orthology_score,
 			TaskMonitor taskMonitor
 	) {
-		this.psicquicServices = psicquicServices;
 		this.referenceOrganism = referenceOrganism;
 		this.organism = organism;
 		this.inReferenceOrgansim = organism.equals(referenceOrganism);
 
-		this.proteinOfInterestPool = proteinOfInterestPool;
 		this.interactorPool = interactorPool;
 
 		this.executorServiceManager = executorServiceManager;
@@ -97,38 +103,27 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 		MINIMUM_ORTHOLOGY_SCORE = minimum_orthology_score;
 
-		this.newInteractions = new ArrayList<BinaryInteraction>();
-	}
-
-	public PrimaryInteractionQuery call() throws Exception {
-		taskMonitor.setProgress(0);
-
 		// Get list of protein of interest's orthologs in this organism
 		Set<String> proteinOfInterestInOrganism = interactorPool.identifiersInOrganism(proteinOfInterestPool, organism);
 
-		// Prepare MiQL queries
-		ArrayList<String> queries = new ArrayList<String>();
+		// Prepare requests
+		final PsicquicRequestBuilder builder = new PsicquicRequestBuilder(psicquicServices);
 		for (String id : proteinOfInterestInOrganism) {
-			queries.add(
-					InteractionUtils.generateMiQLQueryIDTaxID(
-							id,
-							organism.getTaxId()
-					)
-			);
+			builder.addGetByTaxonAndId(id, organism.getTaxId());
 		}
+		estimatedInteractionCount = builder.getEstimatedInteractionsCount();
+		interactionRequests = builder.getRequests();
+	}
 
-		// Fetch primary interactions
-		ThreadedPsicquicClient psicquicClient = new ThreadedPsicquicClient(psicquicServices, executorServiceManager);
-		List<BinaryInteraction> interactions = psicquicClient.getByQueries(queries);
+	public Iterator<BinaryInteraction> call() throws Exception {
+		if(taskMonitor != null) taskMonitor.setProgress(0);
 
-		// Filter interaction and extract interactors in the reference organism
-		final Double[] i = new Double[]{0d, 0d};
-		final double size = interactions.size();
-		newInteractions.addAll(InteractionUtils.filterConcurrently(
-				executorServiceManager,
-				interactions,
-				new ProgressTaskMonitor(taskMonitor),
-
+		//Prepare interaction filters
+		final InteractionFilter filter = InteractionUtils.combineFilters(
+				taskMonitor != null ? new ProgressMonitoringInteractionFilter(
+						estimatedInteractionCount,
+						taskMonitor
+				) : null,
 				new UniProtInteractorFilter(),
 				new OrganismInteractorFilter(organism),
 
@@ -143,19 +138,16 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 						if (inReferenceOrgansim)
 							proteinsInReferenceOrganism.add(interactorProtein);
 						else try {
-							proteinsInReferenceOrganism.addAll(proteinOrthologClient.getOrtholog(interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE));
-						} catch (Exception ignored) {
-						}
-
-						/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(interactorProtein.getUniProtId()))
-							System.out.println(interactorProtein.getUniProtId());*/
+							proteinsInReferenceOrganism.addAll(
+									proteinOrthologClient.getOrtholog(
+											interactorProtein, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE
+									)
+							);
+						} catch (Exception ignored) {}
 
 						boolean ok = false;
 						for (Protein proteinInReferenceOrganism : proteinsInReferenceOrganism) {
 							String uniProtId = proteinInReferenceOrganism.getUniProtId();
-
-							/*if (Arrays.asList("P49448", "Q6FI13", "P62807", "P0C0S5", "P60981", "P23528", "Q5H9R7", "Q16778", "P63261").contains(uniProtId))
-								System.out.println(uniProtId);*/
 
 							// Find in existing protein pools
 							UniProtEntry entry = null;
@@ -171,13 +163,12 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 									if (entry != null) synchronized (interactorPool) {
 										interactorPool.add(entry);
 									}
-								} catch (IOException ignored) {
-								}
+								} catch (IOException ignored) {}
 							}
 
 							if (entry != null) {
 								if (!inReferenceOrgansim) synchronized (interactorPool) {
-									interactorPool.addOrtholog(entry, Arrays.asList(interactorProtein));
+									interactorPool.addOrtholog(entry, Collections.singletonList(interactorProtein));
 								}
 								ok = true;
 							}
@@ -185,18 +176,18 @@ class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 						return ok;
 					}
 				}
-		));
+		);
 
-		if (i[1] < 1.0) taskMonitor.setProgress(1.0);
-
-		return this;
+		return Iterators.filter(
+				new ConcurrentFetcherIterator<BinaryInteraction>(
+						interactionRequests,
+						executorServiceManager
+				),
+				filter
+		);
 	}
 
-	public Organism getOrganism() {
-		return organism;
-	}
-
-	public Collection<BinaryInteraction> getNewInteractions() {
-		return newInteractions;
+	public int getEstimatedInteractionCount() {
+		return estimatedInteractionCount;
 	}
 }

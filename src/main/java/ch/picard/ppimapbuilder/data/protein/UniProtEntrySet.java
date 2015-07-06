@@ -172,7 +172,7 @@ public class UniProtEntrySet implements Set<UniProtEntry>, Serializable {
 	}
 
 	public Map<String, UniProtEntry> identifiersInOrganism(Organism organism) {
-		return uniprotEntriesIndexed.get(organism);
+		return Maps.newHashMap(uniprotEntriesIndexed.get(organism));
 	}
 
 	public Set<String> identifiersInOrganism(Collection<UniProtEntry> entries, Organism organism) {

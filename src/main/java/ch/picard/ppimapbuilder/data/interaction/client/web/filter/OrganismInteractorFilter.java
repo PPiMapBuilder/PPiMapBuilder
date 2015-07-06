@@ -23,19 +23,27 @@ package ch.picard.ppimapbuilder.data.interaction.client.web.filter;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
+import com.google.common.collect.Sets;
 import psidev.psi.mi.tab.model.Interactor;
 
-public final class OrganismInteractorFilter extends InteractorFilter {
-	private final Organism organism;
+import java.util.Collection;
+import java.util.Set;
 
-	public OrganismInteractorFilter(Organism organism) {
-		this.organism = organism;
+public class OrganismInteractorFilter extends InteractorFilter {
+	private final Set<Organism> organism;
+
+	public OrganismInteractorFilter(Organism... organisms) {
+		this.organism = Sets.newHashSet(organisms);
+	}
+
+	public OrganismInteractorFilter(Collection<Organism> organisms) {
+		this.organism = Sets.newHashSet(organisms);
 	}
 
 	@Override
 	public boolean isValidInteractor(Interactor interactor) {
 		try {
-			return organism.equals(
+			return organism.contains(
 					OrganismUtils.findOrganismInMITABTaxId(
 							InParanoidOrganismRepository.getInstance(),
 							interactor.getOrganism().getTaxid()

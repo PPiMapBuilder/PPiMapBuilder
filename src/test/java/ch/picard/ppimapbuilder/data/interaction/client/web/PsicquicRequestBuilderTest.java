@@ -56,7 +56,7 @@ public class PsicquicRequestBuilderTest {
 		final PsicquicRequestBuilder builder = new PsicquicRequestBuilder(clients)
 				.addQuery(query);
 
-		final List<PsicquicRequest> requests = builder.getPsicquicRequests();
+		final List<PsicquicRequest> requests = builder.getRequests();
 		Assert.assertNotNull(requests);
 		Assert.assertFalse(requests.isEmpty());
 		Assert.assertEquals(requests.size(), nbClients);
@@ -76,7 +76,7 @@ public class PsicquicRequestBuilderTest {
 				.setMaxResultsPerPages(maxResultsPerPages)
 				.addQuery(query);
 
-		final List<PsicquicRequest> requests = builder.getPsicquicRequests();
+		final List<PsicquicRequest> requests = builder.getRequests();
 		Assert.assertNotNull(requests);
 		Assert.assertFalse(requests.isEmpty());
 		Assert.assertEquals(requests.size(), 6);
@@ -96,7 +96,7 @@ public class PsicquicRequestBuilderTest {
 		final PsicquicRequestBuilder builder = new PsicquicRequestBuilder(clients)
 				.addGetByTaxon(9606);
 
-		final List<PsicquicRequest> requests = builder.getPsicquicRequests();
+		final List<PsicquicRequest> requests = builder.getRequests();
 		Assert.assertNotNull(requests);
 		Assert.assertFalse(requests.isEmpty());
 		Assert.assertEquals(requests.size(), 1);
@@ -112,7 +112,7 @@ public class PsicquicRequestBuilderTest {
 		final PsicquicRequestBuilder builder = new PsicquicRequestBuilder(clients)
 				.addGetByTaxonAndId("P04040", 9606);
 
-		final List<PsicquicRequest> requests = builder.getPsicquicRequests();
+		final List<PsicquicRequest> requests = builder.getRequests();
 		Assert.assertNotNull(requests);
 		Assert.assertFalse(requests.isEmpty());
 		Assert.assertEquals(requests.size(), 1);

@@ -25,12 +25,17 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import com.google.common.collect.Lists;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 
@@ -40,7 +45,7 @@ public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 	private final Organism referenceOrganism;
 	private final Set<UniProtEntry> proteinOfInterestPool;
 	private final UniProtEntrySet interactorPool;
-	private final HashMap<Organism, Collection<BinaryInteraction>> directInteractionsByOrg;
+	private final List<BinaryInteraction> directInteractions;
 	private final List<Organism> otherOrganisms;
 	private final List<Organism> allOrganisms;
 	private final HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
@@ -69,7 +74,7 @@ public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 		allOrganisms.addAll(this.otherOrganisms);
 		allOrganisms.add(referenceOrganism);
 
-		this.directInteractionsByOrg = new HashMap<Organism, Collection<BinaryInteraction>>();
+		this.directInteractions = Lists.newArrayList();
 		this.interactionsByOrg = interactionsByOrg;
 	}
 
@@ -84,7 +89,7 @@ public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 				new FetchDirectInteractionReferenceOrganismTask(
 						executorServiceManager, psicquicServices,
 						referenceOrganism, proteinOfInterestPool, MINIMUM_ORTHOLOGY_SCORE,
-						interactorPool, directInteractionsByOrg
+						interactorPool, directInteractions
 				),
 				new FetchOrthologsOfInteractorsTask(
 						executorServiceManager,
@@ -93,11 +98,11 @@ public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 				new FetchDirectInteractionOtherOrganismsTask(
 						executorServiceManager, psicquicServices,
 						otherOrganisms, referenceOrganism, MINIMUM_ORTHOLOGY_SCORE, proteinOfInterestPool,
-						interactorPool, directInteractionsByOrg
+						interactorPool, directInteractions
 				),
 				new FetchInteractionsTask(
 						executorServiceManager, psicquicServices,
-						allOrganisms, interactorPool, proteinOfInterestPool, directInteractionsByOrg,
+						allOrganisms, interactorPool, proteinOfInterestPool, directInteractions,
 						interactionsByOrg
 				)
 		);

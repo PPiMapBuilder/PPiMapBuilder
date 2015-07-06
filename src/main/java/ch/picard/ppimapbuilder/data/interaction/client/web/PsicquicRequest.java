@@ -27,22 +27,27 @@ import psidev.psi.mi.tab.PsimiTabReader;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 public class PsicquicRequest implements IteratorRequest<BinaryInteraction> {
-	private final PsicquicSimpleClient client;
+	private final PsicquicClientWrapper wrapper;
 	private final String query;
-	private final int firstResult;
-	private final int maxResults;
-	private	final PsimiTabReader psimiTabReader;
+	private final Integer firstResult;
+	private final Integer maxResults;
+	private final PsimiTabReader psimiTabReader;
 	private final static int MAX_TRY = 3;
 
-	protected PsicquicRequest(PsicquicSimpleClient client, String query, int firstResult, int maxResults) {
-		this.client = client;
+	protected PsicquicRequest(PsicquicClientWrapper wrapper, String query, Integer firstResult, Integer maxResults) {
+		this.wrapper = wrapper;
 		this.query = query;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
 		this.psimiTabReader = new PsimiTabReader();
+	}
+
+	protected PsicquicRequest(PsicquicClientWrapper wrapper, String query) {
+		this(wrapper, query, null, null);
 	}
 
 	@Override
@@ -50,14 +55,21 @@ public class PsicquicRequest implements IteratorRequest<BinaryInteraction> {
 		int ntry = 0;
 		while (++ntry <= MAX_TRY) {
 			try {
-				return psimiTabReader.iterate(
-						client.getByQuery(
-								query,
-								PsicquicSimpleClient.MITAB25,
-								firstResult,
-								maxResults
-						)
-				);
+				InputStream stream;
+				if (firstResult == null || maxResults == null) {
+					stream = wrapper.getClient().getByQuery(
+							query,
+							PsicquicSimpleClient.MITAB25
+					);
+				} else {
+					stream = wrapper.getClient().getByQuery(
+							query,
+							PsicquicSimpleClient.MITAB25,
+							firstResult,
+							maxResults
+					);
+				}
+				return psimiTabReader.read(stream).iterator();//psimiTabReader.iterate(stream);
 			} catch (IOException ignored) {}
 		}
 		return new EmptyIterator<BinaryInteraction>();

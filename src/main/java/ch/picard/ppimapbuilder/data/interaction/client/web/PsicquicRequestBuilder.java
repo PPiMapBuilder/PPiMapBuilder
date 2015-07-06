@@ -35,18 +35,28 @@ import java.util.Set;
 
 public class PsicquicRequestBuilder {
 
-	private final List<PsicquicSimpleClient> clients;
+	private final List<PsicquicClientWrapper> clients;
 	private final List<PsicquicRequest> requests;
 	private int maxResultsPerPages = 1000;
 	private int estimatedInteractionsCount = 0;
 
 	public PsicquicRequestBuilder(Collection<PsicquicService> services) {
-		this(InteractionUtils.psicquicServicesToPsicquicSimpleClients(services));
+		this();
+		for (PsicquicService service : services) {
+			this.clients.add(new PsicquicClientWrapper(service));
+		}
 	}
 
 	public PsicquicRequestBuilder(List<PsicquicSimpleClient> clients) {
-		this.clients = new ArrayList<PsicquicSimpleClient>(clients);
-		requests = new ArrayList<PsicquicRequest>();
+		this();
+		for (PsicquicSimpleClient client : clients) {
+			this.clients.add(new PsicquicClientWrapper(client));
+		}
+	}
+
+	private PsicquicRequestBuilder() {
+		this.clients = Lists.newArrayList();
+		this.requests = Lists.newArrayList();
 	}
 
 	public PsicquicRequestBuilder setMaxResultsPerPages(int maxResultsPerPages) {
@@ -62,18 +72,18 @@ public class PsicquicRequestBuilder {
 	 * Create PSICQUIC request for a query on multiple databases and pagination of max 1000 interactions per page
 	 */
 	public PsicquicRequestBuilder addQuery(final String query) {
-		for (PsicquicSimpleClient client : clients) {
+		for (PsicquicClientWrapper wrapper : clients) {
 			try {
-				long count = client.countByQuery(query);
+				long count = wrapper.getClient().countByQuery(query);
 				estimatedInteractionsCount += count;
 				final int numberPages = (int) Math.ceil((double) count / (double) maxResultsPerPages);
 
 				for (int page = 0; page < numberPages; page++) {
 					final int firstResult = page * maxResultsPerPages;
-					requests.add(new PsicquicRequest(client, query, firstResult, maxResultsPerPages));
+					requests.add(new PsicquicRequest(wrapper, query, firstResult, maxResultsPerPages));
 				}
 			} catch (IOException e) {
-				requests.add(new PsicquicRequest(client, query, 0, Integer.MAX_VALUE));
+				requests.add(new PsicquicRequest(wrapper, query));
 			}
 		}
 		return this;
@@ -196,7 +206,7 @@ public class PsicquicRequestBuilder {
 		return this;
 	}
 
-	public List<PsicquicRequest> getPsicquicRequests() {
+	public List<PsicquicRequest> getRequests() {
 		return requests;
 	}
 
