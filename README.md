@@ -1,3 +1,11 @@
+
+## HELP REQUIRED
+
+We have no more time to finish this plugin. Any help would be really appreciated. Feel free to contact us!
+
+_______
+
+
 # ![](https://fr.gravatar.com/userimage/46678059/7c7f65f2ea5b01dfc46adac45048df6b.jpg?size=40) PPiMapBuilder
 
   PPiMapBuilder is a Cytoscape 3 app for protein-protein interaction network generation and protein-protein interaction prediction via the [Phylogenetic profiling](http://en.wikipedia.org/wiki/Protein-protein_interaction_prediction#Phylogenetic_profiling) method as described by:
