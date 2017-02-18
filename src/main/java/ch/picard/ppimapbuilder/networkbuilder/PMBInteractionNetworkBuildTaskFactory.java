@@ -108,7 +108,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 						proteinOfInterestPool,
 						networkQueryParameters,
 						executorServiceManager
-				).createTaskIterator()
+				)
 		);
 		taskIterator.append(
 				new PMBCreateNetworkTask(
