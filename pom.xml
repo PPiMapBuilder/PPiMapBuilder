@@ -217,6 +217,12 @@
             <url>http://www.ebi.ac.uk/~maven/m2repo</url>
         </repository>
 
+        <!-- EBI repo -->
+        <repository>
+            <id>nexus-ebi-release-repo</id>
+            <url>http://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-repo/</url>
+        </repository>
+
         <!-- <repository> <id>ebi-repo-snapshots</id> <name>EBI snapshots repository</name>
             <url>http://www.ebi.ac.uk/~maven/m2repo_snapshots</url> </repository> -->
 
@@ -490,9 +496,9 @@
         </dependency>
 
         <dependency>
-            <groupId>uk.ac.ebi</groupId>
-            <artifactId>ols</artifactId>
-            <version>1.14.1</version>
+            <groupId>uk.ac.ebi.pride.utilities</groupId>
+            <artifactId>ols-client</artifactId>
+            <version>2.5</version>
         </dependency>
 
     </dependencies>
