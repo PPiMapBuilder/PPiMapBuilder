@@ -1,4 +1,4 @@
-/*   
+/*
  * This file is part of PPiMapBuilder.
  *
  * PPiMapBuilder is free software: you can redistribute it and/or modify
@@ -13,16 +13,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with PPiMapBuilder.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
- * 
- */    	
-    
+ *
+ */
+
 package ch.picard.ppimapbuilder.networkbuilder;
 
-import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.interaction.Interaction;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntrySet;
 import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
@@ -35,12 +34,8 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
-import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * PPiMapBuilder network query and build
@@ -61,8 +56,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 	// Data output from network querying
 	private Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
-	private HashMap<Organism, Collection<EncoreInteraction>> interactionsByOrg;
-	private UniProtEntrySet interactorPool;
+	private Collection<Interaction> interactions;
 
 	// Error output
 	private String errorMessage;
@@ -93,8 +87,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		long startTime = System.currentTimeMillis();
 
-		this.interactionsByOrg = new HashMap<Organism, Collection<EncoreInteraction>>();
-		this.interactorPool = new UniProtEntrySet(networkQueryParameters.getReferenceOrganism());
+		this.interactions = new ArrayList<Interaction>();
 		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
 
 		ExecutorServiceManager executorServiceManager =
@@ -103,8 +96,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
 				new PMBInteractionQueryTaskFactory(
-						interactionsByOrg,
-						interactorPool,
+						interactions,
 						proteinOfInterestPool,
 						networkQueryParameters,
 						executorServiceManager
@@ -113,8 +105,8 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		taskIterator.append(
 				new PMBCreateNetworkTask(
 						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
-						layoutAlgorithmManager, visualMappingManager, interactionsByOrg,
-						interactorPool, proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
+						layoutAlgorithmManager, visualMappingManager, interactions,
+						proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
 				)
 		);
 		return taskIterator;
@@ -128,12 +120,8 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		return errorMessage;
 	}
 
-	protected UniProtEntrySet getInteractorPool() {
-		return interactorPool;
-	}
-
-	protected HashMap<Organism, Collection<EncoreInteraction>> getInteractionsByOrg() {
-		return interactionsByOrg;
+	protected Collection<Interaction> getInteractions() {
+		return interactions;
 	}
 
 	protected Set<UniProtEntry> getProteinOfInterestPool() {
