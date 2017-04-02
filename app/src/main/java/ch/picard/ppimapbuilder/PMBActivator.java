@@ -16,8 +16,8 @@
  * 
  * Copyright 2015 Echeverria P.C., Dupuis P., Cornut G., Gravouil K., Kieffer A., Picard D.
  * 
- */    	
-    
+ */
+
 package ch.picard.ppimapbuilder;
 
 import ch.picard.ppimapbuilder.data.settings.PMBSettingSaveTaskFactory;
@@ -31,6 +31,9 @@ import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
 import ch.picard.ppimapbuilder.ui.resultpanel.listener.ResultPanelAction;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
+import clojure.java.api.Clojure;
+import clojure.lang.IFn;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -87,7 +90,16 @@ public class PMBActivator extends AbstractCyActivator {
 	 * @param bc
 	 */
 	@Override
-	public void start(BundleContext bc) {
+	public void start(BundleContext bc) throws Exception {
+		ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
+			@Override
+			public void run() throws Exception {
+				IFn require = Clojure.var("clojure.core", "require");
+				require.invoke(Clojure.read("ppi-query.interaction.miql"));
+				IFn getQueryByTaxon = Clojure.var("ppi-query.interaction.miql", "get-query-by-taxon");
+				System.out.println(getQueryByTaxon.invoke(9606).toString());
+			}
+		}, clojure.core__init.class);
 		context = bc;
 		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
 
@@ -129,7 +141,7 @@ public class PMBActivator extends AbstractCyActivator {
 			ResultPanelAction rpa = new ResultPanelAction(pmbResultPanel, cyApplicationManager);
 			registerService(bc, rpa, RowsSetListener.class, new Properties());
 
-			
+
 			// View services
 			CyNetworkViewFactory cyNetworkViewFactoryServiceRef = getService(bc, CyNetworkViewFactory.class);
 			CyNetworkViewManager cyNetworkViewManagerServiceRef = getService(bc, CyNetworkViewManager.class);
@@ -145,7 +157,7 @@ public class PMBActivator extends AbstractCyActivator {
 			PMBVisualStylesDefinition vsDef = PMBVisualStylesDefinition.getInstance().setFactories(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			PMBVisualStyleTaskFactory visualStyleFactory = new PMBVisualStyleTaskFactory(visualMappingManager, vmfFactoryD, vmfFactoryP, visualStyleFactoryServiceRef);
 			networkBuildTaskManager.execute(visualStyleFactory.createTaskIterator());
-			
+
 
 			// Layout services
 			CyLayoutAlgorithmManager layoutManagerServiceRef = getService(bc, CyLayoutAlgorithmManager.class);
