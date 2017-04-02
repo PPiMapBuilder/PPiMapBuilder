@@ -1,0 +1,3 @@
+[submodule "ppi-query"]
+	path = ppi-query
+	url = https://github.com/Soaring-Outliers/ppi-query.git
