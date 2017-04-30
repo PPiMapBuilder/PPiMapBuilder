@@ -31,6 +31,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import java.util.Collection;
 import java.util.HashMap;
 
+@Deprecated
 public class InteractomeNetworkQueryTaskFactory implements TaskFactory {
 	private final ExecutorServiceManager executorServiceManager;
 	private final Organism referenceOrganism;

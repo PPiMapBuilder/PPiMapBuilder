@@ -20,7 +20,6 @@
     
 package ch.picard.ppimapbuilder.ui.querywindow;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 import ch.picard.ppimapbuilder.networkbuilder.PMBInteractionNetworkBuildTaskFactory;
@@ -37,6 +36,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Map;
 
 /**
  * PPiMapBuilder interaction query window
@@ -141,13 +141,18 @@ public class QueryWindow extends JFrame implements NetworkQueryParameters, Focus
 		});
 	}
 
-	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
+	public void updateDatabases(List<Map> databases) {
 		for (NetworkQueryPanel networkQueryPanel : networkQueryPanels.getTabPanels())
-			networkQueryPanel.updateLists(databases, organisms);
+			networkQueryPanel.updateDatabases(databases);
+	}
+
+	public void updateOrganisms(List<Organism> organisms) {
+		for (NetworkQueryPanel networkQueryPanel : networkQueryPanels.getTabPanels())
+			networkQueryPanel.updateOrganisms(organisms);
 	}
 
 	@Override
-	public List<PsicquicService> getSelectedDatabases() {
+	public List<Map> getSelectedDatabases() {
 		return networkQueryPanels.getActivePanel().getSelectedDatabases();
 	}
 

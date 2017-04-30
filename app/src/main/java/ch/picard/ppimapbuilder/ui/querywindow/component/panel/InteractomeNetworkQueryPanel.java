@@ -1,6 +1,5 @@
 package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.DatabaseSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.ReferenceOrganismSelectionPanel;
@@ -15,6 +14,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQueryPanel, FocusListener {
 
@@ -55,7 +55,7 @@ public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQuery
 	}
 
 	@Override
-	public List<PsicquicService> getSelectedDatabases() {
+	public List<Map> getSelectedDatabases() {
 		return databaseSelectionPanel.getSelectedDatabases();
 	}
 
@@ -65,10 +65,14 @@ public class InteractomeNetworkQueryPanel extends JPanel implements NetworkQuery
 	}
 
 	@Override
-	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
-		referenceOrganismSelectionPanel.updateList(organisms);
-		databaseSelectionPanel.updateList(databases);
+	public void updateDatabases(List<Map> databases) {
+		databaseSelectionPanel.updateDatabases(databases);
 	}
+
+    @Override
+    public void updateOrganisms(List<Organism> organisms) {
+        referenceOrganismSelectionPanel.updateOrganisms(organisms);
+    }
 
 	@Override
 	public JComponent getComponent() {

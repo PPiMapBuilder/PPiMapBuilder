@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+@Deprecated
 class FetchInteractionsTask extends AbstractThreadedTask {
 
 	private final Collection<PsicquicService> psicquicServices;

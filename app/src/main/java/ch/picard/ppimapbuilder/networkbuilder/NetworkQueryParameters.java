@@ -20,10 +20,10 @@
     
 package ch.picard.ppimapbuilder.networkbuilder;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 
 import java.util.List;
+import java.util.Map;
 
 public interface NetworkQueryParameters {
 
@@ -33,7 +33,7 @@ public interface NetworkQueryParameters {
 
 	public List<Organism> getOtherOrganisms();
 
-	public List<PsicquicService> getSelectedDatabases();
+	public List<Map> getSelectedDatabases();
 
 	public boolean isInteractomeQuery();
 

@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutionException;
  * A PSICQUIC client capable of querying multiple service with multiple thread.<br/>
  * Also makes a cluster (MiCluster) of resulted interaction to remove duplicates.
  */
-//@Deprecated
+@Deprecated
 public class ThreadedPsicquicClient extends AbstractThreadedClient {
 
 	// Clients for each services

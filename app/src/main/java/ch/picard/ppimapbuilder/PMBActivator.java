@@ -55,7 +55,6 @@ import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -91,15 +90,6 @@ public class PMBActivator extends AbstractCyActivator {
 	 */
 	@Override
 	public void start(BundleContext bc) throws Exception {
-		ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
-			@Override
-			public void run() throws Exception {
-				IFn require = Clojure.var("clojure.core", "require");
-				require.invoke(Clojure.read("ppi-query.interaction.miql"));
-				IFn getQueryByTaxon = Clojure.var("ppi-query.interaction.miql", "get-query-by-taxon");
-				System.out.println(getQueryByTaxon.invoke(9606).toString());
-			}
-		}, clojure.core__init.class);
 		context = bc;
 		OpenBrowser openBrowser = getService(bc, OpenBrowser.class);
 

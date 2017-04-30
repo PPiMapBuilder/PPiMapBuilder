@@ -46,6 +46,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * PPiMapBuilder setting window
@@ -153,8 +154,8 @@ public class SettingWindow extends JDialog implements FocusListener {
 	private void saveSettings() {
 		// DATABASE SETTINGS SAVE
 		ArrayList<String> databases = new ArrayList<String>();
-		for (PsicquicService s : databaseSettingPanel.getSelectedDatabases()) {
-			databases.add(s.getName());
+		for (Map s : databaseSettingPanel.getSelectedDatabases()) {
+			databases.add((String) s.get("name"));
 		}
 		PMBSettings.getInstance().setDatabaseList(databases);
 

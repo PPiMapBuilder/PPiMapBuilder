@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 /**
  * /!\ ThreadedPsicquicClient will be replaced by PsicquicRequestBuilder
  */
-//@Deprecated
+@Deprecated
 public class ThreadedPsicquicClientTest {
 
 	private static final List<PsicquicService> services = Arrays.asList(

@@ -28,10 +28,7 @@ import org.hupo.psi.mi.psicquic.wsclient.PsicquicSimpleClient;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PsicquicRequestBuilder {
 

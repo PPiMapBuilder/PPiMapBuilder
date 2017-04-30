@@ -42,6 +42,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 import java.util.Collection;
 import java.util.HashMap;
 
+@Deprecated
 public class FetchInteractionsTask extends AbstractThreadedTask {
 
 	private ConcurrentFetcherIterator<BinaryInteraction> interactionIterator = null;

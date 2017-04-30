@@ -20,6 +20,10 @@
     
 package ch.picard.ppimapbuilder.util;
 
+import jdk.nashorn.internal.codegen.CompilerConstants;
+
+import java.util.concurrent.Callable;
+
 /**
  * This is to fix JVM's factory auto-discovery, etc..
  * (things such as JAXB and StAX might not always work
@@ -29,18 +33,32 @@ package ch.picard.ppimapbuilder.util;
  *         Found at : https://github.com/cytoscape/cytoscape-impl/blob/develop/biopax-impl/src/main/java/org/cytoscape/biopax/internal/util/ClassLoaderHack.java
  */
 public class ClassLoaderHack {
-	public static final void runWithHack(ThrowingRunnable runnable, Class<?> clazz) throws Exception {
+	public static final <T> T runWithHack(Callable<T> callable, Class<?> clazz) throws Exception {
 		Thread thread = Thread.currentThread();
 		ClassLoader loader = thread.getContextClassLoader();
 		try {
 			thread.setContextClassLoader(clazz.getClassLoader());
-			runnable.run();
+			return callable.call();
 		} finally {
 			thread.setContextClassLoader(loader);
 		}
 	}
 
-	public interface ThrowingRunnable {
-		public void run() throws Exception;
+	public static final void runWithHack(ThrowingRunnable runnable, Class<?> clazz) throws Exception {
+	    runWithHack((Callable<Void>) runnable, clazz);
+	}
+
+	public static final <T> T runWithClojure(Callable<T> callable) throws Exception {
+		return runWithHack(callable, clojure.core__init.class);
+	}
+
+	public abstract static class ThrowingRunnable implements Callable<Void> {
+		public abstract void run() throws Exception;
+
+		@Override
+		public Void call() throws Exception {
+			run();
+			return null;
+		}
 	}
 }

@@ -75,7 +75,7 @@ public class OtherOrganismSelectionPanel extends JPanel {
 	 * Updates the database list with an list of String
 	 * Updates the organism list with an list of organism
 	 */
-	public void updateList(List<Organism> organisms) {
+	public void updateOrganisms(List<Organism> organisms) {
 		// Creation of the database list
 		this.organismsCb.clear();
 		panSourceOtherOrganisms.removeAll();

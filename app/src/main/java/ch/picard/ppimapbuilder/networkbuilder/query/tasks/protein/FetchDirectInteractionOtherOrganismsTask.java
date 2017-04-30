@@ -34,6 +34,7 @@ import psidev.psi.mi.tab.model.BinaryInteraction;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+@Deprecated
 class FetchDirectInteractionOtherOrganismsTask extends AbstractThreadedTask {
 
 	private final Collection<PsicquicService> psicquicServices;

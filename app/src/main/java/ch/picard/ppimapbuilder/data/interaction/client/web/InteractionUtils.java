@@ -185,10 +185,10 @@ public class InteractionUtils {
 		return validInteractions;
 	}
 
-	public static List<String> psicquicServicesToStrings(Collection<PsicquicService> services) {
+	public static List<String> psicquicServicesToStrings(Collection<Map> services) {
 		ArrayList<String> out = new ArrayList<String>();
-		for (PsicquicService service : services) {
-			out.add(service.getName());
+		for (Map service : services) {
+			out.add((String) service.get("name"));
 		}
 		return out;
 	}

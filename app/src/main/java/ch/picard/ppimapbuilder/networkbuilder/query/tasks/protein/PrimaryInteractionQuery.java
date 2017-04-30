@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+@Deprecated
 class PrimaryInteractionQuery implements Callable<PrimaryInteractionQuery> {
 
 	private final Double MINIMUM_ORTHOLOGY_SCORE;

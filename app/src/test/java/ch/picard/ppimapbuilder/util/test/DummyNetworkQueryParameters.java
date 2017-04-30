@@ -25,6 +25,7 @@ import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
 
 import java.util.List;
+import java.util.Map;
 
 public class DummyNetworkQueryParameters implements NetworkQueryParameters {
 	private final List<PsicquicService> selectedDatabases;
@@ -62,8 +63,8 @@ public class DummyNetworkQueryParameters implements NetworkQueryParameters {
 	}
 
 	@Override
-	public List<PsicquicService> getSelectedDatabases() {
-		return selectedDatabases;
+	public List<Map> getSelectedDatabases() {
+		return null;//selectedDatabases;
 	}
 
 	@Override

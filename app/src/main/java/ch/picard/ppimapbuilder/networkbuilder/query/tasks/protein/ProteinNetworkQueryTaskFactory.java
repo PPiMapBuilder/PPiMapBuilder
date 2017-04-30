@@ -32,6 +32,7 @@ import uk.ac.ebi.enfin.mi.cluster.EncoreInteraction;
 
 import java.util.*;
 
+@Deprecated
 public class ProteinNetworkQueryTaskFactory implements TaskFactory {
 
 	private final ExecutorServiceManager executorServiceManager;

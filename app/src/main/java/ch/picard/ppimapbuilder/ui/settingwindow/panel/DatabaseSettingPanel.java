@@ -20,12 +20,12 @@
     
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
+import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -36,12 +36,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 
 public class DatabaseSettingPanel extends JPanel implements TabContent {
 
 	private static final long serialVersionUID = 1L;
-	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
+	private final LinkedHashMap<Map, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
 	private final ActionListener checkBoxClicked;
@@ -52,7 +54,7 @@ public class DatabaseSettingPanel extends JPanel implements TabContent {
 		setName("PSICQUIC Databases");
 
 		setBorder(new EmptyBorder(5, 5, 5, 5));
-		this.databases = new LinkedHashMap<PsicquicService, JCheckBox>();
+		this.databases = new LinkedHashMap<Map, JCheckBox>();
 
 		final JLabel lblSourceDatabases = new JLabel("Preferred databases:");
 		add(lblSourceDatabases, BorderLayout.NORTH);
@@ -80,11 +82,11 @@ public class DatabaseSettingPanel extends JPanel implements TabContent {
 	/**
 	 * Get the list of selected databases
 	 */
-	public List<PsicquicService> getSelectedDatabases() {
-		ArrayList<PsicquicService> databaseList = new ArrayList<PsicquicService>();
+	public List<Map> getSelectedDatabases() {
+		ArrayList<Map> databaseList = new ArrayList<Map>();
 
 		// For each entry of the database linkedHashmap
-		for (Entry<PsicquicService, JCheckBox> entry : databases.entrySet()) {
+		for (Entry<Map, JCheckBox> entry : databases.entrySet()) {
 			if (entry.getValue().isSelected()) { // If the checkbox is selected
 				databaseList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
@@ -98,24 +100,32 @@ public class DatabaseSettingPanel extends JPanel implements TabContent {
 	@Override
 	public void validate() {
 		if (!beenUpdated) {
-			PsicquicRegistry reg = PsicquicRegistry.getInstance();
-
 			try {
 				// Creation of the database list
 				databases.clear();
 				panSourceDatabases.removeAll();
 
-				for (PsicquicService db : reg.getServices()) {
-					JCheckBox j = new JCheckBox(db.getName(), true);
-					j.setEnabled(true);
-					j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(db.getName()));
-					j.addActionListener(checkBoxClicked);
-					databases.put(db, j);
+				ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
+					@Override
+					public void run() throws Exception {
+						List<Map> services = PPIQueryAPI.getServices();
+						for (Map service : services) {
+						    String name = (String) service.get("name");
 
-					panSourceDatabases.add(j);
-				}
+							JCheckBox j = new JCheckBox(name, true);
+							j.setEnabled(true);
+							j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(name));
+							j.addActionListener(checkBoxClicked);
+							databases.put(service, j);
+
+							panSourceDatabases.add(j);
+						}
+					}
+				}, clojure.core__init.class);
+
 				beenUpdated = true;
-			} catch (IOException e) {
+			} catch (Exception e) {
+			    e.printStackTrace();
 				JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
 			}
 		}

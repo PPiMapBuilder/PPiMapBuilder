@@ -23,6 +23,7 @@ package ch.picard.ppimapbuilder.data.interaction.client.web;
 import java.util.Iterator;
 import java.util.List;
 
+@Deprecated
 public class PsicquicService {
 
 	final private String name;

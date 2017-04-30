@@ -36,6 +36,7 @@ import org.cytoscape.work.TaskMonitor;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 class FetchOrthologsOfInteractorsTask extends AbstractThreadedTask {
 
 	// Input

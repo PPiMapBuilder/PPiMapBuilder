@@ -20,12 +20,11 @@
 
 package ch.picard.ppimapbuilder.ui.resultpanel;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.ui.util.label.JHyperlinkLabel;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import com.eclipsesource.json.JsonObject;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang.NotImplementedException;
@@ -33,6 +32,7 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
+import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -44,12 +44,13 @@ import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Creates new ResultPanel form
@@ -812,13 +813,20 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		this.panelSource.removeAll();
 
 		// Construct a map to get Database URL from name
-		PsicquicRegistry reg = PsicquicRegistry.getInstance();
-		LinkedHashMap<String, String> getDbUrl = new LinkedHashMap<String, String>();
+		final LinkedHashMap<String, String> getDbUrl = new LinkedHashMap<String, String>();
 		try {
-			for (PsicquicService db : reg.getServices()) {
-				getDbUrl.put(db.getName().toLowerCase(), db.getOrganizationUrl());
-			}
-		} catch (IOException e) {
+			ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
+				@Override
+				public void run() throws Exception {
+					List<Map> services = PPIQueryAPI.getServices();
+					for (Map service : services) {
+						String name = (String) service.get("name");
+						String organizationUrl = (String) service.get("organizationUrl");
+						getDbUrl.put(name.toLowerCase(), organizationUrl);
+					}
+				}
+			}, clojure.core__init.class);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

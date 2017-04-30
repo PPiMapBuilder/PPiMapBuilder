@@ -63,7 +63,7 @@ public class ReferenceOrganismSelectionPanel extends JPanel {
 	/**
 	 * Updates the database list with an list of String
 	 */
-	public void updateList(List<Organism> organisms) {
+	public void updateOrganisms(List<Organism> organisms) {
 		refOrgCb.removeAllItems();
 		for (Organism organism : organisms) {
 			refOrgCb.addItem(organism);

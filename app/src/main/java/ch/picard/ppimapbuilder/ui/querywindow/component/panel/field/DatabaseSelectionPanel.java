@@ -20,7 +20,6 @@
 
 package ch.picard.ppimapbuilder.ui.querywindow.component.panel.field;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.label.HelpIcon;
@@ -35,7 +34,7 @@ import java.util.Map.Entry;
 public class DatabaseSelectionPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private final LinkedHashMap<PsicquicService, JCheckBox> databases;
+	private final LinkedHashMap<Map, JCheckBox> databases;
 	private final JPanel panSourceDatabases;
 
 	public DatabaseSelectionPanel() {
@@ -64,21 +63,23 @@ public class DatabaseSelectionPanel extends JPanel {
 		scrollPaneSourceDatabases.setViewportView(panSourceDatabases);
 		panSourceDatabases.setLayout(new BoxLayout(panSourceDatabases, BoxLayout.Y_AXIS));
 
-		databases = new LinkedHashMap<PsicquicService, JCheckBox>();
+		databases = new LinkedHashMap<Map, JCheckBox>();
 	}
 
 	/**
 	 * Updates the database list with an list of String
 	 */
-	public void updateList(List<PsicquicService> dbs) {
+	public void updateDatabases(List<Map> dbs) {
 		// Creation of the database list
 		databases.clear();
 		panSourceDatabases.removeAll();
 
 		// Checked and active
-		for (PsicquicService db : dbs) {
-			if (PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
+		for (Map db : dbs) {
+			String name = (String) db.get("name");
+			Boolean active = (Boolean) db.get("active");
+			if (PMBSettings.getInstance().getDatabaseList().contains(name) && active) {
+				JCheckBox j = new JCheckBox(name, true);
 				j.setEnabled(true);
 				j.setSelected(true);
 				databases.put(db, j);
@@ -87,9 +88,11 @@ public class DatabaseSelectionPanel extends JPanel {
 			}
 		}
 		// Checked and inactive
-		for (PsicquicService db : dbs) {
-			if (PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && !db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
+		for (Map db : dbs) {
+			String name = (String) db.get("name");
+			Boolean active = (Boolean) db.get("active");
+			if (PMBSettings.getInstance().getDatabaseList().contains(name) && !active) {
+				JCheckBox j = new JCheckBox(name, true);
 				j.setEnabled(false);
 				j.setSelected(false);
 				databases.put(db, j);
@@ -98,9 +101,11 @@ public class DatabaseSelectionPanel extends JPanel {
 			}
 		}
 		// Unchecked but active
-		for (PsicquicService db : dbs) {
-			if (!PMBSettings.getInstance().getDatabaseList().contains(db.getName()) && db.isActive()) {
-				JCheckBox j = new JCheckBox(db.getName(), true);
+		for (Map db : dbs) {
+			String name = (String) db.get("name");
+			Boolean active = (Boolean) db.get("active");
+			if (!PMBSettings.getInstance().getDatabaseList().contains(name) && active) {
+				JCheckBox j = new JCheckBox(name, true);
 				j.setEnabled(true);
 				j.setSelected(false);
 				databases.put(db, j);
@@ -113,17 +118,17 @@ public class DatabaseSelectionPanel extends JPanel {
 	/**
 	 * Get the list of selected databases
 	 */
-	public List<PsicquicService> getSelectedDatabases() {
-		Set<PsicquicService> databaseList = new LinkedHashSet<PsicquicService>();
+	public List<Map> getSelectedDatabases() {
+		Set<Map> databaseList = new LinkedHashSet<Map>();
 
 		// For each entry of the database linkedHashmap
-		for (Entry<PsicquicService, JCheckBox> entry : databases.entrySet()) {
+		for (Entry<Map, JCheckBox> entry : databases.entrySet()) {
 			if (entry.getValue().isSelected()) // If the checkbox is selected
 			{
 				databaseList.add(entry.getKey()); // The database name is add into the list to be returned
 			}
 		}
-		return new ArrayList<PsicquicService>(databaseList);
+		return new ArrayList<Map>(databaseList);
 	}
 
 }

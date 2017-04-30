@@ -32,6 +32,7 @@ import org.cytoscape.work.TaskMonitor;
 
 import java.util.*;
 
+@Deprecated
 public class PMBInteractionQueryTaskFactory extends AbstractTask {
 
 	private final ExecutorServiceManager executorServiceManager;

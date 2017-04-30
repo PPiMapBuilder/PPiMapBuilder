@@ -34,6 +34,7 @@ import java.util.ListIterator;
 /**
  * Retrieve the PSICQUIC registry in a very simple way. TODO: Use Registry and XML file
  */
+@Deprecated
 public class PsicquicRegistry {
 
 	/**  Singleton instance*/

@@ -1,6 +1,5 @@
 package ch.picard.ppimapbuilder.ui.querywindow.component.panel;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicService;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.DatabaseSelectionPanel;
 import ch.picard.ppimapbuilder.ui.querywindow.component.panel.field.OtherOrganismSelectionPanel;
@@ -12,6 +11,7 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 
 public class ProteinNetworkQueryPanel extends CustomSplitPane implements NetworkQueryPanel {
 
@@ -68,7 +68,7 @@ public class ProteinNetworkQueryPanel extends CustomSplitPane implements Network
 	}
 
 	@Override
-	public List<PsicquicService> getSelectedDatabases() {
+	public List<Map> getSelectedDatabases() {
 		return databaseSelectionPanel.getSelectedDatabases();
 	}
 
@@ -78,10 +78,14 @@ public class ProteinNetworkQueryPanel extends CustomSplitPane implements Network
 	}
 
 	@Override
-	public void updateLists(List<PsicquicService> databases, List<Organism> organisms) {
-		otherOrganismSelectionPanel.updateList(organisms);
-		referenceOrganismSelectionPanel.updateList(organisms);
-		databaseSelectionPanel.updateList(databases);
+	public void updateOrganisms(List<Organism> organisms) {
+		otherOrganismSelectionPanel.updateOrganisms(organisms);
+		referenceOrganismSelectionPanel.updateOrganisms(organisms);
+	}
+
+	@Override
+	public void updateDatabases(List<Map> databases) {
+		databaseSelectionPanel.updateDatabases(databases);
 	}
 
 	@Override

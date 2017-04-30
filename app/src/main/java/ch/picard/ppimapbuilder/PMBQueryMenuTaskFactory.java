@@ -20,16 +20,19 @@
     
 package ch.picard.ppimapbuilder;
 
-import ch.picard.ppimapbuilder.data.interaction.client.web.PsicquicRegistry;
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
+import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * PPiMapBuilder app sub menu
@@ -51,15 +54,22 @@ public class PMBQueryMenuTaskFactory extends AbstractTaskFactory {
 						SwingUtilities.invokeLater(new Runnable() {
 							@Override
 							public void run() {
+								queryWindow.updateOrganisms(
+										UserOrganismRepository.getInstance().getOrganisms()
+								);
+
 								try {
-									PsicquicRegistry reg = PsicquicRegistry.getInstance();
-									queryWindow.updateLists(
-											reg.getServices(),
-											UserOrganismRepository.getInstance().getOrganisms()
-									);
+									List<Map> services = ClassLoaderHack.runWithClojure(new Callable<List<Map>>() {
+										@Override
+										public List<Map> call() throws Exception {
+											return PPIQueryAPI.getServices();
+										}
+									});
+									queryWindow.updateDatabases(services);
 
 									queryWindow.setVisible(true);
-								} catch (IOException e) {
+								} catch (Exception e) {
+								    e.printStackTrace();
 									JOptionPane.showMessageDialog(null, "Unable to get PSICQUIC databases");
 								}
 							}
