@@ -22,10 +22,14 @@ package ch.picard.ppimapbuilder.data.organism;
 
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
+import ch.picard.ppimapbuilder.util.ClassLoaderHack;
+import com.google.common.collect.Lists;
+import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Class that keeps a register of organisms in PMB
@@ -40,29 +44,27 @@ public class UserOrganismRepository extends OrganismRepository {
 		return _instance;
 	}
 
-	private UserOrganismRepository(List<Organism> organismList) {
-		super(organismList);
-	}
 	private UserOrganismRepository() {
-		this(PMBSettings.getInstance().getOrganismList());
+		super(PMBSettings.getInstance().getOrganismList());
 	}
 	
 	public static void resetToSettings() {
 		_instance = new UserOrganismRepository();
 	}
 	
-	public static ArrayList<Organism> getDefaultOrganismList() {
-		ArrayList<Organism> organismList = new ArrayList<Organism>();
-		organismList.add(new Organism("Homo sapiens", "HUMAN", "Human", 9606));
-		organismList.add(new Organism("Arabidopsis thaliana", "ARATH", "Mouse-ear cress", 3702));
-		organismList.add(new Organism("Caenorhabditis elegans", "CAEEL", "", 6239));
-		organismList.add(new Organism("Drosophila melanogaster", "DROME", "Fruit fly", 7227));
-		organismList.add(new Organism("Mus musculus", "MOUSE", "Mouse", 10090));
-		organismList.add(new Organism("Saccharomyces cerevisiae (strain ATCC 204508 / S288c)", "YEAST", "Baker's yeast", 559292));
-		organismList.add(new Organism("Schizosaccharomyces pombe (strain 972 / ATCC 24843)", "SCHPO", "Fission yeast", 284812));
-		organismList.add(new Organism("Plasmodium falciparum (isolate 3D7)", "PLAF7", "", 36329));
-		organismList.add(new Organism("Gallus gallus", "CHICK", "Chicken", 9031));
-		return organismList;
+	public static List<Organism> getDefaultOrganismList() {
+		List<Integer> taxIds = Lists.newArrayList(
+				9606, 3702, 6239, 7227, 10090, 559292, 284812, 36329, 9031
+		);
+		List<Organism> organisms = Lists.newArrayList();
+
+		for (Integer taxId : taxIds) {
+		    organisms.add(
+                    InParanoidOrganismRepository.getInstance().getOrganismByTaxId(taxId)
+			);
+		}
+
+		return organisms;
 	}
 
 	public void removeOrganism(Organism o) {

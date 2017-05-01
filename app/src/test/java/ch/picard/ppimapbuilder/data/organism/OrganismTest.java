@@ -111,7 +111,7 @@ public class OrganismTest extends TestCase {
 						String mnemonic = document.select("mnemonic").text();
 						String commonName = document.select("commonName").text();
 
-						Organism org = new Organism(scientificName, mnemonic, commonName, id);
+						Organism org = new Organism(scientificName, id);
 
 						System.out.println("new Organism(\"" + scientificName + "\", \"" + mnemonic + "\", \"" + commonName + "\", " + id + "),");
 

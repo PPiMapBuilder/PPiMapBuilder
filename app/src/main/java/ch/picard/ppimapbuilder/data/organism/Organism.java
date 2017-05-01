@@ -21,6 +21,7 @@
 package ch.picard.ppimapbuilder.data.organism;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Organism representation inspired by UniProt taxonomy RDF format
@@ -46,11 +47,20 @@ public class Organism implements Comparable<Organism>, Serializable {
 	// Unique identifier for Organisms
 	private final int ncbiTaxId;
 
+	public Organism(Map organism) {
+		this(
+				(String) organism.get("scientific-name"),
+				"",
+				(String) organism.get("common-name"),
+				((Long) organism.get("taxon-id")).intValue()
+		);
+	}
+
 	public Organism(String scientificName, int taxId) {
 		this(scientificName, "", "", taxId);
 	}
 
-	public Organism(String scientificName, String mnemonic, String commonName, int taxId) {
+	private Organism(String scientificName, String mnemonic, String commonName, int taxId) {
 		String[] parts = scientificName.split(" ");
 
 		// Format genus name to have a capitalized word

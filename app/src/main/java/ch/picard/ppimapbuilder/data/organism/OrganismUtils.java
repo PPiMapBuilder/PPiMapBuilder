@@ -46,18 +46,20 @@ public class OrganismUtils {
 		return out;
 	}
 
+	@Deprecated
 	public static Organism findOrganismInMITABTaxId(OrganismRepository repository, String taxId) {
 		Matcher matcher;
 		int taxIdA = Integer.parseInt(taxId);
 		Organism organism = repository.getOrganismByTaxId(taxIdA);
 
+		/*
 		if(organism == null && (matcher = pattern.matcher(taxId)).matches()) {
 			String[] genusSpecies = matcher.group(1).split(" ");
 			organism = InParanoidOrganismRepository.getInstance().getOrganismByGenusAndSpecies(
 					genusSpecies[0],
 					genusSpecies[1]
 			);
-		}
+		}*/
 		return organism;
 	}
 

@@ -48,8 +48,15 @@ public class ClassLoaderHack {
 	    runWithHack((Callable<Void>) runnable, clazz);
 	}
 
-	public static final <T> T runWithClojure(Callable<T> callable) throws Exception {
-		return runWithHack(callable, clojure.core__init.class);
+	/**
+	 * Run code with a class loader compatible with Clojure execution
+	 */
+	public static final <T> T runWithClojure(Callable<T> callable) {
+		try {
+			return runWithHack(callable, clojure.core__init.class);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public abstract static class ThrowingRunnable implements Callable<Void> {

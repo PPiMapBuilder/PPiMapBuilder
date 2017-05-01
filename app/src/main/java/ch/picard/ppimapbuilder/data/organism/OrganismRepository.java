@@ -20,29 +20,27 @@
     
 package ch.picard.ppimapbuilder.data.organism;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 class OrganismRepository {
 
     protected final List<Organism> organisms;
 
-    OrganismRepository(Organism... organisms) {
-        this.organisms = Arrays.asList(organisms);
+    OrganismRepository(List organisms) {
+        this.organisms = Lists.newArrayList();
+        for (Object organism : organisms) {
+            if (organism instanceof Map) {
+                this.organisms.add(new Organism((Map) organism));
+            } else if (organism instanceof Organism) {
+                this.organisms.add((Organism) organism);
+            }
+        }
     }
-
-    OrganismRepository(List<Organism> organisms) {
-        this.organisms = new ArrayList<Organism>(organisms);
-    }
-
-	public Organism getOrganismByGenusAndSpecies(String genus, String species) {
-		for (Organism organism : organisms) {
-			if(organism.getGenus().equalsIgnoreCase(genus) && organism.getSpecies().equalsIgnoreCase(species))
-				return organism;
-		}
-		return null;
-	}
 
     public Organism getOrganismBySimpleName(String simpleName) {
         for (Organism org : organisms)
