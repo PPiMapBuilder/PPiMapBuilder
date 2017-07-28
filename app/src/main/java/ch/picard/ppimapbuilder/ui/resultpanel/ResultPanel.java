@@ -32,7 +32,7 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
-import ppi_query.api.PPIQueryAPI;
+import ppi_query.api.ApiImpl;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Creates new ResultPanel form
@@ -818,7 +817,7 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 			ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
 				@Override
 				public void run() throws Exception {
-					List<Map> services = PPIQueryAPI.getServices();
+					List<Map> services = ApiImpl.getServices();
 					for (Map service : services) {
 						String name = (String) service.get("name");
 						String organizationUrl = (String) service.get("organizationUrl");

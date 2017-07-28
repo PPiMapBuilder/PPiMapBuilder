@@ -20,11 +20,7 @@
     
 package ch.picard.ppimapbuilder.data.organism;
 
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
-import ppi_query.api.PPIQueryAPI;
-
-import java.util.List;
-import java.util.concurrent.Callable;
+import ch.picard.ppimapbuilder.PPiQueryService;
 
 /**
  * Repository of InParanoid supported Organisms
@@ -36,12 +32,7 @@ public class InParanoidOrganismRepository extends OrganismRepository {
     private InParanoidOrganismRepository() {
         super(
                 // Load from ppi-query
-                ClassLoaderHack.runWithClojure(new Callable<List>() {
-                    @Override
-                    public List call() throws Exception {
-                        return PPIQueryAPI.getOrganisms();
-                    }
-                })
+                PPiQueryService.getInstance().getOrganisms()
         );
     }
 

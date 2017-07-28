@@ -22,14 +22,10 @@ package ch.picard.ppimapbuilder.data.organism;
 
 import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import com.google.common.collect.Lists;
-import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Class that keeps a register of organisms in PMB

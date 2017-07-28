@@ -20,25 +20,22 @@
     
 package ch.picard.ppimapbuilder.ui.settingwindow.panel;
 
+import ch.picard.ppimapbuilder.PPiQueryService;
 import ch.picard.ppimapbuilder.data.settings.PMBSettings;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
 import ch.picard.ppimapbuilder.ui.util.PMBUIStyle;
 import ch.picard.ppimapbuilder.ui.util.tabpanel.TabContent;
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
-import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
 
 public class DatabaseSettingPanel extends JPanel implements TabContent {
 
@@ -105,23 +102,18 @@ public class DatabaseSettingPanel extends JPanel implements TabContent {
 				databases.clear();
 				panSourceDatabases.removeAll();
 
-				ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
-					@Override
-					public void run() throws Exception {
-						List<Map> services = PPIQueryAPI.getServices();
-						for (Map service : services) {
-						    String name = (String) service.get("name");
+				List<Map> services = PPiQueryService.getInstance().getPsicquicServices();
+				for (Map service : services) {
+					String name = (String) service.get("name");
 
-							JCheckBox j = new JCheckBox(name, true);
-							j.setEnabled(true);
-							j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(name));
-							j.addActionListener(checkBoxClicked);
-							databases.put(service, j);
+					JCheckBox j = new JCheckBox(name, true);
+					j.setEnabled(true);
+					j.setSelected(PMBSettings.getInstance().getDatabaseList().contains(name));
+					j.addActionListener(checkBoxClicked);
+					databases.put(service, j);
 
-							panSourceDatabases.add(j);
-						}
-					}
-				}, clojure.core__init.class);
+					panSourceDatabases.add(j);
+				}
 
 				beenUpdated = true;
 			} catch (Exception e) {

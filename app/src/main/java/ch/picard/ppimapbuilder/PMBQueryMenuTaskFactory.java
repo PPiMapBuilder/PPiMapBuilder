@@ -22,17 +22,14 @@ package ch.picard.ppimapbuilder;
 
 import ch.picard.ppimapbuilder.data.organism.UserOrganismRepository;
 import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
-import ppi_query.api.PPIQueryAPI;
 
 import javax.swing.*;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * PPiMapBuilder app sub menu
@@ -59,12 +56,7 @@ public class PMBQueryMenuTaskFactory extends AbstractTaskFactory {
 								);
 
 								try {
-									List<Map> services = ClassLoaderHack.runWithClojure(new Callable<List<Map>>() {
-										@Override
-										public List<Map> call() throws Exception {
-											return PPIQueryAPI.getServices();
-										}
-									});
+									List<Map> services = PPiQueryService.getInstance().getPsicquicServices();
 									queryWindow.updateDatabases(services);
 
 									queryWindow.setVisible(true);
