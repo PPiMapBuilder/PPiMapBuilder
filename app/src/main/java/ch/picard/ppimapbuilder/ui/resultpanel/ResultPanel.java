@@ -20,6 +20,7 @@
 
 package ch.picard.ppimapbuilder.ui.resultpanel;
 
+import ch.picard.ppimapbuilder.PPiQueryService;
 import ch.picard.ppimapbuilder.data.organism.InParanoidOrganismRepository;
 import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.protein.Protein;
@@ -32,7 +33,6 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.util.swing.OpenBrowser;
-import ppi_query.api.ApiImpl;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -814,17 +814,12 @@ public class ResultPanel extends javax.swing.JPanel implements CytoPanelComponen
 		// Construct a map to get Database URL from name
 		final LinkedHashMap<String, String> getDbUrl = new LinkedHashMap<String, String>();
 		try {
-			ClassLoaderHack.runWithHack(new ClassLoaderHack.ThrowingRunnable() {
-				@Override
-				public void run() throws Exception {
-					List<Map> services = ApiImpl.getServices();
-					for (Map service : services) {
-						String name = (String) service.get("name");
-						String organizationUrl = (String) service.get("organizationUrl");
-						getDbUrl.put(name.toLowerCase(), organizationUrl);
-					}
-				}
-			}, clojure.core__init.class);
+			List<Map> services = PPiQueryService.getInstance().getPsicquicServices();
+			for (Map service : services) {
+				String name = (String) service.get("name");
+				String organizationUrl = (String) service.get("organizationUrl");
+				getDbUrl.put(name.toLowerCase(), organizationUrl);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
