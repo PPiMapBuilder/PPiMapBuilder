@@ -9,10 +9,17 @@ import java.util.concurrent.Callable;
 
 public class PPiQueryService implements Api {
 
-    private final Api api = new ApiImpl();
+    private final Api api;
     private final static PPiQueryService instance = new PPiQueryService();
 
-    private PPiQueryService() {}
+    private PPiQueryService() {
+        api = ClassLoaderHack.runWithClojure(new Callable<ApiImpl>() {
+            @Override
+            public ApiImpl call() throws Exception {
+                return new ApiImpl();
+            }
+        });
+    }
 
     public static PPiQueryService getInstance() {
         return instance;
