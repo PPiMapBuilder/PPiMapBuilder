@@ -44,4 +44,14 @@ public class PPiQueryService implements Api {
             }
         });
     }
+
+    @Override
+    public List getInteractome(final List databaseNames, final Long organismId) {
+        return ClassLoaderHack.runWithClojure(new Callable<List>() {
+            @Override
+            public List call() throws Exception {
+                return api.getInteractome(databaseNames, organismId);
+            }
+        });
+    }
 }

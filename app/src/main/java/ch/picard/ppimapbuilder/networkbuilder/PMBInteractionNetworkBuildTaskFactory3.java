@@ -20,9 +20,10 @@
 
 package ch.picard.ppimapbuilder.networkbuilder;
 
-import ch.picard.ppimapbuilder.PPiQueryService;
 import ch.picard.ppimapbuilder.data.interaction.Interaction;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
+import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
+import ch.picard.ppimapbuilder.networkbuilder.query.PMBInteractionQueryTaskFactory;
 import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -32,16 +33,18 @@ import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.work.AbstractTaskFactory;
-import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskIterator;
-import org.cytoscape.work.TaskMonitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * PPiMapBuilder network query and build
  */
-public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
+@Deprecated
+public class PMBInteractionNetworkBuildTaskFactory3 extends AbstractTaskFactory {
 
 	// Cytoscape services
 	private final CyNetworkManager networkManager;
@@ -62,7 +65,7 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	// Error output
 	private String errorMessage;
 
-	public PMBInteractionNetworkBuildTaskFactory(
+	public PMBInteractionNetworkBuildTaskFactory3(
 			final CyNetworkManager networkManager,
 			final CyNetworkNaming networkNaming,
 			final CyNetworkFactory networkFactory,
@@ -96,37 +99,20 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
-				new Task() {
-					@Override
-					public void run(TaskMonitor taskMonitor) throws Exception {
-						System.out.println("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-					    List<Map> dbs = networkQueryParameters.getSelectedDatabases();
-						List<String> dbNames = new ArrayList<String>();
-						for (Map db : dbs) {
-							dbNames.add(db.get("name").toString());
-						}
-						System.out.println(dbNames);
-						System.out.println((long) networkQueryParameters.getReferenceOrganism().getTaxId());
-						List interactions = PPiQueryService.getInstance().getInteractome(dbNames, (long) networkQueryParameters.getReferenceOrganism().getTaxId());
-						System.out.println(interactions);
-						for (Object stuff : interactions) {
-                            System.out.println(stuff);
-                        }
-					}
-
-					@Override
-					public void cancel() {
-
-					}
-				}
+				new PMBInteractionQueryTaskFactory(
+						interactions,
+						proteinOfInterestPool,
+						networkQueryParameters,
+						executorServiceManager
+				)
 		);
-//		taskIterator.append(
-//				new PMBCreateNetworkTask(
-//						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
-//						layoutAlgorithmManager, visualMappingManager, interactions,
-//						proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
-//				)
-//		);
+		taskIterator.append(
+				new PMBCreateNetworkTask(
+						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
+						layoutAlgorithmManager, visualMappingManager, interactions,
+						proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
+				)
+		);
 		return taskIterator;
 	}
 

@@ -31,9 +31,6 @@ import ch.picard.ppimapbuilder.ui.querywindow.QueryWindow;
 import ch.picard.ppimapbuilder.ui.resultpanel.ResultPanel;
 import ch.picard.ppimapbuilder.ui.resultpanel.listener.ResultPanelAction;
 import ch.picard.ppimapbuilder.ui.settingwindow.SettingWindow;
-import ch.picard.ppimapbuilder.util.ClassLoaderHack;
-import clojure.java.api.Clojure;
-import clojure.lang.IFn;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -55,6 +52,7 @@ import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
