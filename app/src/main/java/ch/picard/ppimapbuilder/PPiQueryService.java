@@ -54,4 +54,14 @@ public class PPiQueryService implements Api {
             }
         });
     }
+
+    @Override
+    public List getProteinNetwork(final List list, final Long aLong, final List list2, final List list3) {
+        return ClassLoaderHack.runWithClojure(new Callable<List>() {
+            @Override
+            public List call() throws Exception {
+                return api.getProteinNetwork(list, aLong, list2, list3);
+            }
+        });
+    }
 }

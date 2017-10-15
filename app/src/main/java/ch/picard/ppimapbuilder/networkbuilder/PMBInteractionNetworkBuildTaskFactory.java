@@ -22,8 +22,9 @@ package ch.picard.ppimapbuilder.networkbuilder;
 
 import ch.picard.ppimapbuilder.PPiQueryService;
 import ch.picard.ppimapbuilder.data.interaction.Interaction;
-import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
+import ch.picard.ppimapbuilder.data.organism.Organism;
+import ch.picard.ppimapbuilder.data.protein.Protein;
+import ch.picard.ppimapbuilder.networkbuilder.network.PMBCreateNetworkTask;
 import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.session.CyNetworkNaming;
@@ -36,7 +37,10 @@ import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * PPiMapBuilder network query and build
@@ -56,7 +60,6 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 	private final NetworkQueryParameters networkQueryParameters;
 
 	// Data output from network querying
-	private Set<UniProtEntry> proteinOfInterestPool; // not the same as user input
 	private Collection<Interaction> interactions;
 
 	// Error output
@@ -89,28 +92,30 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		long startTime = System.currentTimeMillis();
 
 		this.interactions = new ArrayList<Interaction>();
-		this.proteinOfInterestPool = new HashSet<UniProtEntry>();
-
-		ExecutorServiceManager executorServiceManager =
-				new ExecutorServiceManager((Runtime.getRuntime().availableProcessors() + 1) * 3);
 
 		TaskIterator taskIterator = new TaskIterator();
 		taskIterator.append(
 				new Task() {
 					@Override
 					public void run(TaskMonitor taskMonitor) throws Exception {
-						System.out.println("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
 					    List<Map> dbs = networkQueryParameters.getSelectedDatabases();
 						List<String> dbNames = new ArrayList<String>();
 						for (Map db : dbs) {
 							dbNames.add(db.get("name").toString());
 						}
-						System.out.println(dbNames);
-						System.out.println((long) networkQueryParameters.getReferenceOrganism().getTaxId());
-						List interactions = PPiQueryService.getInstance().getInteractome(dbNames, (long) networkQueryParameters.getReferenceOrganism().getTaxId());
-						System.out.println(interactions);
-						for (Object stuff : interactions) {
-                            System.out.println(stuff);
+                        long taxId = networkQueryParameters.getReferenceOrganism().getTaxId();
+
+                        if (networkQueryParameters.isInteractomeQuery()) {
+                            List interactions = PPiQueryService.getInstance().getInteractome(dbNames, taxId);
+                        } else {
+                            List<Organism> otherOrganisms = networkQueryParameters.getOtherOrganisms();
+                            List<Long> otherOrganismIds = new ArrayList<Long>();
+                            for (Organism otherOrganism : otherOrganisms) {
+                                otherOrganismIds.add(((long) otherOrganism.getTaxId()));
+                            }
+                            List<String> proteinIds = networkQueryParameters.getProteinOfInterestUniprotId();
+                            List its = PPiQueryService.getInstance().getProteinNetwork(dbNames, taxId, proteinIds, otherOrganismIds);
+                            interactions.addAll(convertInteractions(its, networkQueryParameters.getReferenceOrganism()));
                         }
 					}
 
@@ -120,13 +125,13 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 					}
 				}
 		);
-//		taskIterator.append(
-//				new PMBCreateNetworkTask(
-//						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
-//						layoutAlgorithmManager, visualMappingManager, interactions,
-//						proteinOfInterestPool, networkQueryParameters, executorServiceManager, startTime
-//				)
-//		);
+		taskIterator.append(
+				new PMBCreateNetworkTask(
+						networkManager, networkNaming, networkFactory, networkViewFactory, networkViewManager,
+						layoutAlgorithmManager, visualMappingManager, interactions,
+                        networkQueryParameters, startTime
+				)
+		);
 		return taskIterator;
 	}
 
@@ -142,7 +147,20 @@ public class PMBInteractionNetworkBuildTaskFactory extends AbstractTaskFactory {
 		return interactions;
 	}
 
-	protected Set<UniProtEntry> getProteinOfInterestPool() {
-		return proteinOfInterestPool;
-	}
+	public static List<Interaction> convertInteractions(Object interactionMaps, Organism refOrganism) {
+	    List<Interaction> interactions = new ArrayList<Interaction>();
+        for (Object interactionMap : ((List) interactionMaps)) {
+            Map interactionMap1 = (Map) interactionMap;
+            Map protA = (Map) interactionMap1.get("protein-a");
+            Organism orgA = new Organism((Map) protA.get("organism"));
+            Map protB = (Map) interactionMap1.get("protein-b");
+            Organism orgB = new Organism((Map) protB.get("organism"));
+
+            Protein proteinA = new Protein((String) protA.get("uniprotid"), orgA);
+            Protein proteinB = new Protein((String) protB.get("uniprotid"), orgB);
+            Interaction interaction = new Interaction(proteinA, proteinB, null, refOrganism);
+            interactions.add(interaction);
+        }
+        return interactions;
+    }
 }

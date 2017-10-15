@@ -23,27 +23,12 @@ package ch.picard.ppimapbuilder.networkbuilder.network;
 import ch.picard.ppimapbuilder.PMBActivator;
 import ch.picard.ppimapbuilder.data.interaction.Interaction;
 import ch.picard.ppimapbuilder.data.interaction.client.web.InteractionUtils;
-import ch.picard.ppimapbuilder.data.organism.Organism;
 import ch.picard.ppimapbuilder.data.organism.OrganismUtils;
 import ch.picard.ppimapbuilder.data.protein.Protein;
 import ch.picard.ppimapbuilder.data.protein.ProteinUtils;
 import ch.picard.ppimapbuilder.data.protein.UniProtEntry;
-import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologGroup;
-import ch.picard.ppimapbuilder.data.protein.ortholog.OrthologScoredProtein;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.ProteinOrthologWebCachedClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.ThreadedProteinOrthologClientDecorator;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.cache.PMBProteinOrthologCacheClient;
-import ch.picard.ppimapbuilder.data.protein.ortholog.client.web.InParanoidClient;
 import ch.picard.ppimapbuilder.networkbuilder.NetworkQueryParameters;
-import ch.picard.ppimapbuilder.networkbuilder.query.tasks.interactome.DeferredFetchUniProtEntryTask;
-import ch.picard.ppimapbuilder.util.concurrent.ExecutorServiceManager;
-import org.cytoscape.model.CyEdge;
-import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNetworkFactory;
-import org.cytoscape.model.CyNetworkManager;
-import org.cytoscape.model.CyNode;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyTable;
+import org.cytoscape.model.*;
 import org.cytoscape.session.CyNetworkNaming;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -75,17 +60,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
     // For the visual style
     private final VisualMappingManager visualMappingManager;
 
-    private final ExecutorServiceManager executorServiceManager;
-
     private final NetworkQueryParameters networkQueryParameters;
     private final Collection<Interaction> interactions;
 
-    private final Set<UniProtEntry> proteinOfInterestPool;
+    //private final Set<UniProtEntry> proteinOfInterestPool;
     //Network data
     private final HashMap<Protein, CyNode> nodeNameMap;
     private final long startTime;
 
-    private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
+    //private final ThreadedProteinOrthologClientDecorator proteinOrthologClient;
 
 
     public PMBCreateNetworkTask(
@@ -97,9 +80,8 @@ public class PMBCreateNetworkTask extends AbstractTask {
             final CyLayoutAlgorithmManager layoutAlgorithmManager,
             final VisualMappingManager visualMappingManager,
             final Collection<Interaction> interactions,
-            final Set<UniProtEntry> proteinOfInterestPool,
             final NetworkQueryParameters networkQueryParameters,
-            final ExecutorServiceManager executorServiceManager, long startTime
+            long startTime
     ) {
 
         // For the network
@@ -119,16 +101,15 @@ public class PMBCreateNetworkTask extends AbstractTask {
         this.visualMappingManager = visualMappingManager;
 
         this.interactions = interactions;
-        this.proteinOfInterestPool = proteinOfInterestPool;
+        //this.proteinOfInterestPool = proteinOfInterestPool;
 
         this.networkQueryParameters = networkQueryParameters;
-        this.executorServiceManager = executorServiceManager;
 
         this.nodeNameMap = new HashMap<Protein, CyNode>();
 
         this.startTime = startTime;
 
-        {
+        /*{
             final InParanoidClient inParanoidClient = new InParanoidClient();
             inParanoidClient.setCache(PMBProteinOrthologCacheClient.getInstance());
 
@@ -139,7 +120,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
                     ),
                     executorServiceManager
             );
-        }
+        }*/
     }
 
     @Override
@@ -163,9 +144,9 @@ public class PMBCreateNetworkTask extends AbstractTask {
                 monitor.setProgress(0.75);
 
                 if (cancelled) return;
-                if (!networkQueryParameters.isInteractomeQuery()) {
-                    removeNodeNotConnectedToPOIs(network);
-                }
+                //if (!networkQueryParameters.isInteractomeQuery()) {
+                //    removeNodeNotConnectedToPOIs(network);
+                //}
             }
 
             if (cancelled) return;
@@ -192,7 +173,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
 
             if (!cancelled) {
                 // search uniprot entries in the background
-                PMBActivator
+/*                PMBActivator
                         .getPMBBackgroundTaskManager()
                         .launchTask(
                                 new DeferredFetchUniProtEntryTask(
@@ -200,13 +181,13 @@ public class PMBCreateNetworkTask extends AbstractTask {
                                         interactorPool,
                                         network
                                 )
-                        );
+                        );*/
             }
         }
         monitor.setProgress(1.0);
     }
 
-    private void removeNodeNotConnectedToPOIs(CyNetwork network) {
+    /*private void removeNodeNotConnectedToPOIs(CyNetwork network) {
         Set<CyNode> nodes = new HashSet<CyNode>(network.getNodeList());
         Set<CyNode> POIsNodes = new HashSet<CyNode>();
 
@@ -230,7 +211,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
         nodes.removeAll(nodesLinkedToPOIs);
         //System.out.println(nodesLinkedToPOIs);
         network.removeNodes(nodes);
-    }
+    }*/
 
     private CyNetwork createNetwork() {
         CyNetwork network = networkFactory.createNetwork();
@@ -263,7 +244,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
             );
             network.getRow(network).set("reference organism", networkQueryParameters.getReferenceOrganism().getScientificName());
             if (!networkQueryParameters.isInteractomeQuery()) {
-                network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
+                //network.getRow(network).set("proteins of interest", new ArrayList<String>(ProteinUtils.asIdentifiers(proteinOfInterestPool)));
                 network.getRow(network).set("other organisms", OrganismUtils.organismsToStrings(networkQueryParameters.getOtherOrganisms()));
             }
             network.getRow(network).set("source databases", InteractionUtils.psicquicServicesToStrings(networkQueryParameters.getSelectedDatabases()));
@@ -358,7 +339,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
             nodeAttr.set("Uniprot_id", protein.getUniProtId());
 
             boolean queried = false;
-            if (!networkQueryParameters.isInteractomeQuery()) {
+            /*if (!networkQueryParameters.isInteractomeQuery()) {
                 List<String> orthologJsons = new ArrayList<String>();
                 try {
                     for (Organism organism : networkQueryParameters.getOtherOrganisms()) {
@@ -377,7 +358,7 @@ public class PMBCreateNetworkTask extends AbstractTask {
                        orthologJsons
                 );
                 queried = proteinOfInterestPool.contains(protein);
-            }
+            }*/
             nodeAttr.set("Queried", String.valueOf(queried));
             nodeAttr.set("Legend", "false");
         }
