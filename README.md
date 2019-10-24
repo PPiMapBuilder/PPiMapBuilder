@@ -24,7 +24,7 @@ _______
 1. Download the [lastest PPiMapBuilder release](https://github.com/PPiMapBuilder/PPiMapBuilder/releases)
 2. Install `PPiMapBuilder-X.X.jar`
   * Within Cytoscape:
-    - Go to `Apps>App Manager` 
+    - Go to `Apps > App Manager` 
     - Click `Install from file`
     - Select the PPiMapBuilder jar file
 
@@ -37,7 +37,7 @@ _______
 2. Run `mvn install` in the PPiMapBuilder folder
 3. Install `./target/PPiMapBuilder-X.X.jar`
   * Within Cytoscape:
-    - Go to `Apps>App Manager` 
+    - Go to `Apps > App Manager` 
     - Click `Install from file`
     - Select the PPiMapBuilder jar file
 
